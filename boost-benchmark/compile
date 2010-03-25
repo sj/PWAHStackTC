@@ -1,3 +1,0 @@
-#!/bin/bash
-c++ -L /home/bas/boost/lib -lboost_regex -lboost_graph -I ~/boost-1.42/include transitive_closure_test_bas.cpp  -o transitive_closure_test_bas
-c++ -L /home/bas/boost/lib -lboost_regex -lboost_graph -I ~/boost-1.42/include benchmark2.cpp  -o benchmark2
