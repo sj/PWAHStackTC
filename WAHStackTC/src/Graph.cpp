@@ -20,6 +20,7 @@ int Graph::getNumberOfVertices(){
 	return _vertices.size();
 }
 
+/**
 Graph* Graph::parseChacoFile(string& filename){
 	Graph* graph = new Graph();
 
@@ -115,3 +116,4 @@ Graph* Graph::parseChacoFile(string& filename){
 
 	return graph;
 }
+**/
