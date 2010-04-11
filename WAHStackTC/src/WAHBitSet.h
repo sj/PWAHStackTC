@@ -13,10 +13,11 @@ using namespace std;
 class WAHBitSet {
 private:
 	vector<int> _compressedBits;
-	int _plainBlock;
-	int _plainBlockOffset;
+	int _plainWord;
+	int _plainWordOffset;
 
 public:
+	static const bool DEBUGGING = true;
 	static const int WORDSIZE = 32;
 	static const int BLOCKSIZE = WORDSIZE - 1;
 
@@ -49,6 +50,8 @@ public:
 	void set(int bitIndex, bool value);
 	bool get(int bitIndex);
 	string toString();
+
+	static string toBitString(int value);
 };
 
 //const int WAHBitSet::SIMPLE_ZEROFILL;

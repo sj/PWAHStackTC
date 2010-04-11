@@ -46,8 +46,8 @@ WAHBitSet::WAHBitSet() {
 }
 
 WAHBitSet::WAHBitSet(int initialCapacity) {
-	_plainBlock = 0;
-	_plainBlockOffset = 0;
+	_plainWord = 0;
+	_plainWordOffset = 0;
 }
 
 WAHBitSet::~WAHBitSet() {
@@ -58,19 +58,18 @@ void WAHBitSet::set(int bitIndex){
 }
 
 void WAHBitSet::set(int bitIndex, bool value){
-	if (bitIndex < _plainBlockOffset){
+	if (DEBUGGING) cout << "WAHBitSet::set setting bit with index " << bitIndex << endl;
+	if (bitIndex < _plainWordOffset){
 		// The passed bit was already compressed. Can't do anything about that.
 		stringstream stream;
 		stream << "Cannot set/unset bit at index " << bitIndex << ": bit is already compressed!";
 		throw stream.str();
-	} else if (bitIndex < _plainBlockOffset + BLOCKSIZE){
-		// BitIndex is within the boundaries of the plain block: change bit of the plain block.
-		// Note that the first bit of the plain block is not to be touched, hence the bitIndex + 1
-		if (value) SET_BIT(_plainBlock, bitIndex + 1 - _plainBlockOffset);
-		else CLEAR_BIT(_plainBlock, bitIndex + 1 - _plainBlockOffset);
-	} else {
-		// BitIndex not within boundaries of the plain block. The plain block should be written
-		// to the _compressedBits. Also, a number of additional 0-fills could be required.
+	}
+
+	if (bitIndex >= _plainWordOffset + BLOCKSIZE){
+		// BitIndex not within boundaries of the plain word. The plain word should be written
+		// to the _compressedBits.
+		if (DEBUGGING) cout << "compressing plain word (" << _plainWord << ") ..." << endl;
 
 		// Prepare exception...
 		stringstream stream;
@@ -83,7 +82,8 @@ void WAHBitSet::set(int bitIndex, bool value){
 		int blockSeq = bitIndex / BLOCKSIZE;
 
 		// currBlockSeq is the sequence number of the current plain block.
-		int currBlockSeq = _plainBlockOffset / BLOCKSIZE;
+		int currBlockSeq = _plainWordOffset / BLOCKSIZE;
+		if (DEBUGGING) cout << "Bit should go in block " << blockSeq << ", current block has sequence no " << currBlockSeq << endl;
 
 		// Number of 0-fills which should be inserted
 		int numNewZeroFills = blockSeq - currBlockSeq -1;
@@ -91,7 +91,7 @@ void WAHBitSet::set(int bitIndex, bool value){
 		int lastWordIndex = _compressedBits.size() - 1;
 
 		// First, store the current plain block in the vector with compressed bits
-		if (_plainBlock == BLOCK_ZEROES){
+		if (_plainWord == BLOCK_ZEROES){
 			// The _plainBlock can be represented as a 0-fill. It might be needed to
 			// append some more 0-fills. When the last block on the _compressedBits is
 			// also a 0-fill, that 0-fill should be extended (if possible)
@@ -122,7 +122,9 @@ void WAHBitSet::set(int bitIndex, bool value){
 				_compressedBits.push_back(compressedWord);
 			}
 		} else {
-			if (_plainBlock == BLOCK_ONES){
+			if (_plainWord == BLOCK_ONES){
+				if (DEBUGGING) cout << "Storing plain block (" << _plainWord << ") as 1-fill" << endl;
+
 				// The _plainBlock can be represented as a 1-fill. If the last block on
 				// _compressedBits is also a 1-fill, this 1-fill should be enlarged when possible
 				if (lastWordIndex >= 0 && IS_ONEFILL(_compressedBits.back())){
@@ -143,28 +145,39 @@ void WAHBitSet::set(int bitIndex, bool value){
 				}
 			} else {
 				// literal block. Store _plainBlock as-is (it already contains a preceding 0).
-				_compressedBits.push_back(_plainBlock);
+				if (DEBUGGING) cout << "Storing plain block (" << _plainWord << ") as literal word" << endl;
+				cout << this->toString() << endl;
+				cout << BLOCK_ONES  << endl;
+				_compressedBits.push_back(_plainWord);
 			}
 
 			// Append 0-fills when needed
-			if (numNewZeroFills > MAX_BLOCKS_IN_FILL) throw maxBlocksExceededException;
-			SET_BIT(numNewZeroFills, 0);
-			_compressedBits.push_back(numNewZeroFills);
+			if (numNewZeroFills > 0){
+				if (numNewZeroFills > MAX_BLOCKS_IN_FILL) throw maxBlocksExceededException;
+				SET_BIT(numNewZeroFills, 0);
+				_compressedBits.push_back(numNewZeroFills);
+			}
 		}
 
 		// Now, reset the _plainBlock and determine its offset
-		_plainBlock = 0;
-		_plainBlockOffset = blockSeq * BLOCKSIZE;
+		_plainWord = 0;
+		_plainWordOffset = blockSeq * BLOCKSIZE;
 	}
+
+	// BitIndex is within the boundaries of the plain word: change bit of the plain block.
+	// Note that the first bit of the plain block is not to be touched, hence the bitIndex + 1
+	if (DEBUGGING) cout << "Bitindex " << bitIndex << " == index " << (bitIndex + 1 - _plainWordOffset) << " of plain word" << endl;
+	if (value) SET_BIT(_plainWord, bitIndex + 1 - _plainWordOffset);
+	else CLEAR_BIT(_plainWord, bitIndex + 1 - _plainWordOffset);
 }
 
 bool WAHBitSet::get(int bitIndex){
-	if (bitIndex < _plainBlockOffset){
+	if (bitIndex < _plainWordOffset){
 		// The passed bit was already compressed. Let's find it...
 		int currWord;
 		int firstBitIndex = 0;
 		int lastBitIndex = 0;
-		for (int i = 0; i < _compressedBits.size(); i++){
+		for (unsigned int i = 0; i < _compressedBits.size(); i++){
 			currWord = _compressedBits[i];
 			if (currWord < 0){
 				// First bit == 1, hence this is a fill word
@@ -188,10 +201,10 @@ bool WAHBitSet::get(int bitIndex){
 
 			firstBitIndex = lastBitIndex + 1;
 		}
-	} else if (bitIndex < _plainBlockOffset + BLOCKSIZE){
+	} else if (bitIndex < _plainWordOffset + BLOCKSIZE){
 		// BitIndex is within the boundaries of the plain block: change bit of the plain block.
 		// Note that the first bit of the plain block is not to be touched, hence the bitIndex + 1
-		return GET_BIT(_plainBlock, bitIndex + 1 - _plainBlockOffset);
+		return GET_BIT(_plainWord, bitIndex + 1 - _plainWordOffset);
 	} else {
 		// Out of bounds, that's a 0-bit
 		return false;
@@ -199,15 +212,24 @@ bool WAHBitSet::get(int bitIndex){
 	return false;
 }
 
+string WAHBitSet::toBitString(int value){
+	stringstream res;
+	for (int bit = 0; bit < 32; bit++){
+		if (GET_BIT(value, bit)) res << "1";
+		else res << "0";
+	}
+	return res.str();
+}
+
 string WAHBitSet::toString(){
 	stringstream res;
 	for (unsigned int i = 0; i < _compressedBits.size(); i++){
-		int word = _compressedBits[i];
-		for (int bit = 0; bit < 32; bit++){
-			if (GET_BIT(word, bit)) res << "1 ";
-			else res << "0 ";
-		}
-		res << endl;
+		res << toBitString(_compressedBits[i]) << endl;
+	}
+
+	if (_plainWord != 0){
+		res << endl << "Plain block:" << endl;
+		res << toBitString(_plainWord) << endl;
 	}
 
 	return res.str();

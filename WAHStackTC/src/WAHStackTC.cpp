@@ -21,10 +21,13 @@ int main() {
 
 	try {
 		WAHBitSet bitset = WAHBitSet(100);
-		/*bitset.set(0);
-		bitset.set(1);
-		bitset.set(3);*/
-		for (int i = 0; i < 34; i++) bitset.set(i);
+		bitset.set(0);
+		//bitset.set(1);
+		//bitset.set(3);
+		/**for (int i = 0; i < 34; i++){
+			if (i == 11) continue;
+			bitset.set(i);
+		}**/
 		bitset.set(38);
 
 		cout << bitset.toString();
