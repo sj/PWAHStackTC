@@ -8,6 +8,7 @@
 #ifndef WAHBITSET_H_
 #define WAHBITSET_H_
 #include <vector>
+#include <string>
 using namespace std;
 
 class WAHBitSet {
@@ -17,14 +18,15 @@ private:
 	int _plainWordOffset;
 
 public:
-	static const bool DEBUGGING = true;
+	static const bool DEBUGGING = false;
 	static const int WORDSIZE = 32;
 	static const int BLOCKSIZE = WORDSIZE - 1;
 
 	// Maximum number of blocks in a 0-fill or 1-fill
 	static const int MAX_BLOCKS_IN_FILL = 1073741824; // 2^30
 
-	// Block (31 bits) of ones, preceded by a zero
+	// Literal word (32 bits) consisting of only ones. That's 31 ones,
+	// succeeded by a 0.
 	static const int BLOCK_ONES = 0b01111111111111111111111111111111;
 
 	// Block (31 bits) of zeroes
@@ -43,7 +45,6 @@ public:
 	static const int SIMPLE_ZEROFILL = 0b10000000000000000000000000000001;
 
 	WAHBitSet();
-	WAHBitSet(int initialCapacity);
 	virtual ~WAHBitSet();
 
 	void set(int bitIndex);
@@ -52,6 +53,7 @@ public:
 	string toString();
 
 	static string toBitString(int value);
+	void constructFailingExample();
 };
 
 //const int WAHBitSet::SIMPLE_ZEROFILL;
