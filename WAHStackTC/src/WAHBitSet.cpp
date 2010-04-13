@@ -32,6 +32,11 @@ using namespace std;
 #define IS_FILL(var) (GET_BIT(var,31))
 
 /**
+ * Macro to determine the length of a FILL
+ */
+#define FILL_LENGTH(var) ((var) ^ EMPTY_ONEFILL)
+
+/**
  * Macro to determine whether a var represents a 1-fill
  */
 #define IS_ONEFILL(var) (IS_FILL(var) && GET_BIT(var,30))
@@ -100,22 +105,14 @@ void WAHBitSet::set(int bitIndex, bool value){
 
 				// If the 1-bit at the end of the word is cleared, the current size of the 0-fill
 				// remains
-				int numZeroFills = _compressedBits[lastWordIndex];
-				CLEAR_BIT(numZeroFills,31);
-				numZeroFills += numNewZeroFills;
+				int numZeroFills = FILL_LENGTH(_compressedBits[lastWordIndex]) + numNewZeroFills;
 				if (numZeroFills > MAX_BLOCKS_IN_FILL) throw maxBlocksExceededException;
 
-				// Set the 1-bit at the end of the word to indicate a fill bit.
-				SET_BIT(numZeroFills, 31);
-
 				// And replace the last word of the vector
-				_compressedBits[lastWordIndex] = numZeroFills;
+				_compressedBits[lastWordIndex] = numZeroFills | EMPTY_ZEROFILL;
 			} else {
 				// No 0-fill on the back of the list, just append a number of 0-fills
-				int compressedWord = numNewZeroFills;
-				SET_BIT(compressedWord, 31);
-
-				_compressedBits.push_back(compressedWord);
+				_compressedBits.push_back(numNewZeroFills | EMPTY_ZEROFILL);
 			}
 		} else {
 			if (_plainWord == BLOCK_ONES){
@@ -125,17 +122,10 @@ void WAHBitSet::set(int bitIndex, bool value){
 				// _compressedBits is also a 1-fill, this 1-fill should be enlarged when possible
 				if (lastWordIndex >= 0 && IS_ONEFILL(_compressedBits.back())){
 					// Last element of _compressedBits is a 1-fill
-					int numOneFills = _compressedBits[lastWordIndex];
-					CLEAR_BIT(numOneFills, 31);
-					CLEAR_BIT(numOneFills, 30);
-					numOneFills++;
+					int numOneFills = FILL_LENGTH(_compressedBits[lastWordIndex]) + 1;
 					if (numOneFills > MAX_BLOCKS_IN_FILL) throw maxBlocksExceededException;
 
-					// Let last two bits to indicate a 1-fill
-					SET_BIT(numOneFills, 30);
-					SET_BIT(numOneFills, 31);
-
-					_compressedBits[lastWordIndex] = numOneFills;
+					_compressedBits[lastWordIndex] = numOneFills | EMPTY_ONEFILL;
 				} else {
 					// No 1-fill on the back of the list, just append simple 1-fill
 					_compressedBits.push_back(+SIMPLE_ONEFILL);
@@ -150,8 +140,7 @@ void WAHBitSet::set(int bitIndex, bool value){
 			if (numNewZeroFills > 0){
 				if (numNewZeroFills > MAX_BLOCKS_IN_FILL) throw maxBlocksExceededException;
 				if (DEBUGGING) cout << "Appending " << numNewZeroFills << " 0-fill words" << endl;
-				SET_BIT(numNewZeroFills, 31);
-				_compressedBits.push_back(numNewZeroFills);
+				_compressedBits.push_back(numNewZeroFills | EMPTY_ZEROFILL);
 			}
 		}
 
@@ -231,10 +220,52 @@ string WAHBitSet::toString(){
 	return res.str();
 }
 
-void WAHBitSet::constructFailingExample(){
+void WAHBitSet::clear(){
 	_compressedBits = vector<int>();
-	_compressedBits.push_back(-2147483645);	// 11000000000000000000000000000001 == 0-fill of length 3
+	_plainWord = 0;
+	_plainWordOffset = 0;
+}
 
-	_plainWord = 204828790; // 01101110000011101010110000110000
-	_plainWordOffset = 1 * BLOCKSIZE;
+void WAHBitSet::addOneFill(int numBlocks){
+
+}
+
+void WAHBitSet::addZeroFill(int numBlocks){
+
+}
+
+void WAHBitSet::addLiteral(int value){
+
+}
+
+WAHBitSet WAHBitSet::constructByOr(const WAHBitSet& bs1, const WAHBitSet& bs2){
+	WAHBitSet result;
+
+	int word1, word2; // current words under investigation
+	int wordOffset1, wordOffset2; // offset within the current words under investigation
+	int w1, w2; // counter for current word index of bs1 and bs2
+	int bl1, bl2; // counter for current block index of bs1 and bs2
+	int fillLength1, fillLength2;
+	bool oneFill;
+	while (w1 < bs1._compressedBits.size() || w2 < bs2._compressedBits.size()){
+		word1 = bs1._compressedBits[w1];
+		word2 = bs2._compressedBits[w2];
+
+		fillLength1 = -1;
+		fillLength2 = -1;
+		if (IS_ONEFILL(word1)) fillLength1 = FILL_LENGTH(word1);
+		if (IS_ONEFILL(word2)) fillLength2 = FILL_LENGTH(word2);
+
+		if (fillLength1 > fillLength2){
+
+		} else if (fillLength1 < fillLength2){
+
+		} else {
+
+		}
+		w1++;
+		w2++;
+	}
+
+	return result;
 }
