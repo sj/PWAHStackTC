@@ -21,6 +21,50 @@ using namespace std;
 WAHBitSetTester::WAHBitSetTester() {}
 WAHBitSetTester::~WAHBitSetTester() {}
 
+void WAHBitSetTester::testOr(){
+	srand ( time(NULL) );
+
+	WAHBitSet bs1, bs2;
+	randomize(bs1);
+	randomize(bs2);
+
+	WAHBitSet res = WAHBitSet::constructByOr(bs1, bs2);
+
+	cout << res.toString() << endl;
+}
+
+void WAHBitSetTester::randomize(WAHBitSet& bitset){
+	bitset.clear();
+
+	// Probability of constructing a fill-bit
+	float fillProb = RAND_FLOAT();
+
+	// Probability a fill bit is a 1-fill
+	float oneFillProb = RAND_FLOAT();
+
+	// Fill the bit set with a random number of bits, somewhere between 0 and 10,000,000
+	//int numBlocks = (rand() % 10000000) / 31;
+	int numBits = 4 * 31 + (rand() % 10000);
+	int numBlocks = numBits / 31 + 1;
+	int offset;
+
+	for (int block = 0; block < numBlocks; block++){
+		offset = block * 31;
+
+		if (RAND_FLOAT() <= fillProb){
+			// Construct a block in such a way that a fill will occur
+			if (RAND_FLOAT() <= oneFillProb){
+				// 1-fill
+				for (int bit = offset; bit < offset + 31; bit++) bitset.set(bit);
+			} // else: 0-fill, do nothing
+		} else {
+			// Construct a block with random bits
+			if (DEBUGGING) cout << "Constructing block " << block << ": will be stored as literal word" << endl;
+			for (int bit = offset; bit < offset + 31; bit++) if (RAND_FLOAT() < 0.5) bitset.set(bit);
+		}
+	}
+}
+
 void WAHBitSetTester::test(int runs){
 	srand ( time(NULL) );
 	int runCount = 0;
@@ -33,7 +77,7 @@ void WAHBitSetTester::test(int runs){
 
 		// Fill the bit set with a random number of bits, somewhere between 0 and 10,000,000
 		//int numBlocks = (rand() % 10000000) / 31;
-		int numBits = 4 * 31 + (rand() % 100000);
+		int numBits = 4 * 31 + (rand() % 10000);
 		int numBlocks = numBits / 31 + 1;
 		int offset;
 

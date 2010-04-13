@@ -11,6 +11,7 @@
 #include "WAHBitSet.h"
 #include "DynamicBitSet.h"
 #include "WAHBitSetTester.h"
+#include "PerformanceTimer.h"
 #include <string>
 #include <sstream>
 using namespace std;
@@ -28,7 +29,10 @@ int main() {
 		dynaBitSet.set(3);
 		dynaBitSet.set(5);
 		cout << dynaBitSet.toString() << endl;*/
-		WAHBitSetTester::test(-1);
+		//WAHBitSetTester::testOr();
+		PerformanceTimer timer = PerformanceTimer::start();
+		WAHBitSetTester::test(1000);
+		cout << "That took " << timer.reset() << " msecs" << endl;
 		/**WAHBitSet wahBitset;
 		wahBitset.constructFailingExample();
 		cout << wahBitset.toString() << endl;
