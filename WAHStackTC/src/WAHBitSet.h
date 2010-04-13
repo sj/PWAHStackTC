@@ -17,6 +17,10 @@ private:
 	int _plainWord;
 	int _plainWordOffset;
 
+	void addOneFill();
+	void addZeroFill(int numBlocks);
+	void addLiteral(int value);
+
 public:
 	static const bool DEBUGGING = false;
 	static const int WORDSIZE = 32;
@@ -33,10 +37,10 @@ public:
 	static const int BLOCK_ZEROES = 0b00000000000000000000000000000000;
 
 	// 1-fill: first two bits set to 1
-	static const int ONEFILL = 0b11000000000000000000000000000000;
+	static const int EMPTY_ONEFILL = 0b11000000000000000000000000000000;
 
 	// 0-fill: first bit set to 1, second to 0
-	static const int ZEROFILL = 0b10000000000000000000000000000000;
+	static const int EMPTY_ZEROFILL = 0b10000000000000000000000000000000;
 
 	// 1-fill of length 1
 	static const int SIMPLE_ONEFILL = 0b11000000000000000000000000000001;
@@ -53,11 +57,9 @@ public:
 	string toString();
 
 	static string toBitString(int value);
-	void constructFailingExample();
-};
+	static WAHBitSet constructByOr(const WAHBitSet& first, const WAHBitSet& second);
+	void clear();
 
-//const int WAHBitSet::SIMPLE_ZEROFILL;
-//const int WAHBitSet::SIMPLE_ONEFILL;
-//WAHBitSet::SIMPLE_ONEFILL = 0b11000000000000000000000000000001;
+};
 
 #endif /* WAHBITSET_H_ */

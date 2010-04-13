@@ -8,6 +8,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <stdexcept>
 #include "WAHBitSet.h"
 using namespace std;
 
@@ -88,60 +89,22 @@ void WAHBitSet::set(int bitIndex, bool value){
 		// Number of 0-fills which should be inserted
 		int numNewZeroFills = blockSeq - currBlockSeq -1;
 
-		int lastWordIndex = _compressedBits.size() - 1;
-
 		// First, store the current plain block in the vector with compressed bits
 		if (_plainWord == BLOCK_ZEROES){
 			// The _plainBlock can be represented as a 0-fill. It might be needed to
 			// append some more 0-fills. When the last block on the _compressedBits is
 			// also a 0-fill, that 0-fill should be extended (if possible)
-			if (DEBUGGING) cout << "Compressing plain block (seq " << currBlockSeq << ", " << _plainWord << ") into 0-fill word, succeeded by " << numNewZeroFills << " additional 0-fill words" << endl;
-			numNewZeroFills++;
-
-			if (numNewZeroFills > MAX_BLOCKS_IN_FILL) throw maxBlocksExceededException;
-
-			if (lastWordIndex >= 0 && IS_ZEROFILL(_compressedBits[lastWordIndex])){
-				// Last element of _compressedBits is a 0-fill: extend that one!
-
-				// If the 1-bit at the end of the word is cleared, the current size of the 0-fill
-				// remains
-				int numZeroFills = FILL_LENGTH(_compressedBits[lastWordIndex]) + numNewZeroFills;
-				if (numZeroFills > MAX_BLOCKS_IN_FILL) throw maxBlocksExceededException;
-
-				// And replace the last word of the vector
-				_compressedBits[lastWordIndex] = numZeroFills | EMPTY_ZEROFILL;
-			} else {
-				// No 0-fill on the back of the list, just append a number of 0-fills
-				_compressedBits.push_back(numNewZeroFills | EMPTY_ZEROFILL);
-			}
+			this->addZeroFill(++numNewZeroFills);
 		} else {
 			if (_plainWord == BLOCK_ONES){
-				if (DEBUGGING) cout << "Compressing plain block (seq " << currBlockSeq << ", " << _plainWord << ") into 1-fill word" << endl;
-
-				// The _plainBlock can be represented as a 1-fill. If the last block on
-				// _compressedBits is also a 1-fill, this 1-fill should be enlarged when possible
-				if (lastWordIndex >= 0 && IS_ONEFILL(_compressedBits.back())){
-					// Last element of _compressedBits is a 1-fill
-					int numOneFills = FILL_LENGTH(_compressedBits[lastWordIndex]) + 1;
-					if (numOneFills > MAX_BLOCKS_IN_FILL) throw maxBlocksExceededException;
-
-					_compressedBits[lastWordIndex] = numOneFills | EMPTY_ONEFILL;
-				} else {
-					// No 1-fill on the back of the list, just append simple 1-fill
-					_compressedBits.push_back(+SIMPLE_ONEFILL);
-				}
+				this->addOneFill();
 			} else {
 				// literal block. Store _plainBlock as-is (it already contains a preceding 0).
-				if (DEBUGGING) cout << "Compressing plain block (seq " << currBlockSeq << ", " << _plainWord << ") into literal word: " << toBitString(_plainWord) << endl;
-				_compressedBits.push_back(_plainWord);
+				this->addLiteral(_plainWord);
 			}
 
 			// Append 0-fills when needed
-			if (numNewZeroFills > 0){
-				if (numNewZeroFills > MAX_BLOCKS_IN_FILL) throw maxBlocksExceededException;
-				if (DEBUGGING) cout << "Appending " << numNewZeroFills << " 0-fill words" << endl;
-				_compressedBits.push_back(numNewZeroFills | EMPTY_ZEROFILL);
-			}
+			if (numNewZeroFills > 0) this->addZeroFill(numNewZeroFills);
 		}
 
 		// Now, reset the _plainBlock and determine its offset
@@ -226,16 +189,40 @@ void WAHBitSet::clear(){
 	_plainWordOffset = 0;
 }
 
-void WAHBitSet::addOneFill(int numBlocks){
+void WAHBitSet::addOneFill(){
+	int lastWordIndex = _compressedBits.size() - 1;
+	if (lastWordIndex >= 0 && IS_ONEFILL(_compressedBits[lastWordIndex])){
+		// Last element of _compressedBits is a 1-fill
+		int numOneFills = FILL_LENGTH(_compressedBits[lastWordIndex]) + 1;
+		if (numOneFills > MAX_BLOCKS_IN_FILL) throw range_error("Number of one blocks exceeds maximum number of blocks in a fill");
 
+		_compressedBits[lastWordIndex] = numOneFills | EMPTY_ONEFILL;
+	} else {
+		// No 1-fill on the back of the list, just append simple 1-fill
+		_compressedBits.push_back(+SIMPLE_ONEFILL);
+	}
 }
 
 void WAHBitSet::addZeroFill(int numBlocks){
+	int lastWordIndex = _compressedBits.size() - 1;
 
+	if (lastWordIndex >= 0 && IS_ZEROFILL(_compressedBits[lastWordIndex])){
+		// Last element of _compressedBits is a 0-fill: extend that one!
+
+		int numZeroFills = FILL_LENGTH(_compressedBits[lastWordIndex]) + numBlocks;
+		if (numZeroFills > MAX_BLOCKS_IN_FILL) throw range_error("Number of zero blocks exceeds maximum number of blocks in a fill");
+
+		// And replace the last word of the vector
+		_compressedBits[lastWordIndex] = numZeroFills | EMPTY_ZEROFILL;
+	} else {
+		// No 0-fill on the back of the list, just append a number of 0-fills
+		if (numBlocks > MAX_BLOCKS_IN_FILL) throw range_error("Number of zero blocks exceeds maximum number of blocks in a fill");
+		_compressedBits.push_back(numBlocks | EMPTY_ZEROFILL);
+	}
 }
 
 void WAHBitSet::addLiteral(int value){
-
+	_compressedBits.push_back(value);
 }
 
 WAHBitSet WAHBitSet::constructByOr(const WAHBitSet& bs1, const WAHBitSet& bs2){
