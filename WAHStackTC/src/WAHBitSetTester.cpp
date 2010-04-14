@@ -65,6 +65,8 @@ void WAHBitSetTester::randomize(WAHBitSet& bitset){
 	}
 }
 
+
+
 void WAHBitSetTester::test(int runs){
 	srand ( time(NULL) );
 	int runCount = 0;
@@ -90,8 +92,6 @@ void WAHBitSetTester::test(int runs){
 			offset = block * 31;
 
 			if (RAND_FLOAT() <= fillProb){
-
-
 				// Construct a block in such a way that a fill will occur
 				if (RAND_FLOAT() <= oneFillProb){
 					// 1-fill
@@ -104,6 +104,7 @@ void WAHBitSetTester::test(int runs){
 					// else: 0-fill, do nothing
 					if (DEBUGGING) cout << "Constructing block " << block << ": suitable for compression as 0-fill" << endl;
 					for (int bit = offset; bit < offset + 31; bit++){
+						wahBitset.set(bit, false);
 						dynaBitset.set(bit, false);
 					}
 				}

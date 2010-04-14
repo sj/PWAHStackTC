@@ -15,9 +15,8 @@ class WAHBitSet {
 private:
 	vector<int> _compressedBits;
 	int _plainWord;
-	int _plainWordOffset;
-
-	void addOneFill();
+	int _plainWordBlockSeq;
+	void addOneFill(int numBlocks);
 	void addZeroFill(int numBlocks);
 	void addLiteral(int value);
 
@@ -51,11 +50,14 @@ public:
 	WAHBitSet();
 	virtual ~WAHBitSet();
 
+	void setBits(int blockSeq, int value);
 	void set(int bitIndex);
 	void set(int bitIndex, bool value);
 	bool get(int bitIndex);
 	string toString();
 
+
+	static int generateRandomLiteralBlock();
 	static string toBitString(int value);
 	static WAHBitSet constructByOr(const WAHBitSet& first, const WAHBitSet& second);
 	void clear();
