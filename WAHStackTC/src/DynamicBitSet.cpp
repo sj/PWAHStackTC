@@ -73,6 +73,20 @@ string DynamicBitSet::toBitString(long value){
 	return res.str();
 }
 
+DynamicBitSet DynamicBitSet::constructByOr(const DynamicBitSet& bs1, const DynamicBitSet& bs2){
+	DynamicBitSet res;
+	int word;
+
+	for (int i = 0; i < max(bs1._vec.size(), bs2._vec.size()); i++){
+		word = 0;
+
+		if (i < bs1._vec.size()) word |= bs1._vec[i];
+		if (i < bs2._vec.size()) word |= bs2._vec[i];
+
+		res._vec.push_back(res);
+	}
+}
+
 void DynamicBitSet::constructFailingExample(){
 	_vec.push_back(0);
 	_vec.push_back(109966619291156480);

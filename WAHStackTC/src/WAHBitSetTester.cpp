@@ -33,7 +33,7 @@ void WAHBitSetTester::testOr(){
 	cout << res.toString() << endl;
 }
 
-void WAHBitSetTester::randomize(WAHBitSet& bitset){
+void WAHBitSetTester::randomize(WAHBitSet& bitset, int maxBits){
 	bitset.clear();
 
 	// Probability of constructing a fill-bit
@@ -42,9 +42,9 @@ void WAHBitSetTester::randomize(WAHBitSet& bitset){
 	// Probability a fill bit is a 1-fill
 	float oneFillProb = RAND_FLOAT();
 
-	// Fill the bit set with a random number of bits, somewhere between 0 and 10,000,000
+	// Fill the bit set with a random number of bits, somewhere between 0 and a big number
 	//int numBlocks = (rand() % 10000000) / 31;
-	int numBits = 4 * 31 + (rand() % 10000);
+	int numBits = 4 * 31 + (rand() % maxBits);
 	int numBlocks = numBits / 31 + 1;
 	int offset;
 

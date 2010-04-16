@@ -24,6 +24,7 @@ int main() {
 
 		delete graph;**/
 
+
 	try {
 		/*DynamicBitSet dynaBitSet;
 		dynaBitSet.set(1);
@@ -44,7 +45,9 @@ int main() {
 			bitset2.setBits(i, randomBlock2);
 		}
 		bitset1.clear();
-		for (int i = 0; i < 4; i++) bitset1.setBits(i, 0xFFFFFFFF);
+
+		// Add 4 one fills
+		for (int i = 0; i < 5; i++) bitset1.setBits(i, 0xFFFFFFFF);
 		//for (int i = 0; i < 2 * 31; i++) bitset1.set(i);
 		bitset1.setBits(5, WAHBitSet::generateRandomLiteralBlock());
 		bitset1.setBits(6, WAHBitSet::generateRandomLiteralBlock());
@@ -55,7 +58,7 @@ int main() {
 		cout << "===== BitSet 2 =====" << endl << bitset2.toString() << endl;
 
 		WAHBitSet merge = WAHBitSet::constructByOr(bitset1, bitset2);
-		cout << "Result:" << endl;
+		cout << endl << endl << "Merge result:" << endl;
 		cout << merge.toString() << endl;
 
 

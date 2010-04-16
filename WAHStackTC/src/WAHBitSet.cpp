@@ -261,9 +261,9 @@ WAHBitSet WAHBitSet::constructByOr(const WAHBitSet& bs1, const WAHBitSet& bs2){
 	const WAHBitSet * actBitSet;
 	const WAHBitSet * otherBitSet;
 
-	int word1, word2; // current words under investigation
-	int* actWord;
-	int* otherWord;
+	int word1, word2; // words currently under investigation
+	const int* actWord;
+	const int* otherWord;
 
 	int wordOffset1 = 0; // offset within the current words under investigation (counted in blocks)
 	int wordOffset2 = 0;
@@ -275,35 +275,67 @@ WAHBitSet WAHBitSet::constructByOr(const WAHBitSet& bs1, const WAHBitSet& bs2){
 	unsigned int* actW;
 	unsigned int* otherW;
 
-	int fillLength1, fillLength2;
-	int* actFillLength;
-	int* otherFillLength;
-	while (w1 < bs1._compressedBits.size() || w2 < bs2._compressedBits.size()){
+	int fillLength1, fillLength2, remainingFillLength1, remainingFillLength2;
+	const int* actFillLength;
+	const int* otherFillLength;
+	int* actRemainingFillLength;
+	int* otherRemainingFillLength;
+
+	bool processedPlainWord1 = false;
+	bool processedPlainWord2 = false;
+	while (!processedPlainWord1 || !processedPlainWord2){
 		cout << "w1=" << w1 << ", wordOffset1=" << wordOffset1 << ", w2=" << w2 << ", wordOffset2=" << wordOffset2 << endl;
 		if (w1 >= bs1._compressedBits.size()){
-			// End of BitSet1 was reached, pretend only a huge 0-fill is left
-			w1 = MAX_BLOCKS_IN_FILL | EMPTY_ZEROFILL;
+			// End of BitSet1 was reached.
+			cout << "End of BitSet1 reached!" << endl;
+
+			if (!processedPlainWord1){
+				word1 = bs1._plainWord;
+				processedPlainWord1 = true;
+			} else {
+				// Plain word was also processed, pretend only a huge 0-fill is left
+				word1 = MAX_BLOCKS_IN_FILL | EMPTY_ZEROFILL;
+			}
 		} else {
 			word1 = bs1._compressedBits[w1];
 		}
+		cout << "Current word of BitSet 1: " << toBitString(word1) << endl;
 
 		if (w2 >= bs2._compressedBits.size()){
 			// End of BitSet2 was reached, pretend only a huge 0-fill is left
-			w2 = MAX_BLOCKS_IN_FILL | EMPTY_ZEROFILL;
+			cout << "End of BitSet2 reached!" << endl;
+
+			if (!processedPlainWord1){
+				word2 = bs2._plainWord;
+				processedPlainWord2 = true;
+			} else {
+				// Plain word was also processed, pretend only a huge 0-fill is left
+				word2 = MAX_BLOCKS_IN_FILL | EMPTY_ZEROFILL;
+			}
 		} else {
 			word2 = bs2._compressedBits[w2];
 		}
+
+		cout << "Current word of BitSet 2: " << toBitString(word2) << endl;
 
 		// Check fill length, minus the offset in the current word. This value tells us how
 		// many blocks are left in the current fill.
 		fillLength1 = -1;
 		fillLength2 = -1;
-		if (IS_FILL(word1)) fillLength1 = FILL_LENGTH(word1) - wordOffset1;
-		if (IS_FILL(word2)) fillLength2 = FILL_LENGTH(word2) - wordOffset2;
+		remainingFillLength1 = -1;
+		remainingFillLength2 = -1;
+		if (IS_FILL(word1)){
+			fillLength1 = FILL_LENGTH(word1);
+			remainingFillLength1 = fillLength1 - wordOffset1;
+		}
+		if (IS_FILL(word2)){
+			fillLength2 = FILL_LENGTH(word2);
+			remainingFillLength2 = fillLength2 - wordOffset2;
+		}
 
-		if (fillLength1 == -1 && fillLength2 == -1){
+		if (remainingFillLength1 == -1 && remainingFillLength2 == -1){
 			// Both BitSets are at a literal word
-			cout << "at literal " << endl;
+			cout << "Encountered two literal words, conducting simple merge " << endl;
 			int merged = word1 | word2;
 			if (merged == BLOCK_ONES) result.addOneFill(1);
 			else if (merged == BLOCK_ZEROES) result.addZeroFill(1);
@@ -312,92 +344,139 @@ WAHBitSet WAHBitSet::constructByOr(const WAHBitSet& bs1, const WAHBitSet& bs2){
 			w1++;
 			w2++;
 		} else {
-			// At least one of two BitSets is at a fill word
-
-			if (fillLength1 >= fillLength2){
+			// At least one of two BitSets is at a fill word. Find out which fill word has most
+			// blocks left to process. That word will become the 'active word', the other word
+			// will be the 'other word'.
+			if (remainingFillLength1 >= remainingFillLength2){
 				// number of blocks left in the current fill of BitSets 1 is bigger than that of BitSets 2
 				actWord = &word1;
 				actFillLength = &fillLength1;
+				actRemainingFillLength = &remainingFillLength1;
+				actWordOffset = &wordOffset1;
+				actW = &w1;
+				actBitSet = &bs1;
+
 				otherWord = &word2;
 				otherFillLength = &fillLength2;
-				actWordOffset = &wordOffset1;
+				otherRemainingFillLength = &remainingFillLength2;
 				otherWordOffset = &wordOffset2;
-				actW = &w1;
 				otherW = &w2;
-				actBitSet = &bs1;
 				otherBitSet = &bs2;
 			} else {
 				// number of blocks left in the current fill of BitSets 1 is bigger than that of BitSets 2
 				actWord = &word2;
 				actFillLength = &fillLength2;
+				actRemainingFillLength = &remainingFillLength2;
+				actWordOffset = &wordOffset2;
+				actW = &w2;
+				actBitSet = &bs2;
+
 				otherWord = &word1;
 				otherFillLength = &fillLength1;
-				actWordOffset = &wordOffset2;
+				otherRemainingFillLength = &remainingFillLength1;
 				otherWordOffset = &wordOffset1;
-				actW = &w2;
 				otherW = &w1;
-				actBitSet = &bs2;
 				otherBitSet = &bs1;
 			}
 
-			if (IS_ONEFILL(*actWord)){
+			cout << "Processing fill: " << toBitString(*actWord) <<endl;
+			bool actWordIsOneFill = IS_ONEFILL(*actWord);
+
+			if (actWordIsOneFill){
 				// Process 1-fill from one of the words (ignoring the other word for the time being)
-				result.addOneFill(*actFillLength);
-				*actW++;
+				result.addOneFill(*actRemainingFillLength);
+				(*actW)++;
+				cout << "actW is now " << *actW << endl;
 				*actWordOffset = 0;
-
-				// *actFillLength blocks were processed by adding the 1-fill, we should increase the
-				// active position in the other (ignored) BitSet too.
-				if (*otherFillLength != -1 && *otherFillLength == *actFillLength){
-					// Got lucky: other BitSet was at a fill too, of equal length. That's easy.
-					*otherW++;
-					*otherWordOffset = 0;
-				} else {
-					// Other BitSet was at a literal, or at a shorter fill. We'll have to skip
-					// one or more words there
-					*otherWordOffset = 0;
-					int skipped = 0;
-					int* currWord = otherWord;
-					int currFillLength;
-					int skipsToGo;
-					while (skipped < *actFillLength){
-						skipsToGo = *actFillLength - skipped;
-
-						if (IS_FILL(*currWord)){
-							// Fill word, potential big skip. But be careful, we shouldn't skip too far...
-							currFillLength = FILL_LENGTH(*currWord);
-							if (currFillLength < skipsToGo){
-								// Safe to skip the entire fill
-								skipped += currFillLength;
-								*otherW++;
-							} else {
-								// Destination is somewhere in the middle of this fill
-								*otherWordOffset = skipsToGo;
-								break;
-							}
-						} else {
-							// Literal word, that's only one block. Small skip.
-							skipped++;
-							*otherW++;
-						}
-
-						if (*otherW >= otherBitSet->_compressedBits.size()){
-							// Reached end of the other BitSet
-							break;
-						} else {
-							// Increase pointer position to next element in vector _compressedBits
-							currWord++;
-						}
-					} // end while: skipping through other word
-				} // end if
-			} else {
-				// Process 0-fill from one of the words (copy the other word for the time being)
 			}
-		}
-	}
 
-	// Only thing left: merge plain words
-	result._plainWord = bs1._plainWord | bs2._plainWord;
+			// *actRemainingFillLength were detected in the active word. If the active word
+			// was a 1-fill, the other word should be ignored. If the active word was a
+			// 0-fill, the contents of the other word should be copied.
+			// Either way, we need to align the two BitSets and find out where to stop processing
+			// the other word. That might well be in the middle of a fill.
+
+			if (*otherRemainingFillLength != -1 && *otherRemainingFillLength == *actRemainingFillLength){
+				// Got lucky: other BitSet was at a fill too, of equal length. That's easy.
+				cout << "Other BitSet was at fill of equal length, lucky!" << endl;
+				if (!actWordIsOneFill){
+					// The active word is apparently a 0-fill, store the value of the other word
+					if (IS_ONEFILL(*otherWord)) result.addOneFill(*otherRemainingFillLength);
+					else result.addZeroFill(*otherRemainingFillLength);
+				} // else: active word is 1-fill, ignore other word
+
+				(*otherW)++;
+				*otherWordOffset = 0;
+			} else {
+				// Other BitSet was at a literal, or at a shorter fill. We'll have to process
+				// one or more words there
+				cout << "Skipping other BitSet for " << *actRemainingFillLength << " blocks" << endl;
+				*otherWordOffset = 0;
+				int blocksProcessed = 0;
+				cout << "Otherword: " << toBitString(*otherWord) << endl;
+				int foo;
+				int blocksToGo;
+				while (blocksProcessed < *actFillLength){
+					blocksToGo = *actRemainingFillLength - blocksProcessed;
+
+					if (IS_FILL(*otherWord)){
+						// Fill word, potential big skip. But be careful, we shouldn't skip too far...
+						foo = FILL_LENGTH(*otherWord);
+						otherFillLength = &foo;
+						*otherRemainingFillLength = *otherFillLength - *otherWordOffset;
+
+						cout << "Current word is fill of length " << *otherRemainingFillLength << ": " << toBitString(*otherWord) << endl;
+						if (*otherRemainingFillLength < blocksToGo){
+							// Safe to skip the entire fill of the other word
+							blocksProcessed += *otherRemainingFillLength;
+
+							if (!actWordIsOneFill){
+								// Active word is a 0-fill, blocks from the other word should be copied
+								if (IS_ONEFILL(*otherWord)) result.addOneFill(*otherRemainingFillLength);
+								else result.addZeroFill(*otherRemainingFillLength);
+							}
+
+							*otherWordOffset = 0;
+							(*otherW)++;
+						} else {
+							// Destination position is somewhere in the middle of the fill of the other word
+
+							if (!actWordIsOneFill){
+								// Active BitSet is at a 0-fill, remaining blocks from the word from
+								// the other BitSet should be copied
+								if (IS_ONEFILL(*otherWord)) result.addOneFill(blocksToGo);
+								else result.addZeroFill(blocksToGo);
+							}
+
+							blocksProcessed += blocksToGo;
+							*otherWordOffset += blocksToGo;
+							break;
+						}
+					} else {
+						// Literal word, that's only one block. Small skip.
+						blocksProcessed++;
+
+						if (!actWordIsOneFill){
+							// Active BitSet is at a 0-fill, add literal word from the other BitSet.
+							result.addLiteral(*otherWord);
+						}
+						(*otherW)++;
+					}
+
+					if (*otherW >= otherBitSet->_compressedBits.size()){
+						cout << "Reached end of other bitset: " << *otherW << " " << w2 << endl;
+						// Reached end of the other BitSet
+						break;
+					} else {
+						// Continue looking at the other BitSet
+						otherWord = &otherBitSet->_compressedBits[*otherW];
+						*otherWordOffset = 0;
+					}
+				} // end while: skipping through other word
+			} // end if
+
+		}
+	} // end while
 
 	// TODO:!! _plainWordOffset!!!
 	return result;

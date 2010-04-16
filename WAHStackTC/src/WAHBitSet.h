@@ -26,7 +26,7 @@ public:
 	static const int BLOCKSIZE = WORDSIZE - 1;
 
 	// Maximum number of blocks in a 0-fill or 1-fill
-	static const int MAX_BLOCKS_IN_FILL = 1073741824; // 2^30
+	static const int MAX_BLOCKS_IN_FILL = 1073741823; // 2^30 - 1
 
 	// Literal word (32 bits) consisting of only ones. That's 31 ones,
 	// succeeded by a 0.
