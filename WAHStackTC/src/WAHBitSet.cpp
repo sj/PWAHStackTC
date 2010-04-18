@@ -50,19 +50,43 @@ using namespace std;
  */
 #define IS_ZEROFILL(var) (IS_FILL(var) && !GET_BIT(var,30))
 
+/**
+ * Macro to determine whether a var is a literal concealing a 1-fill
+ */
+#define IS_LITERAL_ONEFILL(var) ((var) == 0b01111111111111111111111111111111)
+
+/**
+ * Macro to determine whether a var is a literal concealing a 0-fill
+ */
+#define IS_LITERAL_ZEROFILL(var) ((var) == 0b00000000000000000000000000000000)
+
+
 WAHBitSet::WAHBitSet() {
-	_plainWord = 0;
-	_plainWordBlockSeq = 0;
+	init();
 }
 
 WAHBitSet::~WAHBitSet() {
+}
+
+WAHBitSet::WAHBitSet(DynamicBitSet& dynamicBitSet){
+	init();
+	for (unsigned int i = 0; i < dynamicBitSet.size(); i++) this->set(i, dynamicBitSet.get(i));
 }
 
 void WAHBitSet::set(int bitIndex){
 	set(bitIndex, true);
 }
 
+void WAHBitSet::init(){
+	_lastBitIndex = -1;
+	_plainWord = 0;
+	_plainWordBlockSeq = 0;
+	_compressedBits = vector<int>();
+}
+
 void WAHBitSet::set(int bitIndex, bool value){
+	if (bitIndex > _lastBitIndex) _lastBitIndex = bitIndex;
+
 	//if (DEBUGGING) cout << "WAHBitSet::set setting bit with index " << bitIndex << endl;
 	if (bitIndex < _plainWordBlockSeq * BLOCKSIZE){
 		// The passed bit was already compressed. Can't do anything about that.
@@ -120,31 +144,34 @@ void WAHBitSet::set(int bitIndex, bool value){
 }
 
 bool WAHBitSet::get(int bitIndex){
+	const bool debug = false;
+	if (bitIndex > _lastBitIndex) throw range_error("Index out of bounds");
+
 	if (bitIndex < _plainWordBlockSeq * BLOCKSIZE){
 		// The passed bit was already compressed. Lets find it...
-		//cout << "Bit with index " << bitIndex << " already compressed..." << endl;
+		if (debug) cout << "Bit with index " << bitIndex << " already compressed..." << endl;
 		int currWord;
 		int firstBitIndex = 0;
 		int lastBitIndex = 0;
 		for (unsigned int i = 0; i < _compressedBits.size(); i++){
 			currWord = _compressedBits[i];
-			if (currWord < 0){
+			if (IS_FILL(currWord) < 0){
 				// Fill word
-				bool isOneFill = GET_BIT(currWord, 30);
-				int fillNumBlocks = currWord;
-				CLEAR_BIT(fillNumBlocks,30);
-				CLEAR_BIT(fillNumBlocks,31);
-				lastBitIndex = firstBitIndex + BLOCKSIZE * fillNumBlocks - 1;
-				if (bitIndex >= firstBitIndex && bitIndex <= lastBitIndex) return isOneFill;
+				lastBitIndex = firstBitIndex + BLOCKSIZE * FILL_LENGTH(currWord) - 1;
+				if (bitIndex >= firstBitIndex && bitIndex <= lastBitIndex){
+					if (debug) cout << "Bit with index " << bitIndex << " is located in fill word " << i << ": " << toBitString(currWord) << endl;
+					return IS_ONEFILL(currWord);
+				}
 			} else {
-				// First bit == 0, hence this is a literal word containing one block
+				// Literal word containing one block
 
 				// The index of the last bit in this block
 				lastBitIndex = firstBitIndex + BLOCKSIZE - 1;
 				if (bitIndex >= firstBitIndex && bitIndex <= lastBitIndex){
 					// Requested bit is sitting somewhere in this literal word
-					bitIndex -= firstBitIndex;
-					return GET_BIT(currWord, bitIndex);
+					//bitIndex -= firstBitIndex;
+					if (debug) cout << "Bit with index " << bitIndex << " is located in literal word " << i << " (" << firstBitIndex << "--" << lastBitIndex << "): " << toBitString(currWord) << endl;
+					return GET_BIT(currWord, bitIndex % 31);
 				}
 			}
 
@@ -152,9 +179,11 @@ bool WAHBitSet::get(int bitIndex){
 		}
 	} else if (bitIndex < _plainWordBlockSeq * BLOCKSIZE + BLOCKSIZE){
 		// BitIndex is within the boundaries of the plain block: fetch bit from plain block.
+		if (debug) cout << "Bit with index " << bitIndex << " is sitting in plain word..." << endl;
 		return GET_BIT(_plainWord, bitIndex - _plainWordBlockSeq * BLOCKSIZE);
 	} else {
 		// Out of bounds, that's a 0-bit
+		if (debug) cout << "Bit with index " << bitIndex << " out of bounds..." << endl;
 		return false;
 	}
 	return false;
@@ -185,9 +214,7 @@ string WAHBitSet::toString(){
 }
 
 void WAHBitSet::clear(){
-	_compressedBits = vector<int>();
-	_plainWord = 0;
-	_plainWordBlockSeq = 0;
+	init();
 }
 
 void WAHBitSet::addOneFill(int numBlocks){
@@ -223,7 +250,9 @@ void WAHBitSet::addZeroFill(int numBlocks){
 }
 
 void WAHBitSet::addLiteral(int value){
-	_compressedBits.push_back(value);
+	if (IS_LITERAL_ZEROFILL(value)) addZeroFill(1);
+	else if (IS_LITERAL_ONEFILL(value)) addOneFill(1);
+	else _compressedBits.push_back(value);
 }
 
 /**
@@ -256,6 +285,7 @@ int WAHBitSet::generateRandomLiteralBlock(){
 }
 
 WAHBitSet WAHBitSet::constructByOr(const WAHBitSet& bs1, const WAHBitSet& bs2){
+	const bool debug = false;
 	WAHBitSet result;
 
 	const WAHBitSet * actBitSet;
@@ -293,10 +323,10 @@ WAHBitSet WAHBitSet::constructByOr(const WAHBitSet& bs1, const WAHBitSet& bs2){
 	bool* processedOtherPlainWord;
 
 	while (!processedPlainWord1 || !processedPlainWord2){
-		cout << "w1=" << w1 << ", wordOffset1=" << wordOffset1 << ", w2=" << w2 << ", wordOffset2=" << wordOffset2 << endl;
+		if (debug) cout << "w1=" << w1 << ", wordOffset1=" << wordOffset1 << ", w2=" << w2 << ", wordOffset2=" << wordOffset2 << endl;
 		if (w1 >= bs1._compressedBits.size()){
 			// End of BitSet1 was reached.
-			cout << "End of BitSet1 reached!" << endl;
+			if (debug) cout << "End of BitSet1 reached!" << endl;
 
 			if (!processedPlainWord1){
 				word1 = bs1._plainWord;
@@ -308,11 +338,11 @@ WAHBitSet WAHBitSet::constructByOr(const WAHBitSet& bs1, const WAHBitSet& bs2){
 		} else {
 			word1 = bs1._compressedBits[w1];
 		}
-		cout << "Current word of BitSet 1: " << toBitString(word1) << endl;
+		if (debug) cout << "Current word of BitSet 1: " << toBitString(word1) << endl;
 
 		if (w2 >= bs2._compressedBits.size()){
 			// End of BitSet2 was reached, pretend only a huge 0-fill is left
-			cout << "End of BitSet2 reached!" << endl;
+			if (debug) cout << "End of BitSet2 reached!" << endl;
 
 			if (!processedPlainWord2){
 				word2 = bs2._plainWord;
@@ -325,7 +355,7 @@ WAHBitSet WAHBitSet::constructByOr(const WAHBitSet& bs1, const WAHBitSet& bs2){
 			word2 = bs2._compressedBits[w2];
 		}
 
-		cout << "Current word of BitSet 2: " << toBitString(word2) << endl;
+		if (debug) cout << "Current word of BitSet 2: " << toBitString(word2) << endl;
 
 		// Check fill length, minus the offset in the current word. This value tells us how
 		// many blocks are left in the current fill.
@@ -344,7 +374,7 @@ WAHBitSet WAHBitSet::constructByOr(const WAHBitSet& bs1, const WAHBitSet& bs2){
 
 		if (remainingFillLength1 == -1 && remainingFillLength2 == -1){
 			// Both BitSets are at a literal word
-			cout << "Encountered two literal words, conducting simple merge " << endl;
+			if (debug) cout << "Encountered two literal words, conducting simple merge " << endl;
 			int merged = word1 | word2;
 			if (merged == BLOCK_ONES) result.addOneFill(1);
 			else if (merged == BLOCK_ZEROES) result.addZeroFill(1);
@@ -358,6 +388,7 @@ WAHBitSet WAHBitSet::constructByOr(const WAHBitSet& bs1, const WAHBitSet& bs2){
 			// will be the 'other word'.
 			if (remainingFillLength1 >= remainingFillLength2){
 				// number of blocks left in the current fill of BitSets 1 is bigger than that of BitSets 2
+				if (debug) cout << "Processing fill from BitSet 1: " << remainingFillLength1 << " blocks left..." << endl;
 				actWord = &word1;
 				actFillLength = &fillLength1;
 				actRemainingFillLength = &remainingFillLength1;
@@ -377,6 +408,7 @@ WAHBitSet WAHBitSet::constructByOr(const WAHBitSet& bs1, const WAHBitSet& bs2){
 				processedOtherPlainWord = &processedPlainWord2;
 			} else {
 				// number of blocks left in the current fill of BitSets 1 is bigger than that of BitSets 2
+				if (debug) cout << "Processing fill from BitSet 2: " << remainingFillLength2 << " blocks left..." << endl;
 				actWord = &word2;
 				actPlainWord =
 				actFillLength = &fillLength2;
@@ -398,15 +430,11 @@ WAHBitSet WAHBitSet::constructByOr(const WAHBitSet& bs1, const WAHBitSet& bs2){
 				processedOtherPlainWord = &processedPlainWord1;
 			}
 
-			cout << "Processing fill: " << toBitString(*actWord) <<endl;
 			bool actWordIsOneFill = IS_ONEFILL(*actWord);
 
 			if (actWordIsOneFill){
 				// Process 1-fill from one of the words (ignoring the other word for the time being)
 				result.addOneFill(*actRemainingFillLength);
-				(*actW)++;
-				cout << "actW is now " << *actW << endl;
-				*actWordOffset = 0;
 			}
 
 			// *actRemainingFillLength were detected in the active word. If the active word
@@ -417,7 +445,7 @@ WAHBitSet WAHBitSet::constructByOr(const WAHBitSet& bs1, const WAHBitSet& bs2){
 
 			if (*otherRemainingFillLength != -1 && *otherRemainingFillLength == *actRemainingFillLength){
 				// Got lucky: other BitSet was at a fill too, of equal length. That's easy.
-				cout << "Other BitSet was at fill of equal length, lucky!" << endl;
+				if (debug) cout << "Other BitSet was at fill of equal length, lucky!" << endl;
 				if (!actWordIsOneFill){
 					// The active word is apparently a 0-fill, store the value of the other word
 					if (IS_ONEFILL(*otherWord)) result.addOneFill(*otherRemainingFillLength);
@@ -426,18 +454,40 @@ WAHBitSet WAHBitSet::constructByOr(const WAHBitSet& bs1, const WAHBitSet& bs2){
 
 				(*otherW)++;
 				*otherWordOffset = 0;
+
+				(*actW)++;
+				*actWordOffset = 0;
 			} else {
 				// Other BitSet was at a literal, or at a shorter fill. We'll have to process
 				// one or more words there
-				cout << "Skipping other BitSet for " << *actRemainingFillLength << " blocks" << endl;
-				*otherWordOffset = 0;
+				if (debug) cout << "Skipping other BitSet for " << *actRemainingFillLength << " blocks" << endl;
+
 				int blocksProcessed = 0;
 				int foo;
 				int blocksToGo;
-				while (blocksProcessed < *actFillLength){
+				while (blocksProcessed < *actRemainingFillLength){
 					blocksToGo = *actRemainingFillLength - blocksProcessed;
-					cout << "Skipped " << blocksProcessed << " blocks, " << blocksToGo << " blocks to go" << endl;
-					cout << "Otherword: " << toBitString(*otherWord) << endl;
+					if (debug) cout << "Skipped " << blocksProcessed << " blocks, " << blocksToGo << " blocks to go" << endl;
+
+					if (blocksProcessed > 0){
+						if (*otherW >= otherBitSet->_compressedBits.size()){
+							if (*processedOtherPlainWord){
+								if (debug) cout << "Reached end of other bitset: " << *otherW << endl;
+								break;
+							} else {
+								if (debug) cout << "Processed last compressed word (" << toBitString(*otherWord) << ") of the other BitSet, processing plain word: " << toBitString(*otherPlainWord) << endl;
+								*processedOtherPlainWord = true;
+								otherWord = otherPlainWord;
+								*otherWordOffset = 0;
+							}
+						} else {
+							// Continue looking at the other BitSet
+							otherWord = &otherBitSet->_compressedBits[*otherW];
+							*otherWordOffset = 0;
+						}
+					}
+
+					if (debug) cout << "Other word: " << toBitString(*otherWord) << endl;
 
 
 					if (IS_FILL(*otherWord)){
@@ -446,8 +496,8 @@ WAHBitSet WAHBitSet::constructByOr(const WAHBitSet& bs1, const WAHBitSet& bs2){
 						otherFillLength = &foo;
 						*otherRemainingFillLength = *otherFillLength - *otherWordOffset;
 
-						cout << "Current word is fill of length " << *otherRemainingFillLength << ": " << toBitString(*otherWord) << endl;
-						if (*otherRemainingFillLength < blocksToGo){
+						if (debug) cout << "Other word is fill of length " << *otherFillLength << ", of which " << *otherRemainingFillLength << " blocks are remaining: " << toBitString(*otherWord) << endl;
+						if (*otherRemainingFillLength <= blocksToGo){
 							// Safe to skip the entire fill of the other word
 							blocksProcessed += *otherRemainingFillLength;
 
@@ -483,30 +533,67 @@ WAHBitSet WAHBitSet::constructByOr(const WAHBitSet& bs1, const WAHBitSet& bs2){
 						}
 						(*otherW)++;
 					}
-
-					if (*otherW >= otherBitSet->_compressedBits.size()){
-						if (*processedOtherPlainWord){
-							cout << "Reached end of other bitset: " << *otherW << endl;
-							break;
-						} else {
-							cout << "Processed last compressed word (" << toBitString(*otherWord) << ") of the other BitSet, processing plain word: " << toBitString(*otherPlainWord) << endl;
-							*processedOtherPlainWord = true;
-							otherWord = otherPlainWord;
-							*otherWordOffset = 0;
-						}
-					} else {
-						// Continue looking at the other BitSet
-						otherWord = &otherBitSet->_compressedBits[*otherW];
-						*otherWordOffset = 0;
-					}
-
-
 				} // end while: skipping through other word
+				if (debug) cout << "Done skipping!" << endl;
+
+				if (blocksProcessed == *actFillLength || (processedPlainWord1 && processedPlainWord2)){
+					// Apparently, all blocks were processed. This means the next word from the active BitSet
+					// should be inspected
+					(*actW)++;
+					*actWordOffset = 0;
+				} else {
+					// Apparently, it was not possible to process all blocks. This could happen when the end of
+					// other BitSet is encountered. In that case, simply skipping to the next word in the active
+					// BitSet will yield an invalid result.
+					// Suppose the active word consisted of a 0-fill of 10 blocks. After skipping the first
+					// 4 blocks, the end of the other BitSet was encountered. The remaining 6 blocks should
+					// then be added to the result, before looking at the next word.
+					// In case of a 1-fill of 10 blocks the result would be valid.
+					if (!actWordIsOneFill) result.addZeroFill(*actRemainingFillLength - blocksProcessed);
+					(*actW)++;
+					*actWordOffset = 0;
+				}
 			} // end if
+
 
 		}
 	} // end while
 
-	// TODO:!! _plainWordOffset!!!
+	result._plainWordBlockSeq = max(bs1._plainWordBlockSeq, bs2._plainWordBlockSeq) + 1;
+	result._lastBitIndex = max(bs1._lastBitIndex, bs2._lastBitIndex);
 	return result;
+}
+
+unsigned int WAHBitSet::size(){
+	return _lastBitIndex + 1;
+}
+
+WAHBitSet WAHBitSet::constructFailingExample1(){
+	WAHBitSet res;
+	res._compressedBits.clear();
+	res._compressedBits.push_back(-2147483645); // 0-fill of 3 block
+	res._compressedBits.push_back(-1073741822); // 1-fill of 2 blocks
+	res._compressedBits.push_back(1526167291); // literal
+	res._compressedBits.push_back(-2147483647); // 0-fill of 1 block
+	res._compressedBits.push_back(-1073741823); // 1-fill of 1 blocks
+	res._compressedBits.push_back(-2147483647); // 0-fill of 1 blocks
+	res._plainWordBlockSeq = 9;
+	res._plainWord = 1893837043; // literal
+	res._lastBitIndex = 309;
+	return res;
+}
+
+WAHBitSet WAHBitSet::constructFailingExample2(){
+	WAHBitSet res;
+	res._compressedBits.clear();
+	res._compressedBits.push_back(237562924); // literal
+	res._compressedBits.push_back(270540582); // literal
+	res._compressedBits.push_back(-1073741822); // 1-fill of 2 block
+	res._compressedBits.push_back(491844537); // literal
+	res._compressedBits.push_back(-2147483647); // 0-fill of 1 block
+	res._compressedBits.push_back(3328389); // literal
+	res._plainWordBlockSeq = 7;
+	res._plainWord = 1784157257; // 306848798
+	res._lastBitIndex = 247;
+	return res;
 }

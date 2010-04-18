@@ -10,16 +10,20 @@
 #include <vector>
 #include <string>
 #include "BitSet.h"
+#include "DynamicBitSet.h"
 using namespace std;
 
-class WAHBitSet : BitSet {
+class WAHBitSet : public BitSet {
 private:
+	int _lastBitIndex;
 	vector<int> _compressedBits;
 	int _plainWord;
 	int _plainWordBlockSeq;
 	void addOneFill(int numBlocks);
 	void addZeroFill(int numBlocks);
 	void addLiteral(int value);
+	void init();
+
 
 public:
 	static const bool DEBUGGING = false;
@@ -48,21 +52,25 @@ public:
 	// 0-fill of length 1
 	static const int SIMPLE_ZEROFILL = 0b10000000000000000000000000000001;
 
+	WAHBitSet(DynamicBitSet& dynamicBitSet);
 	WAHBitSet();
 	virtual ~WAHBitSet();
+
 
 	void setBits(int blockSeq, int value);
 	void set(int bitIndex);
 	void set(int bitIndex, bool value);
 	bool get(int bitIndex);
 	string toString();
-
+	unsigned int size();
 
 	static int generateRandomLiteralBlock();
 	static string toBitString(int value);
 	static WAHBitSet constructByOr(const WAHBitSet& first, const WAHBitSet& second);
 	void clear();
 
+	static WAHBitSet constructFailingExample1();
+	static WAHBitSet constructFailingExample2();
 };
 
 #endif /* WAHBITSET_H_ */

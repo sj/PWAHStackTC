@@ -14,6 +14,7 @@
 #include <iostream>
 #include <bitset>
 #include <sstream>
+#include "PerformanceTimer.h"
 using namespace std;
 
 #define RAND_FLOAT() ((rand() % 1000) / 1000.0)
@@ -23,17 +24,65 @@ WAHBitSetTester::~WAHBitSetTester() {}
 
 void WAHBitSetTester::testOr(){
 	srand ( time(NULL) );
+	PerformanceTimer timer = PerformanceTimer::start();
 
-	WAHBitSet bs1, bs2;
-	randomize(bs1, 10000);
-	randomize(bs2, 10000);
+	while(true){
+		//WAHBitSet wahbs1, wahbs2;
+		cout << "Creating 2 random DynamicBitSet objects... ";
+		cout.flush();
+		DynamicBitSet dbs1; //(wahbs1);
+		DynamicBitSet dbs2; //(wahbs2);
+		randomise(dbs1, 100000);
+		randomise(dbs2, 100000);
+		cout << "done, that took " << timer.reset() << " msecs" << endl;
+		//wahbs1 = WAHBitSet::constructFailingExample1();
+		//wahbs2 = WAHBitSet::constructFailingExample2();
+		cout << "Creating 2 WAHBitSet objects from generated DynamicBitSet objects... ";
+		cout.flush();
+		WAHBitSet wahbs1(dbs1);
+		WAHBitSet wahbs2(dbs2);
+		cout << "done, that took " << timer.reset() << " msecs" << endl;
 
-	WAHBitSet res = WAHBitSet::constructByOr(bs1, bs2);
+		/**cout << "Comparing DynamicBitSets and WAHBitSets... ";
+		cout.flush();
+		if (!wahbs1.equals(dbs1)){
+			throw string("bitset1 mismatch");
+		}
+		if (!wahbs2.equals(dbs2)){
+			throw string("bitset2 mismatch");
+		}
+		cout << "done, that took " << timer.reset() << " msecs" << endl;**/
 
-	cout << res.toString() << endl;
+
+		cout << "Merging two bitsets of sizes " << wahbs1.size() << " and " << wahbs2.size() << "..." << endl;
+		cout.flush();
+		timer.reset();
+		WAHBitSet wahres = WAHBitSet::constructByOr(wahbs1, wahbs2);
+		cout << "WAHBitSets merged, that took " << timer.reset() << " msecs" << endl;
+		DynamicBitSet dbsres = DynamicBitSet::constructByOr(dbs1, dbs2);
+		cout << "DynamicBitSets merged, that took " << timer.reset() << " msecs" << endl;
+
+		cout << "Comparing merge results... ";
+		cout.flush();
+		if (!wahres.equals(dbsres)){
+			cerr << "=== INPUT 1 (compressed) ===" << endl;
+			cerr << wahbs1.toString() << endl << endl;
+			cerr << "=== INPUT 2 (compressed) ===" << endl;
+			cerr << wahbs2.toString() << endl << endl << endl;
+
+			cerr << "=== INPUT 1 (plain) ===" << endl;
+			cerr << dbs1.toString() << endl << endl;
+			cerr << "=== INPUT 2 (plain) ===" << endl;
+			cerr << dbs2.toString() << endl;
+			throw string("MERGE FAIL!");
+		}
+		cout << "done, that took " << timer.reset() << " msecs" << endl << endl;
+
+		//cout << wahres.toString() << endl;
+	}
 }
 
-void WAHBitSetTester::randomize(WAHBitSet& bitset, int maxBits){
+void WAHBitSetTester::randomise(BitSet& bitset, int maxBits){
 	bitset.clear();
 
 	// Probability of constructing a fill-bit

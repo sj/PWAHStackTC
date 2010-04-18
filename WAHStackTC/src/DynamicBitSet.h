@@ -10,25 +10,32 @@
 #include <vector>
 #include <string>
 #include "BitSet.h"
+//#include "WAHBitSet.h"
 using namespace std;
 
-class DynamicBitSet : BitSet {
+class DynamicBitSet : public BitSet {
 private:
 	vector<long> _vec;
+	int _lastBitIndex;
 
 public:
-	DynamicBitSet(int initialCapacity);
 	DynamicBitSet();
+	//DynamicBitSet(WAHBitSet& wahBitset);
+	DynamicBitSet(int initialCapacity);
 	virtual ~DynamicBitSet();
+	void init(int initialCapacity = 64);
 
+	void clear();
 	void set(int bitIndex);
 	void set(int bitIndex, bool value);
 	bool get(int bitIndex);
 	string toString();
 	string toBitString(long value);
+	unsigned int size();
+
 
 	void constructFailingExample();
-	DynamicBitSet constructByOr(const DynamicBitSet& bs1, const DynamicBitSet& bs2);
+	static DynamicBitSet constructByOr(const DynamicBitSet& bs1, const DynamicBitSet& bs2);
 };
 
 #endif /* DYNAMICBITSET_H_ */

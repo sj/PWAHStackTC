@@ -35,6 +35,9 @@ int main() {
 
 		//WAHBitSetTester::test(10000);
 		//exit(1);
+		WAHBitSetTester::testOr();
+		cout << "done testing!" << endl;
+		exit(0);
 
 		WAHBitSet bitset1, bitset2;
 		for (int i = 0; i < 3; i++){
@@ -57,7 +60,8 @@ int main() {
 
 		cout << "===== BitSet 2 =====" << endl << bitset2.toString() << endl;
 
-		WAHBitSet merge = WAHBitSet::constructByOr(bitset1, bitset2);
+		WAHBitSet merge;
+		merge = WAHBitSet::constructByOr(bitset1, bitset2);
 		cout << endl << endl << "Merge result:" << endl;
 		cout << merge.toString() << endl;
 
@@ -104,6 +108,7 @@ int main() {
 		}*/
 	} catch (string str){
 		cerr << "Exception: " << str << endl;
+		cerr.flush();
 	}
 	return 0;
 }
