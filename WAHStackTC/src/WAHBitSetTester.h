@@ -17,7 +17,7 @@ public:
 	WAHBitSetTester();
 	virtual ~WAHBitSetTester();
 
-	static void randomize(WAHBitSet& bitset);
+	static void randomize(WAHBitSet& bitset, int maxBits);
 	static void test(int runs);
 	static float randFloat();
 	static void testOr();

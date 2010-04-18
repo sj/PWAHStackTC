@@ -25,8 +25,8 @@ void WAHBitSetTester::testOr(){
 	srand ( time(NULL) );
 
 	WAHBitSet bs1, bs2;
-	randomize(bs1);
-	randomize(bs2);
+	randomize(bs1, 10000);
+	randomize(bs2, 10000);
 
 	WAHBitSet res = WAHBitSet::constructByOr(bs1, bs2);
 

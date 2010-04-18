@@ -10,11 +10,12 @@
 
 class BitSet {
 public:
-	virtual void set(int bitIndex, bool value);
+	BitSet();
+	virtual ~BitSet();
 
-	virtual void set(int bitIndex){
-		set(bitIndex, true);
-	}
+	virtual void set(int bitIndex, bool value) = 0;
+
+	virtual void set(int bitIndex);
 };
 
 #endif /* BITSET_H_ */

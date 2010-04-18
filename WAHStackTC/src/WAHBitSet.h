@@ -9,9 +9,10 @@
 #define WAHBITSET_H_
 #include <vector>
 #include <string>
+#include "BitSet.h"
 using namespace std;
 
-class WAHBitSet {
+class WAHBitSet : BitSet {
 private:
 	vector<int> _compressedBits;
 	int _plainWord;

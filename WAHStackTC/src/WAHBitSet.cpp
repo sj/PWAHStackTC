@@ -265,6 +265,12 @@ WAHBitSet WAHBitSet::constructByOr(const WAHBitSet& bs1, const WAHBitSet& bs2){
 	const int* actWord;
 	const int* otherWord;
 
+	// plain words of the two bitsets
+	int plainWord1 = bs1._plainWord;
+	int plainWord2 = bs2._plainWord;
+	const int* actPlainWord;
+	const int* otherPlainWord;
+
 	int wordOffset1 = 0; // offset within the current words under investigation (counted in blocks)
 	int wordOffset2 = 0;
 	int* actWordOffset;
@@ -283,6 +289,9 @@ WAHBitSet WAHBitSet::constructByOr(const WAHBitSet& bs1, const WAHBitSet& bs2){
 
 	bool processedPlainWord1 = false;
 	bool processedPlainWord2 = false;
+	bool* processedActPlainWord;
+	bool* processedOtherPlainWord;
+
 	while (!processedPlainWord1 || !processedPlainWord2){
 		cout << "w1=" << w1 << ", wordOffset1=" << wordOffset1 << ", w2=" << w2 << ", wordOffset2=" << wordOffset2 << endl;
 		if (w1 >= bs1._compressedBits.size()){
@@ -305,7 +314,7 @@ WAHBitSet WAHBitSet::constructByOr(const WAHBitSet& bs1, const WAHBitSet& bs2){
 			// End of BitSet2 was reached, pretend only a huge 0-fill is left
 			cout << "End of BitSet2 reached!" << endl;
 
-			if (!processedPlainWord1){
+			if (!processedPlainWord2){
 				word2 = bs2._plainWord;
 				processedPlainWord2 = true;
 			} else {
@@ -355,6 +364,8 @@ WAHBitSet WAHBitSet::constructByOr(const WAHBitSet& bs1, const WAHBitSet& bs2){
 				actWordOffset = &wordOffset1;
 				actW = &w1;
 				actBitSet = &bs1;
+				actPlainWord = &plainWord1;
+				processedActPlainWord = &processedPlainWord1;
 
 				otherWord = &word2;
 				otherFillLength = &fillLength2;
@@ -362,14 +373,20 @@ WAHBitSet WAHBitSet::constructByOr(const WAHBitSet& bs1, const WAHBitSet& bs2){
 				otherWordOffset = &wordOffset2;
 				otherW = &w2;
 				otherBitSet = &bs2;
+				otherPlainWord = &plainWord2;
+				processedOtherPlainWord = &processedPlainWord2;
 			} else {
 				// number of blocks left in the current fill of BitSets 1 is bigger than that of BitSets 2
 				actWord = &word2;
+				actPlainWord =
 				actFillLength = &fillLength2;
 				actRemainingFillLength = &remainingFillLength2;
 				actWordOffset = &wordOffset2;
 				actW = &w2;
 				actBitSet = &bs2;
+				actPlainWord = &plainWord2;
+				processedActPlainWord = &processedPlainWord2;
+
 
 				otherWord = &word1;
 				otherFillLength = &fillLength1;
@@ -377,6 +394,8 @@ WAHBitSet WAHBitSet::constructByOr(const WAHBitSet& bs1, const WAHBitSet& bs2){
 				otherWordOffset = &wordOffset1;
 				otherW = &w1;
 				otherBitSet = &bs1;
+				otherPlainWord = &plainWord1;
+				processedOtherPlainWord = &processedPlainWord1;
 			}
 
 			cout << "Processing fill: " << toBitString(*actWord) <<endl;
@@ -413,11 +432,13 @@ WAHBitSet WAHBitSet::constructByOr(const WAHBitSet& bs1, const WAHBitSet& bs2){
 				cout << "Skipping other BitSet for " << *actRemainingFillLength << " blocks" << endl;
 				*otherWordOffset = 0;
 				int blocksProcessed = 0;
-				cout << "Otherword: " << toBitString(*otherWord) << endl;
 				int foo;
 				int blocksToGo;
 				while (blocksProcessed < *actFillLength){
 					blocksToGo = *actRemainingFillLength - blocksProcessed;
+					cout << "Skipped " << blocksProcessed << " blocks, " << blocksToGo << " blocks to go" << endl;
+					cout << "Otherword: " << toBitString(*otherWord) << endl;
+
 
 					if (IS_FILL(*otherWord)){
 						// Fill word, potential big skip. But be careful, we shouldn't skip too far...
@@ -464,14 +485,22 @@ WAHBitSet WAHBitSet::constructByOr(const WAHBitSet& bs1, const WAHBitSet& bs2){
 					}
 
 					if (*otherW >= otherBitSet->_compressedBits.size()){
-						cout << "Reached end of other bitset: " << *otherW << " " << w2 << endl;
-						// Reached end of the other BitSet
-						break;
+						if (*processedOtherPlainWord){
+							cout << "Reached end of other bitset: " << *otherW << endl;
+							break;
+						} else {
+							cout << "Processed last compressed word (" << toBitString(*otherWord) << ") of the other BitSet, processing plain word: " << toBitString(*otherPlainWord) << endl;
+							*processedOtherPlainWord = true;
+							otherWord = otherPlainWord;
+							*otherWordOffset = 0;
+						}
 					} else {
 						// Continue looking at the other BitSet
 						otherWord = &otherBitSet->_compressedBits[*otherW];
 						*otherWordOffset = 0;
 					}
+
+
 				} // end while: skipping through other word
 			} // end if
 

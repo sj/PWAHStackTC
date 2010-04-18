@@ -7,11 +7,9 @@
 
 #include "BitSet.h"
 
-BitSet::BitSet() {
-	// TODO Auto-generated constructor stub
+BitSet::BitSet(){}
+BitSet::~BitSet(){}
 
-}
-
-BitSet::~BitSet() {
-	// TODO Auto-generated destructor stub
+void BitSet::set(int bitIndex){
+	set(bitIndex, true);
 }

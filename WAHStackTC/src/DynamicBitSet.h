@@ -9,9 +9,10 @@
 #define DYNAMICBITSET_H_
 #include <vector>
 #include <string>
+#include "BitSet.h"
 using namespace std;
 
-class DynamicBitSet {
+class DynamicBitSet : BitSet {
 private:
 	vector<long> _vec;
 
@@ -27,6 +28,7 @@ public:
 	string toBitString(long value);
 
 	void constructFailingExample();
+	DynamicBitSet constructByOr(const DynamicBitSet& bs1, const DynamicBitSet& bs2);
 };
 
 #endif /* DYNAMICBITSET_H_ */

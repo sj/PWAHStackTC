@@ -8,6 +8,7 @@
 #include <iostream>
 #include "DynamicBitSet.h"
 #include "WAHBitSet.h"
+#include "BitSet.h"
 #include <math.h>
 #include <vector>
 #include <string>
@@ -77,13 +78,13 @@ DynamicBitSet DynamicBitSet::constructByOr(const DynamicBitSet& bs1, const Dynam
 	DynamicBitSet res;
 	int word;
 
-	for (int i = 0; i < max(bs1._vec.size(), bs2._vec.size()); i++){
+	for (unsigned int i = 0; i < max(bs1._vec.size(), bs2._vec.size()); i++){
 		word = 0;
 
 		if (i < bs1._vec.size()) word |= bs1._vec[i];
 		if (i < bs2._vec.size()) word |= bs2._vec[i];
 
-		res._vec.push_back(res);
+		res._vec.push_back(word);
 	}
 }
 
