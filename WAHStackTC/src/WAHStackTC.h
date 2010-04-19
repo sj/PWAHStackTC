@@ -37,7 +37,7 @@ public:
 
 	void computeTransitiveClosure();
 	string tcToString();
-	int countNumberOfEdgesInTC();
+	long countNumberOfEdgesInTC();
 };
 
 #endif /* WAHSTACKTC_H_ */

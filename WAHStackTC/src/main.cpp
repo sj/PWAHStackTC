@@ -24,19 +24,29 @@ int main() {
 
 	try {
 		// string filename = "../../Datasets/nuutila32.graph";
-		string filename = "../../Datasets/Semmle graphs/java/depends.graph";
+		//string filename = "../../Datasets/Semmle graphs/java/depends.graph";
+		//string filename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/depends.graph";
+		PerformanceTimer timer = PerformanceTimer::start();
+		cout << "Parsing graph file... ";
+		cout.flush();
+		string filename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/successor.graph";
 		Graph graph = Graph::parseChacoFile(filename);
+		cout << "done, that took " << timer.reset() << " msecs";
 		cout << "Number of vertices: " << graph.getNumberOfVertices() << endl;
 		cout << "Number of edges: " << graph.countNumberOfEdges() << endl;
 
 		WAHStackTC wstc(graph);
-		PerformanceTimer timer = PerformanceTimer::start();
+
 		cout << "Computing transitive closure... ";
+		cout.flush();
 		wstc.computeTransitiveClosure();
 		cout << "done, that took " << timer.reset() << " msecs" << endl;
+		cout.flush();
 
-		cout << wstc.tcToString();
-		cout << "Transitive closure contains " << wstc.countNumberOfEdgesInTC() << " edges" << endl;
+		//cout << wstc.tcToString();
+		cout << "Counting number of edges in TC... ";
+		cout.flush();
+		cout << "Transitive closure contains "<< wstc.countNumberOfEdgesInTC() << " edges" << endl;
 		exit(1);
 
 		/*DynamicBitSet dynaBitSet;

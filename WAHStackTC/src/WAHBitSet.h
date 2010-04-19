@@ -26,7 +26,7 @@ private:
 
 
 public:
-	static const bool DEBUGGING = true;
+	static const bool DEBUGGING = false;
 	static const int WORDSIZE = 32;
 	static const int BLOCKSIZE = WORDSIZE - 1;
 
@@ -71,6 +71,8 @@ public:
 
 	static WAHBitSet constructFailingExample1();
 	static WAHBitSet constructFailingExample2();
+
+	friend class WAHBitSetIterator;
 };
 
 #endif /* WAHBITSET_H_ */

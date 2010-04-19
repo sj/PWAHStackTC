@@ -42,7 +42,9 @@ void WAHStackTC::computeTransitiveClosure(){
 }
 
 void WAHStackTC::dfsVisit(unsigned int vertexIndex){
-	cout << "Visiting vertex " << vertexIndex << endl;
+	const bool debug = false;
+
+	if (debug) cout << "Visiting vertex " << vertexIndex << endl;
 	_visited.set(vertexIndex);
 	_vStack.push(vertexIndex);
 	_savedStackSize[vertexIndex] = _cStack.size();
@@ -57,7 +59,7 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 	bool childWasVisitedBefore;
 	for (unsigned int i = 0; i < children->size(); i++){
 		currChildIndex = children->at(i);
-		cout << "Child index " << currChildIndex << " of vertex " << vertexIndex << endl;
+		if (debug) cout << "Child index " << currChildIndex << " of vertex " << vertexIndex << endl;
 		if (currChildIndex == vertexIndex){
 			// Vertex loops back to itself
 			_vertexSelfLoop.set(vertexIndex);
@@ -70,7 +72,7 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 			}
 
 			if (_vertexComponents[currChildIndex] == -1){
-				cout << "Child " << currChildIndex << " of vertex " << vertexIndex << " not yet a member of a component" << endl;
+				if (debug) cout << "Child " << currChildIndex << " of vertex " << vertexIndex << " not yet a member of a component" << endl;
 				// Child is not yet a member of a wrapped-up component, which means
 				// it belongs to the same component as this vertex belongs to!
 
@@ -85,13 +87,13 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 				}
 			} else {
 				// Child is a member of a component!
-				cout << "Child " << currChildIndex << " of vertex " << vertexIndex << " is a member of component " << _vertexComponents[currChildIndex] << endl;
+				if (debug) cout << "Child " << currChildIndex << " of vertex " << vertexIndex << " is a member of component " << _vertexComponents[currChildIndex] << endl;
 				if (!childWasVisitedBefore){
 					// Child was first visited by this vertex.
 
 					// Register the component of the child as being adjacent to the
 					// component of the current vertex by pushing it on top of the stack
-					cout << "component " << _vertexComponents[currChildIndex] << " is adjacent to vertex " << vertexIndex << endl;
+					if (debug) cout << "component " << _vertexComponents[currChildIndex] << " is adjacent to vertex " << vertexIndex << endl;
 					_cStack.push(_vertexComponents[currChildIndex]);
 				} else {
 					// Child was not visited directly by this vertex. However, this might
@@ -102,7 +104,7 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 					if (_vertexDFSSeqNo[currChildIndex] < _vertexDFSSeqNo[vertexIndex]){
 						// Not a forward edge, register the component of the child
 						// as adjacent
-						cout << "component " << _vertexComponents[currChildIndex] << " is adjacent to vertex " << vertexIndex << endl;
+						if (debug) cout << "component " << _vertexComponents[currChildIndex] << " is adjacent to vertex " << vertexIndex << endl;
 						_cStack.push(_vertexComponents[currChildIndex]);
 					} // else: forward edge! Ignore.
 				}
@@ -113,7 +115,7 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 	if (_vertexCandidateComponentRoot[vertexIndex] == vertexIndex){
 		// This vertex is a component root!
 		int newComponentIndex = ++_lastComponentIndex;
-		cout << "Vertex " << vertexIndex << " is component root, newComponentIndex=" << newComponentIndex << endl;
+		if (debug) cout << "Vertex " << vertexIndex << " is component root, newComponentIndex=" << newComponentIndex << endl;
 		_componentSizes.push_back(0);
 
 		WAHBitSet successors;
@@ -135,38 +137,38 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 		vector<int> adjacentComponentIndices;
 		DynamicBitSet tmpAdjacentComponentBits;
 		int adjacentComponentIndex;
-		cout << "Successors of new component: ";
+		if (debug) cout << "Successors of new component: ";
 		for (unsigned int i = 0; i < dupAdjacentComponentIndices.size(); i++){
 			adjacentComponentIndex = dupAdjacentComponentIndices[i];
 			if (tmpAdjacentComponentBits.get(adjacentComponentIndex)) continue; // duplicate
-			cout << adjacentComponentIndex << " ";
+			if (debug) cout << adjacentComponentIndex << " ";
 			tmpAdjacentComponentBits.set(adjacentComponentIndex);
 			adjacentComponentIndices.push_back(adjacentComponentIndex);
 		}
-		cout << endl;
+		if (debug) cout << endl;
 
 		sort(adjacentComponentIndices.begin(), adjacentComponentIndices.end());
 
 		for (unsigned int i = 0; i < adjacentComponentIndices.size(); i++){
 			adjacentComponentIndex = adjacentComponentIndices[i];
-			cout << "adj: " << adjacentComponentIndex << endl;;
+
 			if (adjacentComponentIndex == newComponentIndex){
 				// Self-loop: full union not needed
-				cout << successors.toString();
-				cout << "Setting self loop (" << newComponentIndex << ")... ";
 				successors.set(newComponentIndex);
-				cout << "done!" << endl;
 			} else {
 				if (!successors.get(adjacentComponentIndex)){
-					cout << "Merging successor list of component " <<  newComponentIndex << " with " << adjacentComponentIndex << "... ";
 					// Merge this successor list with the successor list of the adjacent component
 					successors.set(adjacentComponentIndex);
+					if (debug) cout << "Merging successor list of component " <<  newComponentIndex << " with " << adjacentComponentIndex << "... ";
+					if (debug) cout.flush();
+					//cout << successors.toString() << endl;
+					//cout << _componentSuccessors[adjacentComponentIndex].toString() << endl;
 					successors = WAHBitSet::constructByOr(successors, _componentSuccessors[adjacentComponentIndex]);
-					cout << "done!" << endl;
-					cout << successors.toString() << endl;
+					if (debug) cout << "done!" << endl;
+					//cout << successors.toString() << endl;
 				} else {
 					// adjacent component index already in the successors list, skip merge
-					cout << "Not merging successor list of component " <<  newComponentIndex << " with " << adjacentComponentIndex << "... " << endl;
+					if (debug) cout << "Not merging successor list of component " <<  newComponentIndex << " with " << adjacentComponentIndex << "... " << endl;
 				}
 			}
 		}
@@ -174,7 +176,8 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 		_componentSuccessors.push_back(successors);
 
 
-
+		if (debug) cout << "Adding vertices to new component... ";
+		if (debug) cout.flush();
 		unsigned int currStackVertexIndex;
 		do {
 			currStackVertexIndex = _vStack.top();
@@ -182,10 +185,11 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 			_vertexComponents[currStackVertexIndex] = newComponentIndex;
 			_componentSizes[newComponentIndex]++;
 		} while (vertexIndex != currStackVertexIndex);
+		if (debug) cout << "done!";
 	} // else: vertex is not a component root
 
 
-	cout << "Done visiting " << vertexIndex << ", returning DFS call" << endl;
+	if (debug) cout << "Done visiting " << vertexIndex << ", returning DFS call" << endl;
 }
 
 string WAHStackTC::tcToString(){
@@ -207,7 +211,7 @@ string WAHStackTC::tcToString(){
 	return stream.str();
 }
 
-int WAHStackTC::countNumberOfEdgesInTC(){
+long WAHStackTC::countNumberOfEdgesInTC(){
 	// TODO: optimise by keeping track of cardinality
 	vector<int> componentVertexSuccessorCount(_componentSizes.size());
 
@@ -220,7 +224,7 @@ int WAHStackTC::countNumberOfEdgesInTC(){
 		componentVertexSuccessorCount[c] = count;
 	}
 
-	int edgeCount = 0;
+	long edgeCount = 0;
 	for (int v = 0; v < _graph->getNumberOfVertices(); v++){
 		edgeCount += componentVertexSuccessorCount[_vertexComponents[v]];
 	}

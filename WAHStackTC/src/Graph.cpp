@@ -56,6 +56,7 @@ vector<string> Graph::split(const string &s, char delim) {
 }
 
 Graph Graph::parseChacoFile(string filename){
+	const bool debug = false;
 	Graph graph;
 
 	PerformanceTimer timer = PerformanceTimer::start();
@@ -116,9 +117,9 @@ Graph Graph::parseChacoFile(string filename){
 			}
 
 			currVertexIndex = lineNo - 2;
-			for (int i = 0; i < neighbours.size(); i++){
+			for (unsigned int i = 0; i < neighbours.size(); i++){
 				currNeighbourIndex = atoi(neighbours[i].c_str()) - 1;
-				cout << currVertexIndex << " has neighbour " << currNeighbourIndex << endl;
+				if (debug) cout << currVertexIndex << " has neighbour " << currNeighbourIndex << endl;
 				graph._vertices[currVertexIndex].push_back(currNeighbourIndex);
 				edgeCount++;
 			}

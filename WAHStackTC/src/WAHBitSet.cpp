@@ -98,6 +98,7 @@ void WAHBitSet::set(int bitIndex, bool value){
 	if (bitIndex >= _plainWordBlockSeq * BLOCKSIZE + BLOCKSIZE){
 		// BitIndex not within boundaries of the plain word. The plain word should be written
 		// to the _compressedBits.
+		if (DEBUGGING) cout << "WAHBitSet::set compressing plain word.." << endl;
 
 		// Prepare exception...
 		stringstream stream;
@@ -141,6 +142,8 @@ void WAHBitSet::set(int bitIndex, bool value){
 	//if (DEBUGGING) cout << "Bitindex " << bitIndex << " == index " << (bitIndex - _plainWordOffset) << " of plain word" << endl;
 	if (value) SET_BIT(_plainWord, bitIndex - _plainWordBlockSeq * BLOCKSIZE);
 	else CLEAR_BIT(_plainWord, bitIndex - _plainWordBlockSeq * BLOCKSIZE);
+
+	if (DEBUGGING) cout << "WAHBitSet::set done setting bit with index " << bitIndex <<  "!" << endl;
 }
 
 bool WAHBitSet::get(int bitIndex){
@@ -218,6 +221,7 @@ void WAHBitSet::clear(){
 }
 
 void WAHBitSet::addOneFill(int numBlocks){
+	if (numBlocks < 1) throw range_error("Cannot add 1-fill of size < 1");
 	int lastWordIndex = _compressedBits.size() - 1;
 
 	if (lastWordIndex >= 0 && IS_ONEFILL(_compressedBits[lastWordIndex])){
@@ -233,6 +237,7 @@ void WAHBitSet::addOneFill(int numBlocks){
 }
 
 void WAHBitSet::addZeroFill(int numBlocks){
+	if (numBlocks < 1) throw range_error("Cannot add 0-fill of size < 1");
 	int lastWordIndex = _compressedBits.size() - 1;
 
 	if (lastWordIndex >= 0 && IS_ZEROFILL(_compressedBits[lastWordIndex])){
@@ -536,7 +541,7 @@ WAHBitSet WAHBitSet::constructByOr(const WAHBitSet& bs1, const WAHBitSet& bs2){
 				} // end while: skipping through other word
 				if (debug) cout << "Done skipping!" << endl;
 
-				if (blocksProcessed == *actFillLength || (processedPlainWord1 && processedPlainWord2)){
+				if (blocksProcessed == *actRemainingFillLength || (processedPlainWord1 && processedPlainWord2)){
 					// Apparently, all blocks were processed. This means the next word from the active BitSet
 					// should be inspected
 					(*actW)++;
@@ -563,8 +568,10 @@ WAHBitSet WAHBitSet::constructByOr(const WAHBitSet& bs1, const WAHBitSet& bs2){
 	if (result._compressedBits.size() > 0 && !IS_FILL(result._compressedBits.back())){
 		result._plainWord = result._compressedBits.back();
 		result._compressedBits.pop_back();
+		result._plainWordBlockSeq = max(bs1._plainWordBlockSeq, bs2._plainWordBlockSeq);
+	} else {
+		result._plainWordBlockSeq = max(bs1._plainWordBlockSeq, bs2._plainWordBlockSeq) + 1;
 	}
-	result._plainWordBlockSeq = max(bs1._plainWordBlockSeq, bs2._plainWordBlockSeq);
 	result._lastBitIndex = max(bs1._lastBitIndex, bs2._lastBitIndex);
 	return result;
 }
