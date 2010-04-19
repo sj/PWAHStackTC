@@ -9,6 +9,7 @@
 #include <iostream>
 #include "Graph.h"
 #include "WAHBitSet.h"
+#include "WAHStackTC.h"
 #include "DynamicBitSet.h"
 #include "WAHBitSetTester.h"
 #include "PerformanceTimer.h"
@@ -18,14 +19,26 @@
 using namespace std;
 
 int main() {
-	string filename = "../../Datasets/Semmle graphs/java/depends.graph";
-	/**Graph* graph = Graph::parseChacoFile(filename);
-	cout << "Number of vertices: " << graph->getNumberOfVertices() << endl;
 
-		delete graph;**/
 
 
 	try {
+		// string filename = "../../Datasets/nuutila32.graph";
+		string filename = "../../Datasets/Semmle graphs/java/depends.graph";
+		Graph graph = Graph::parseChacoFile(filename);
+		cout << "Number of vertices: " << graph.getNumberOfVertices() << endl;
+		cout << "Number of edges: " << graph.countNumberOfEdges() << endl;
+
+		WAHStackTC wstc(graph);
+		PerformanceTimer timer = PerformanceTimer::start();
+		cout << "Computing transitive closure... ";
+		wstc.computeTransitiveClosure();
+		cout << "done, that took " << timer.reset() << " msecs" << endl;
+
+		cout << wstc.tcToString();
+		cout << "Transitive closure contains " << wstc.countNumberOfEdgesInTC() << " edges" << endl;
+		exit(1);
+
 		/*DynamicBitSet dynaBitSet;
 		dynaBitSet.set(1);
 		dynaBitSet.set(3);

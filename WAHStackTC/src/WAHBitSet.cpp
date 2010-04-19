@@ -87,7 +87,7 @@ void WAHBitSet::init(){
 void WAHBitSet::set(int bitIndex, bool value){
 	if (bitIndex > _lastBitIndex) _lastBitIndex = bitIndex;
 
-	//if (DEBUGGING) cout << "WAHBitSet::set setting bit with index " << bitIndex << endl;
+	if (DEBUGGING) cout << "WAHBitSet::set setting bit with index " << bitIndex << endl;
 	if (bitIndex < _plainWordBlockSeq * BLOCKSIZE){
 		// The passed bit was already compressed. Can't do anything about that.
 		stringstream stream;
@@ -145,7 +145,7 @@ void WAHBitSet::set(int bitIndex, bool value){
 
 bool WAHBitSet::get(int bitIndex){
 	const bool debug = false;
-	if (bitIndex > _lastBitIndex) throw range_error("Index out of bounds");
+	if (bitIndex > _lastBitIndex) return false;
 
 	if (bitIndex < _plainWordBlockSeq * BLOCKSIZE){
 		// The passed bit was already compressed. Lets find it...
@@ -559,7 +559,12 @@ WAHBitSet WAHBitSet::constructByOr(const WAHBitSet& bs1, const WAHBitSet& bs2){
 		}
 	} // end while
 
-	result._plainWordBlockSeq = max(bs1._plainWordBlockSeq, bs2._plainWordBlockSeq) + 1;
+	// If the last word of the result is a literal, store that one uncompressed
+	if (result._compressedBits.size() > 0 && !IS_FILL(result._compressedBits.back())){
+		result._plainWord = result._compressedBits.back();
+		result._compressedBits.pop_back();
+	}
+	result._plainWordBlockSeq = max(bs1._plainWordBlockSeq, bs2._plainWordBlockSeq);
 	result._lastBitIndex = max(bs1._lastBitIndex, bs2._lastBitIndex);
 	return result;
 }

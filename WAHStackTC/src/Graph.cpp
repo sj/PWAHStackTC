@@ -6,7 +6,15 @@
  */
 
 #include "Graph.h"
-
+#include <sstream>
+#include <iostream>
+#include <string>
+#include <vector>
+#include "PerformanceTimer.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <fstream>
+using namespace std;
 
 Graph::Graph() {
 	// TODO Auto-generated constructor stub
@@ -20,12 +28,39 @@ int Graph::getNumberOfVertices(){
 	return _vertices.size();
 }
 
-/**
-Graph* Graph::parseChacoFile(string& filename){
-	Graph* graph = new Graph();
+vector<int>* Graph::getChildren(unsigned int vertexIndex){
+	return &_vertices[vertexIndex];
+}
 
+int Graph::countNumberOfEdges(){
+	int numEdges = 0;
+	for (int v = 0; v < this->getNumberOfVertices(); v++){
+		numEdges += _vertices[v].size();
+	}
+	return numEdges;
+}
+
+
+vector<string> &Graph::split(const string &s, char delim, vector<string> &elems) {
+	stringstream ss(s);
+	string item;
+	while(getline(ss, item, delim)) {
+		elems.push_back(item);
+	}
+	return elems;
+}
+
+vector<string> Graph::split(const string &s, char delim) {
+	vector<string> elems;
+	return split(s, delim, elems);
+}
+
+Graph Graph::parseChacoFile(string filename){
+	Graph graph;
+
+	PerformanceTimer timer = PerformanceTimer::start();
 	cout << "Parsing " << filename << "... ";
-	std::ifstream input_file(filename.c_str());
+	ifstream input_file(filename.c_str());
 	char buffer[131072];
 
 	input_file.clear();
@@ -36,9 +71,6 @@ Graph* Graph::parseChacoFile(string& filename){
 	int lineNo = 0;
 	int currVertexIndex, currNeighbourIndex;
 	int edgeCount = 0;
-
-	struct timeval tv1, tv2;
-	gettimeofday(&tv1, NULL);
 
 	while (!(input_file.eof())){
 		stringstream eMsg;
@@ -58,7 +90,7 @@ Graph* Graph::parseChacoFile(string& filename){
 
 
 
-		std::vector<std::string> neighbours = split(line, ' ');
+		vector<string> neighbours = split(line, ' ');
 		if (firstLine){
 			// Parse first line consisting of two integers: number
 			// of vertices and the number of edges
@@ -70,11 +102,8 @@ Graph* Graph::parseChacoFile(string& filename){
 			}
 			numVertices = atoi(neighbours[0].c_str());
 			numEdges = atoi(neighbours[1].c_str());
-			vertices = std::vector<vertex_t>(numVertices);
 
-			for (int i = 0; i < numVertices; i++){
-				vertices[i] = add_vertex(i,G);
-			}
+			graph._vertices = vector<vector<int> >(numVertices);
 		} else {
 			// Parse 'regular' lines: line number indicates vertex
 			// index, integers on the line indicate adjacent vertex
@@ -82,15 +111,15 @@ Graph* Graph::parseChacoFile(string& filename){
 
 			if (lineNo - 1 > numVertices){
 				stringstream eMsg;
-				eMsg << "Graph file contains at least " << lineNo << " vertex specifications, whilst it should contain only " << numVertices << "?";
+				eMsg << "Graph file contains at least " << lineNo << " vertex specifications, while it should contain only " << numVertices << "?";
 				throw eMsg.str();
 			}
 
 			currVertexIndex = lineNo - 2;
 			for (int i = 0; i < neighbours.size(); i++){
 				currNeighbourIndex = atoi(neighbours[i].c_str()) - 1;
-				//cout << currVertexIndex << " has neighbour " << currNeighbourIndex << endl;
-				add_edge(vertices[currVertexIndex], vertices[currNeighbourIndex], G);
+				cout << currVertexIndex << " has neighbour " << currNeighbourIndex << endl;
+				graph._vertices[currVertexIndex].push_back(currNeighbourIndex);
 				edgeCount++;
 			}
 		}
@@ -108,12 +137,13 @@ Graph* Graph::parseChacoFile(string& filename){
 		throw eMsg.str();
 	}
 
-	gettimeofday(&tv2, NULL);
-	cout << "done, that took " << difftimeMsecs(tv1,tv2) << " msecs" << endl;
+	cout << "done, that took " << timer.reset() << " msecs" << endl;
 	cout << "Number of vertices: " << numVertices << ", number of edges: " << numEdges << endl;
 	input_file.close();
 
 
 	return graph;
 }
-**/
+
+
+

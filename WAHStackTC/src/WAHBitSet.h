@@ -26,7 +26,7 @@ private:
 
 
 public:
-	static const bool DEBUGGING = false;
+	static const bool DEBUGGING = true;
 	static const int WORDSIZE = 32;
 	static const int BLOCKSIZE = WORDSIZE - 1;
 

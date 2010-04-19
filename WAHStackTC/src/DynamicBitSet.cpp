@@ -75,7 +75,7 @@ void DynamicBitSet::set(int bitIndex, bool value){
 }
 
 bool DynamicBitSet::get(int bitIndex){
-	if (bitIndex > _lastBitIndex) throw range_error("Index out of bounds");
+	if (bitIndex > _lastBitIndex) return false;
 	return GET_BIT(_vec[bitIndex / 64], bitIndex % 64);
 }
 
