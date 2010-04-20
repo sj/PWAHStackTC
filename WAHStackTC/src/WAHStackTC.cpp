@@ -17,7 +17,11 @@ WAHStackTC::WAHStackTC(Graph& graph) {
 	_graph = &graph;
 }
 
-WAHStackTC::~WAHStackTC() {}
+WAHStackTC::~WAHStackTC() {
+	// Free allocated memory for WAHBitSet objects representing successor sets
+	for (int i = 0; i < _componentSuccessors.size(); i++) delete _componentSuccessors[i];
+	cout << "Destructed WAHStackTC" << endl;
+}
 
 void WAHStackTC::computeTransitiveClosure(){
 	unsigned int numVertices = _graph->getNumberOfVertices();
@@ -118,7 +122,7 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 		if (debug) cout << "Vertex " << vertexIndex << " is component root, newComponentIndex=" << newComponentIndex << endl;
 		_componentSizes.push_back(0);
 
-		WAHBitSet successors;
+		WAHBitSet* successors = new WAHBitSet();
 		if (_vStack.top() != vertexIndex || _vertexSelfLoop.get(vertexIndex)){
 			// This component has size > 1 or has an explicit self-loop. Include the
 			// component index as successor of itself
@@ -154,11 +158,11 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 
 			if (adjacentComponentIndex == newComponentIndex){
 				// Self-loop: full union not needed
-				successors.set(newComponentIndex);
+				successors->set(newComponentIndex);
 			} else {
-				if (!successors.get(adjacentComponentIndex)){
+				if (!successors->get(adjacentComponentIndex)){
 					// Merge this successor list with the successor list of the adjacent component
-					successors.set(adjacentComponentIndex);
+					successors->set(adjacentComponentIndex);
 					if (debug) cout << "Merging successor list of component " <<  newComponentIndex << " with " << adjacentComponentIndex << "... ";
 					if (debug) cout.flush();
 					//cout << successors.toString() << endl;
@@ -200,11 +204,11 @@ string WAHStackTC::tcToString(){
 	}
 	stream << endl;
 	stream << "== Component successors ==" << endl;
-	for (int c = 0; c < _componentSuccessors.size(); c++){
+	for (unsigned int c = 0; c < _componentSuccessors.size(); c++){
 		stream << "Successors of component " << c << ": ";
-		WAHBitSet successors = _componentSuccessors[c];
-		for (int i = 0; i <= c; i++){
-			if (successors.get(i)) stream << i << " ";
+		WAHBitSet* successors = _componentSuccessors[c];
+		for (unsigned int i = 0; i <= c; i++){
+			if (successors->get(i)) stream << i << " ";
 		}
 		stream << endl;
 	}
@@ -215,11 +219,11 @@ long WAHStackTC::countNumberOfEdgesInTC(){
 	// TODO: optimise by keeping track of cardinality
 	vector<int> componentVertexSuccessorCount(_componentSizes.size());
 
-	for (int c = 0; c < _componentSizes.size(); c++){
+	for (unsigned int c = 0; c < _componentSizes.size(); c++){
 		int count = 0;
-		WAHBitSet successors = _componentSuccessors[c];
-		for (int i = 0; i <= c; i++){
-			if (successors.get(i)) count += _componentSizes[i];
+		WAHBitSet* successors = _componentSuccessors[c];
+		for (unsigned int i = 0; i <= c; i++){
+			if (successors->get(i)) count += _componentSizes[i];
 		}
 		componentVertexSuccessorCount[c] = count;
 	}

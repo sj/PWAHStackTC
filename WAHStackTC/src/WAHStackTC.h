@@ -17,7 +17,7 @@ using namespace std;
 class WAHStackTC {
 private:
 	Graph* _graph;
-	vector<WAHBitSet> _componentSuccessors; // stores the successor list (transitive closure) for each component
+	vector<WAHBitSet*> _componentSuccessors; // stores the successor list (transitive closure) for each component
 	vector<int> _vertexComponents; // stores the component index of each vertex
 	vector<unsigned int> _componentSizes; // stores the size of strongly connected components
 	DynamicBitSet _visited; // records visited vertices

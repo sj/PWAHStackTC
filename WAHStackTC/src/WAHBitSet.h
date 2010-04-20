@@ -66,7 +66,7 @@ public:
 
 	static int generateRandomLiteralBlock();
 	static string toBitString(int value);
-	static WAHBitSet constructByOr(const WAHBitSet& first, const WAHBitSet& second);
+	static WAHBitSet* constructByOr(const WAHBitSet* first, const WAHBitSet* second);
 	void clear();
 
 	static WAHBitSet constructFailingExample1();

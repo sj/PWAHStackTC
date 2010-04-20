@@ -57,14 +57,14 @@ void WAHBitSetTester::testOr(){
 		cout << "Merging two bitsets of sizes " << wahbs1.size() << " and " << wahbs2.size() << "..." << endl;
 		cout.flush();
 		timer.reset();
-		WAHBitSet wahres = WAHBitSet::constructByOr(wahbs1, wahbs2);
+		WAHBitSet* wahres = WAHBitSet::constructByOr(&wahbs1, &wahbs2);
 		cout << "WAHBitSets merged, that took " << timer.reset() << " msecs" << endl;
 		DynamicBitSet dbsres = DynamicBitSet::constructByOr(dbs1, dbs2);
 		cout << "DynamicBitSets merged, that took " << timer.reset() << " msecs" << endl;
 
 		cout << "Comparing merge results... ";
 		cout.flush();
-		if (!wahres.equals(dbsres)){
+		if (!wahres->equals(dbsres)){
 			cerr << "=== INPUT 1 (compressed) ===" << endl;
 			cerr << wahbs1.toString() << endl << endl;
 			cerr << "=== INPUT 2 (compressed) ===" << endl;
@@ -77,6 +77,7 @@ void WAHBitSetTester::testOr(){
 			throw string("MERGE FAIL!");
 		}
 		cout << "done, that took " << timer.reset() << " msecs" << endl << endl;
+		delete wahres;
 
 		//cout << wahres.toString() << endl;
 	}
