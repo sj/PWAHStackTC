@@ -16,7 +16,7 @@ public:
 	virtual ~BitSet();
 
 	virtual string toString();
-	virtual bool equals(BitSet& otherBitSet);
+	virtual bool equals(BitSet* otherBitSet);
 	virtual unsigned int size() = 0;
 	virtual void clear() = 0;
 	virtual void set(int bitIndex, bool value) = 0;

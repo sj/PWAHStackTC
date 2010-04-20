@@ -59,7 +59,7 @@ void WAHBitSetTester::testOr(){
 		timer.reset();
 		WAHBitSet* wahres = WAHBitSet::constructByOr(&wahbs1, &wahbs2);
 		cout << "WAHBitSets merged, that took " << timer.reset() << " msecs" << endl;
-		DynamicBitSet dbsres = DynamicBitSet::constructByOr(dbs1, dbs2);
+		DynamicBitSet* dbsres = DynamicBitSet::constructByOr(&dbs1, &dbs2);
 		cout << "DynamicBitSets merged, that took " << timer.reset() << " msecs" << endl;
 
 		cout << "Comparing merge results... ";
@@ -78,6 +78,7 @@ void WAHBitSetTester::testOr(){
 		}
 		cout << "done, that took " << timer.reset() << " msecs" << endl << endl;
 		delete wahres;
+		delete dbsres;
 
 		//cout << wahres.toString() << endl;
 	}

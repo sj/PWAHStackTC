@@ -12,22 +12,25 @@
 #include "DynamicBitSet.h"
 #include <vector>
 #include <stack>
+#include "PerformanceTimer.h"
 using namespace std;
 
 class WAHStackTC {
 private:
 	Graph* _graph;
 	vector<WAHBitSet*> _componentSuccessors; // stores the successor list (transitive closure) for each component
-	vector<int> _vertexComponents; // stores the component index of each vertex
+	//vector<DynamicBitSet*> _componentSuccessors; // stores the successor list (transitive closure) for each component
+	int* _vertexComponents; // stores the component index of each vertex
 	vector<unsigned int> _componentSizes; // stores the size of strongly connected components
 	DynamicBitSet _visited; // records visited vertices
 	stack<unsigned int> _vStack, _cStack; // vertex and component stacks
-	vector<unsigned int> _savedStackSize; // size of the stack upon detection of a vertex
-	vector<unsigned int> _vertexCandidateComponentRoot; // candidate component root for each vertex
+	unsigned int* _savedStackSize; // size of the stack upon detection of a vertex
+	unsigned int* _vertexCandidateComponentRoot; // candidate component root for each vertex
 	DynamicBitSet _vertexSelfLoop; // records vertex self loops
-	vector<unsigned int> _vertexDFSSeqNo; // record DFS sequence number of every vertex
+	int* _vertexDFSSeqNo; // record DFS sequence number of every vertex
 	int _lastDFSSeqNo;
 	int _lastComponentIndex;
+	PerformanceTimer _timer;
 
 	void dfsVisit(unsigned int vertexIndex);
 

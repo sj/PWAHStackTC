@@ -49,7 +49,7 @@ DynamicBitSet::~DynamicBitSet() {}
 
 void DynamicBitSet::init(int initialCapacity){
 	_lastBitIndex = -1;
-	_vec = vector<long>(ceil(initialCapacity / 64));
+	_vec = vector<long>(initialCapacity / 64 + 1);
 }
 
 void DynamicBitSet::set(int bitIndex){
@@ -62,7 +62,9 @@ void DynamicBitSet::set(int bitIndex, bool value){
 	unsigned int vecElemIndex = bitIndex / 64;
 	if (debug) cout << "DynamicBitSet: setting bit " << bitIndex << ", at vec element index " << vecElemIndex << ", bit " << (bitIndex % 64) << endl;
 
-	while(_vec.size() <= vecElemIndex){ _vec.push_back(0); }
+	while(_vec.size() <= vecElemIndex){
+		_vec.push_back(0);
+	}
 
 	if (value){
 		if (debug) cout << "setting bit " << (bitIndex % 64) << " in " << toBitString(_vec[vecElemIndex]) << endl;
@@ -97,21 +99,21 @@ string DynamicBitSet::toBitString(long value){
 	return res.str();
 }
 
-DynamicBitSet DynamicBitSet::constructByOr(const DynamicBitSet& bs1, const DynamicBitSet& bs2){
-	DynamicBitSet res;
-	res._vec = vector<long>(max(bs1._vec.size(), bs2._vec.size()));
+DynamicBitSet* DynamicBitSet::constructByOr(const DynamicBitSet* bs1, const DynamicBitSet* bs2){
+	DynamicBitSet* res = new DynamicBitSet();
+	res->_vec = vector<long>(max(bs1->_vec.size(), bs2->_vec.size()));
 	long word;
 
-	for (unsigned int i = 0; i < max(bs1._vec.size(), bs2._vec.size()); i++){
+	for (unsigned int i = 0; i < max(bs1->_vec.size(), bs2->_vec.size()); i++){
 		word = 0;
 
-		if (i < bs1._vec.size()) word |= bs1._vec[i];
-		if (i < bs2._vec.size()) word |= bs2._vec[i];
+		if (i < bs1->_vec.size()) word |= bs1->_vec[i];
+		if (i < bs2->_vec.size()) word |= bs2->_vec[i];
 
-		res._vec[i] = word;
+		res->_vec[i] = word;
 	}
 
-	res._lastBitIndex = max(bs1._lastBitIndex, bs2._lastBitIndex);
+	res->_lastBitIndex = max(bs1->_lastBitIndex, bs2->_lastBitIndex);
 	return res;
 }
 

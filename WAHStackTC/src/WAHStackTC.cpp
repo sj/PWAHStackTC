@@ -11,6 +11,7 @@
 #include <iostream>
 #include <sstream>
 #include <algorithm> // for sorting vectors
+#include "PerformanceTimer.h"
 using namespace std;
 
 WAHStackTC::WAHStackTC(Graph& graph) {
@@ -19,28 +20,37 @@ WAHStackTC::WAHStackTC(Graph& graph) {
 
 WAHStackTC::~WAHStackTC() {
 	// Free allocated memory for WAHBitSet objects representing successor sets
-	for (int i = 0; i < _componentSuccessors.size(); i++) delete _componentSuccessors[i];
+	for (unsigned int i = 0; i < _componentSuccessors.size(); i++) delete _componentSuccessors[i];
+
+	delete[] _vertexComponents;
 	cout << "Destructed WAHStackTC" << endl;
 }
 
 void WAHStackTC::computeTransitiveClosure(){
+	_timer = PerformanceTimer::start();
 	unsigned int numVertices = _graph->getNumberOfVertices();
 	_cStack = stack<unsigned int>();
 	_vStack = stack<unsigned int>();
-	_componentSizes.clear();
+	_componentSizes = vector<unsigned int>(numVertices);
 	_componentSuccessors.clear();
-	_savedStackSize = vector<unsigned int>(numVertices);
-	_vertexComponents = vector<int>(numVertices);
-	_vertexCandidateComponentRoot = vector<unsigned int>(numVertices);
+	_savedStackSize = new unsigned int[numVertices];
+	_vertexComponents = new int[numVertices];
+	_vertexCandidateComponentRoot = new unsigned int[numVertices];
 	_visited = DynamicBitSet(numVertices);
 	_vertexSelfLoop = DynamicBitSet(numVertices);
-	_vertexDFSSeqNo = vector<unsigned int>(numVertices);
+	_vertexDFSSeqNo = new int[numVertices];
 	_lastDFSSeqNo = -1;
 	_lastComponentIndex = -1;
+	cout << "checkpoint 1: " << _timer.currRunTime() << " msecs" << endl;
 
 	for (unsigned int v = 0; v < numVertices; v++){
 		if (!_visited.get(v)) dfsVisit(v);
 	}
+
+
+	delete[] _savedStackSize;
+	delete[] _vertexCandidateComponentRoot;
+	delete[] _vertexDFSSeqNo;
 
 	cout << "done!" << endl;
 }
@@ -118,42 +128,35 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 
 	if (_vertexCandidateComponentRoot[vertexIndex] == vertexIndex){
 		// This vertex is a component root!
-		int newComponentIndex = ++_lastComponentIndex;
+		unsigned int newComponentIndex = ++_lastComponentIndex;
 		if (debug) cout << "Vertex " << vertexIndex << " is component root, newComponentIndex=" << newComponentIndex << endl;
 		_componentSizes.push_back(0);
 
 		WAHBitSet* successors = new WAHBitSet();
+		//DynamicBitSet* successors = new DynamicBitSet(newComponentIndex + 1);
 		if (_vStack.top() != vertexIndex || _vertexSelfLoop.get(vertexIndex)){
 			// This component has size > 1 or has an explicit self-loop. Include the
 			// component index as successor of itself
 			_cStack.push(newComponentIndex);
 		}
 
-		// Pop off all adjacent components from the stack
-		vector<int> dupAdjacentComponentIndices;
+		// Make an overestimation of the number of adjacent components
+		int* adjacentComponentIndices = new int[_cStack.size() - _savedStackSize[vertexIndex]];
+		DynamicBitSet tmpAdjacentComponentBits;
+
+		// Pop off all adjacent components from the stack and remove duplicates
+		unsigned int numAdjacentComponents = 0;
 		while (_cStack.size() > _savedStackSize[vertexIndex]){
-			dupAdjacentComponentIndices.push_back(_cStack.top());
+			if (tmpAdjacentComponentBits.get(_cStack.top())) continue; // skip duplicate
+			adjacentComponentIndices[numAdjacentComponents++] = _cStack.top();
 			_cStack.pop();
 		}
 
+		sort(adjacentComponentIndices, adjacentComponentIndices + numAdjacentComponents);
+		//cout << "checkpoint c: " << _timer.currRunTimeMicro() << " usecs" << endl;
 
-		// Eliminate duplicates in the vector using a temporary BitSet
-		vector<int> adjacentComponentIndices;
-		DynamicBitSet tmpAdjacentComponentBits;
-		int adjacentComponentIndex;
-		if (debug) cout << "Successors of new component: ";
-		for (unsigned int i = 0; i < dupAdjacentComponentIndices.size(); i++){
-			adjacentComponentIndex = dupAdjacentComponentIndices[i];
-			if (tmpAdjacentComponentBits.get(adjacentComponentIndex)) continue; // duplicate
-			if (debug) cout << adjacentComponentIndex << " ";
-			tmpAdjacentComponentBits.set(adjacentComponentIndex);
-			adjacentComponentIndices.push_back(adjacentComponentIndex);
-		}
-		if (debug) cout << endl;
-
-		sort(adjacentComponentIndices.begin(), adjacentComponentIndices.end());
-
-		for (unsigned int i = 0; i < adjacentComponentIndices.size(); i++){
+		unsigned int adjacentComponentIndex;
+		for (unsigned int i = 0; i < numAdjacentComponents; i++){
 			adjacentComponentIndex = adjacentComponentIndices[i];
 
 			if (adjacentComponentIndex == newComponentIndex){
@@ -168,6 +171,7 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 					//cout << successors.toString() << endl;
 					//cout << _componentSuccessors[adjacentComponentIndex].toString() << endl;
 					successors = WAHBitSet::constructByOr(successors, _componentSuccessors[adjacentComponentIndex]);
+					//successors = DynamicBitSet::constructByOr(successors, _componentSuccessors[adjacentComponentIndex]);
 					if (debug) cout << "done!" << endl;
 					//cout << successors.toString() << endl;
 				} else {
@@ -206,7 +210,7 @@ string WAHStackTC::tcToString(){
 	stream << "== Component successors ==" << endl;
 	for (unsigned int c = 0; c < _componentSuccessors.size(); c++){
 		stream << "Successors of component " << c << ": ";
-		WAHBitSet* successors = _componentSuccessors[c];
+		BitSet* successors = _componentSuccessors[c];
 		for (unsigned int i = 0; i <= c; i++){
 			if (successors->get(i)) stream << i << " ";
 		}
@@ -216,21 +220,23 @@ string WAHStackTC::tcToString(){
 }
 
 long WAHStackTC::countNumberOfEdgesInTC(){
-	// TODO: optimise by keeping track of cardinality
-	vector<int> componentVertexSuccessorCount(_componentSizes.size());
-
+	int* componentVertexSuccessorCount = new int[_componentSizes.size()];
+	long count;
 	for (unsigned int c = 0; c < _componentSizes.size(); c++){
-		int count = 0;
-		WAHBitSet* successors = _componentSuccessors[c];
+		count = 0;
+		BitSet* successors = _componentSuccessors[c];
 		for (unsigned int i = 0; i <= c; i++){
 			if (successors->get(i)) count += _componentSizes[i];
 		}
 		componentVertexSuccessorCount[c] = count;
 	}
 
-	long edgeCount = 0;
+	count = 0;
 	for (int v = 0; v < _graph->getNumberOfVertices(); v++){
-		edgeCount += componentVertexSuccessorCount[_vertexComponents[v]];
+		count += componentVertexSuccessorCount[_vertexComponents[v]];
 	}
-	return edgeCount;
+
+	delete[] componentVertexSuccessorCount;
+
+	return count;
 }
