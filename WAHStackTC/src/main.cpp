@@ -35,8 +35,8 @@ int main() {
 		//string filename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/successors.graph";
 		//string filename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/calls.graph";
 		//string filename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/categorypagelinks.graph";
-		//string filename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/pagelinks.graph";
-		string filename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/child.graph";
+		string filename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/pagelinks.graph";
+		//string filename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/child.graph";
 		PerformanceTimer timer = PerformanceTimer::start();
 		cout << "Parsing graph file... ";
 		cout.flush();
