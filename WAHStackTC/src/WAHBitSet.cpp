@@ -11,54 +11,10 @@
 #include <stdexcept>
 #include "WAHBitSet.h"
 #include <stdlib.h>
+#include "IntMacros.cpp"
 using namespace std;
 
 #define RAND_FLOAT() ((rand() % 1000) / 1000.0)
-
-/**
- * Macro to check the bit at position pos of variable var
- */
-#define GET_BIT(var, pos) ((var) & (1 << (pos)))
-
-/**
- * Macro to set the bit at position pos of variable var
- */
-#define SET_BIT(var, pos) ((var) |= 1 << (pos))
-
-/**
- * Macro to clear the bit at position pos of variable vat
- */
-#define CLEAR_BIT(var, pos) ((var) &= ~(1 << (pos)))
-
-/**
- * Macro to determine whether a var represents a FILL or LITERAL
- */
-#define IS_FILL(var) (GET_BIT(var,31))
-
-/**
- * Macro to determine the length of a FILL
- */
-#define FILL_LENGTH(var) ((var) & 0b00111111111111111111111111111111)
-
-/**
- * Macro to determine whether a var represents a 1-fill
- */
-#define IS_ONEFILL(var) (IS_FILL(var) && GET_BIT(var,30))
-
-/**
- * Macro to determine whether a var represents a 0-fill
- */
-#define IS_ZEROFILL(var) (IS_FILL(var) && !GET_BIT(var,30))
-
-/**
- * Macro to determine whether a var is a literal concealing a 1-fill
- */
-#define IS_LITERAL_ONEFILL(var) ((var) == 0b01111111111111111111111111111111)
-
-/**
- * Macro to determine whether a var is a literal concealing a 0-fill
- */
-#define IS_LITERAL_ZEROFILL(var) ((var) == 0b00000000000000000000000000000000)
 
 
 WAHBitSet::WAHBitSet() {
@@ -82,11 +38,10 @@ void WAHBitSet::init(){
 	_plainWord = 0;
 	_plainWordBlockSeq = 0;
 	_compressedBits = vector<int>();
+	_empty = true;
 }
 
 void WAHBitSet::set(int bitIndex, bool value){
-	if (bitIndex > _lastBitIndex) _lastBitIndex = bitIndex;
-
 	if (DEBUGGING) cout << "WAHBitSet::set setting bit with index " << bitIndex << endl;
 	if (bitIndex < _plainWordBlockSeq * BLOCKSIZE){
 		// The passed bit was already compressed. Can't do anything about that.
@@ -94,6 +49,9 @@ void WAHBitSet::set(int bitIndex, bool value){
 		stream << "Cannot set/unset bit at index " << bitIndex << ": bit is already compressed!";
 		throw stream.str();
 	}
+
+	if (bitIndex > _lastBitIndex) _lastBitIndex = bitIndex;
+	if (value) _empty = false;
 
 	if (bitIndex >= _plainWordBlockSeq * BLOCKSIZE + BLOCKSIZE){
 		// BitIndex not within boundaries of the plain word. The plain word should be written
@@ -148,6 +106,7 @@ void WAHBitSet::set(int bitIndex, bool value){
 
 bool WAHBitSet::get(int bitIndex){
 	const bool debug = false;
+	if (_empty) return false;
 	if (bitIndex > _lastBitIndex) return false;
 
 	if (bitIndex < _plainWordBlockSeq * BLOCKSIZE){
@@ -222,6 +181,7 @@ void WAHBitSet::clear(){
 
 void WAHBitSet::addOneFill(int numBlocks){
 	if (numBlocks < 1) throw range_error("Cannot add 1-fill of size < 1");
+	_empty = false;
 	int lastWordIndex = _compressedBits.size() - 1;
 
 	if (lastWordIndex >= 0 && IS_ONEFILL(_compressedBits[lastWordIndex])){
@@ -255,24 +215,11 @@ void WAHBitSet::addZeroFill(int numBlocks){
 }
 
 void WAHBitSet::addLiteral(int value){
+	if (value != 0) _empty = false;
+
 	if (IS_LITERAL_ZEROFILL(value)) addZeroFill(1);
 	else if (IS_LITERAL_ONEFILL(value)) addOneFill(1);
 	else _compressedBits.push_back(value);
-}
-
-/**
- * Don't use this, it's slow and only for testing purposes! Not that only the first 31 bits
- * from the paramater 'value' are actually used.
- */
-void WAHBitSet::setBits(int blockSeq, int value){
-	for (int i = 0; i < 31; i++){
-		bool val = GET_BIT(value, i);
-		string strval;
-		if (val) strval = "1";
-		else strval = "0";
-
-		this->set(blockSeq * BLOCKSIZE + i, val);
-	}
 }
 
 /**
@@ -291,6 +238,15 @@ int WAHBitSet::generateRandomLiteralBlock(){
 
 WAHBitSet* WAHBitSet::constructByOr(const WAHBitSet* bs1, const WAHBitSet* bs2){
 	const bool debug = false;
+
+	if (bs1->_empty){
+		// Use copy constructor to create a copy of second BitSet
+		return new WAHBitSet(*bs2);
+	} else if (bs2->_empty){
+		// Use copy constructor to create a copy of first BitSet
+		return new WAHBitSet(*bs1);
+	}
+
 	WAHBitSet* result = new WAHBitSet();
 
 	const WAHBitSet * actBitSet;
@@ -576,6 +532,10 @@ WAHBitSet* WAHBitSet::constructByOr(const WAHBitSet* bs1, const WAHBitSet* bs2){
 	}
 	result->_lastBitIndex = max(bs1->_lastBitIndex, bs2->_lastBitIndex);
 	return result;
+}
+
+bool WAHBitSet::isEmpty(){
+	return _empty;
 }
 
 unsigned int WAHBitSet::size(){

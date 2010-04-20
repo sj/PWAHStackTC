@@ -19,6 +19,8 @@ private:
 	vector<int> _compressedBits;
 	int _plainWord;
 	int _plainWordBlockSeq;
+	bool _empty;
+
 	void addOneFill(int numBlocks);
 	void addZeroFill(int numBlocks);
 	void addLiteral(int value);
@@ -27,8 +29,8 @@ private:
 
 public:
 	static const bool DEBUGGING = false;
-	static const int WORDSIZE = 32;
-	static const int BLOCKSIZE = WORDSIZE - 1;
+	static const unsigned int WORDSIZE = 32;
+	static const unsigned int BLOCKSIZE = WORDSIZE - 1;
 
 	// Maximum number of blocks in a 0-fill or 1-fill
 	static const int MAX_BLOCKS_IN_FILL = 1073741823; // 2^30 - 1
@@ -63,6 +65,7 @@ public:
 	bool get(int bitIndex);
 	string toString();
 	unsigned int size();
+	bool isEmpty();
 
 	static int generateRandomLiteralBlock();
 	static string toBitString(int value);

@@ -23,13 +23,20 @@ int main() {
 
 
 	try {
+		/**WAHBitSetTester::testIterator();
+		cout << "done testing iterator" << endl;
+		exit(1);**/
+
 		// string filename = "../../Datasets/nuutila32.graph";
 		//string filename = "../../Datasets/Semmle graphs/java/depends.graph";
 		//string filename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/depends.graph";
 		//string filename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/depends.graph";
-		string filename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/successor.graph";
+		//string filename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/successor.graph";
+		//string filename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/successors.graph";
 		//string filename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/calls.graph";
 		//string filename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/categorypagelinks.graph";
+		//string filename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/pagelinks.graph";
+		string filename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/child.graph";
 		PerformanceTimer timer = PerformanceTimer::start();
 		cout << "Parsing graph file... ";
 		cout.flush();

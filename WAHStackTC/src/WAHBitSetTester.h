@@ -21,6 +21,7 @@ public:
 	static void test(int runs);
 	static float randFloat();
 	static void testOr();
+	static void testIterator();
 };
 
 #endif /* WAHBITSETTESTER_H_ */

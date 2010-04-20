@@ -15,12 +15,46 @@
 #include <bitset>
 #include <sstream>
 #include "PerformanceTimer.h"
+#include "WAHBitSetIterator.h"
+#include <string>
 using namespace std;
 
 #define RAND_FLOAT() ((rand() % 1000) / 1000.0)
 
 WAHBitSetTester::WAHBitSetTester() {}
 WAHBitSetTester::~WAHBitSetTester() {}
+
+void WAHBitSetTester::testIterator(){
+	srand ( time(NULL) );
+
+	while (true){
+		WAHBitSet wbs;
+		int maxBits = 5000;
+		randomise(wbs, maxBits);
+
+		cout << wbs.toString() << endl;
+		WAHBitSetIterator iter(&wbs);
+		int nextIndex = iter.next();
+
+		stringstream message;
+		for (int i = 0; i < maxBits; i++){
+			if (wbs.get(i)){
+				// Bit is set, check whether iterator agrees
+				if (nextIndex != i){
+					message << "Bit with index " << i << " is set, but iterator doesn't think so?";
+					throw message.str();
+				}
+				nextIndex = iter.next();
+			} else {
+				// Bit is not set
+				if (nextIndex == i){
+					message << "Bit with index " << i << " is not set, but iterator does think so?";
+					throw message.str();
+				}
+			}
+		}
+	}
+}
 
 void WAHBitSetTester::testOr(){
 	srand ( time(NULL) );

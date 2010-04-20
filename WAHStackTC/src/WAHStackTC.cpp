@@ -12,6 +12,7 @@
 #include <sstream>
 #include <algorithm> // for sorting vectors
 #include "PerformanceTimer.h"
+#include "WAHBitSetIterator.h"
 using namespace std;
 
 WAHStackTC::WAHStackTC(Graph& graph) {
@@ -31,7 +32,7 @@ void WAHStackTC::computeTransitiveClosure(){
 	unsigned int numVertices = _graph->getNumberOfVertices();
 	_cStack = stack<unsigned int>();
 	_vStack = stack<unsigned int>();
-	_componentSizes = vector<unsigned int>(numVertices);
+	_componentSizes.clear();
 	_componentSuccessors.clear();
 	_savedStackSize = new unsigned int[numVertices];
 	_vertexComponents = new int[numVertices];
@@ -221,12 +222,18 @@ string WAHStackTC::tcToString(){
 
 long WAHStackTC::countNumberOfEdgesInTC(){
 	int* componentVertexSuccessorCount = new int[_componentSizes.size()];
+	int currSuccessorIndex;
 	long count;
+
 	for (unsigned int c = 0; c < _componentSizes.size(); c++){
 		count = 0;
-		BitSet* successors = _componentSuccessors[c];
-		for (unsigned int i = 0; i <= c; i++){
-			if (successors->get(i)) count += _componentSizes[i];
+
+		WAHBitSet* successors = _componentSuccessors[c];
+		WAHBitSetIterator iter(successors);
+		currSuccessorIndex = iter.next();
+		while (currSuccessorIndex != -1){
+			count += _componentSizes[currSuccessorIndex];
+			currSuccessorIndex = iter.next();
 		}
 		componentVertexSuccessorCount[c] = count;
 	}
