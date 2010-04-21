@@ -19,10 +19,10 @@ public:
 	virtual ~PerformanceTimer();
 
 	static PerformanceTimer start();
-	static long diffTimeMilliSecs(const timeval& time1, const timeval& time2);
+	static double diffTimeMilliSecs(const timeval& time1, const timeval& time2);
 	static long diffTimeMicroSecs(const timeval& time1, const timeval& time2);
-	long reset();
-	long currRunTime();
+	double reset();
+	double currRunTime();
 	long currRunTimeMicro();
 };
 

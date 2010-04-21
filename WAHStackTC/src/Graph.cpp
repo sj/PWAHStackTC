@@ -60,9 +60,8 @@ Graph Graph::parseChacoFile(string filename){
 	Graph graph;
 
 	PerformanceTimer timer = PerformanceTimer::start();
-	cout << "Parsing " << filename << "... ";
 	ifstream input_file(filename.c_str());
-	char buffer[131072];
+	char buffer[262144];
 
 	input_file.clear();
 	input_file.seekg(0);
@@ -138,8 +137,6 @@ Graph Graph::parseChacoFile(string filename){
 		throw eMsg.str();
 	}
 
-	cout << "done, that took " << timer.reset() << " msecs" << endl;
-	cout << "Number of vertices: " << numVertices << ", number of edges: " << numEdges << endl;
 	input_file.close();
 
 

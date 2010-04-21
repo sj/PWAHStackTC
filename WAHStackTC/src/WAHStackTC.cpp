@@ -13,6 +13,7 @@
 #include <algorithm> // for sorting vectors
 #include "PerformanceTimer.h"
 #include "WAHBitSetIterator.h"
+#include <stdexcept>
 using namespace std;
 
 WAHStackTC::WAHStackTC(Graph& graph) {
@@ -24,11 +25,12 @@ WAHStackTC::~WAHStackTC() {
 	for (unsigned int i = 0; i < _componentSuccessors.size(); i++) delete _componentSuccessors[i];
 
 	delete[] _vertexComponents;
+
+
 	cout << "Destructed WAHStackTC" << endl;
 }
 
 void WAHStackTC::computeTransitiveClosure(){
-	_timer = PerformanceTimer::start();
 	unsigned int numVertices = _graph->getNumberOfVertices();
 	_cStack = stack<unsigned int>();
 	_vStack = stack<unsigned int>();
@@ -42,7 +44,6 @@ void WAHStackTC::computeTransitiveClosure(){
 	_vertexDFSSeqNo = new int[numVertices];
 	_lastDFSSeqNo = -1;
 	_lastComponentIndex = -1;
-	cout << "checkpoint 1: " << _timer.currRunTime() << " msecs" << endl;
 
 	for (unsigned int v = 0; v < numVertices; v++){
 		if (!_visited.get(v)) dfsVisit(v);
@@ -52,8 +53,6 @@ void WAHStackTC::computeTransitiveClosure(){
 	delete[] _savedStackSize;
 	delete[] _vertexCandidateComponentRoot;
 	delete[] _vertexDFSSeqNo;
-
-	cout << "done!" << endl;
 }
 
 void WAHStackTC::dfsVisit(unsigned int vertexIndex){
@@ -171,7 +170,11 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 					if (debug) cout.flush();
 					//cout << successors.toString() << endl;
 					//cout << _componentSuccessors[adjacentComponentIndex].toString() << endl;
+					WAHBitSet* oldSuccessors = successors;
 					successors = WAHBitSet::constructByOr(successors, _componentSuccessors[adjacentComponentIndex]);
+					delete oldSuccessors;
+					oldSuccessors = NULL;
+
 					//successors = DynamicBitSet::constructByOr(successors, _componentSuccessors[adjacentComponentIndex]);
 					if (debug) cout << "done!" << endl;
 					//cout << successors.toString() << endl;
@@ -181,6 +184,8 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 				}
 			}
 		}
+
+		delete[] adjacentComponentIndices;
 
 		_componentSuccessors.push_back(successors);
 
@@ -246,4 +251,13 @@ long WAHStackTC::countNumberOfEdgesInTC(){
 	delete[] componentVertexSuccessorCount;
 
 	return count;
+}
+
+bool WAHStackTC::reachable(int src, int dst){
+	if (src >= _graph->getNumberOfVertices()) throw range_error("Source index out of bounds");
+	if (dst >= _graph->getNumberOfVertices()) throw range_error("Source index out of bounds");
+
+	int srcComponent = _vertexComponents[src];
+	int dstComponent = _vertexComponents[dst];
+	return _componentSuccessors[srcComponent]->get(dstComponent);
 }

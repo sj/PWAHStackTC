@@ -30,7 +30,6 @@ private:
 	int* _vertexDFSSeqNo; // record DFS sequence number of every vertex
 	int _lastDFSSeqNo;
 	int _lastComponentIndex;
-	PerformanceTimer _timer;
 
 	void dfsVisit(unsigned int vertexIndex);
 
@@ -41,6 +40,7 @@ public:
 	void computeTransitiveClosure();
 	string tcToString();
 	long countNumberOfEdgesInTC();
+	bool reachable(int src, int dst);
 };
 
 #endif /* WAHSTACKTC_H_ */
