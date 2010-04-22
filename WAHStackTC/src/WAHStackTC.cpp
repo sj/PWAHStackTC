@@ -261,3 +261,18 @@ bool WAHStackTC::reachable(int src, int dst){
 	int dstComponent = _vertexComponents[dst];
 	return _componentSuccessors[srcComponent]->get(dstComponent);
 }
+
+long WAHStackTC::memoryUsedByBitSets(){
+	long totalBits = 0;
+	for (unsigned int i = 0; i < _componentSizes.size(); i++){
+		totalBits += _componentSuccessors[i]->memoryUsage();
+	}
+	return totalBits;
+}
+void WAHStackTC::reportStatistics(){
+	cout << "Number of vertices: " << _graph->getNumberOfVertices() << endl;
+	cout << "Number of edges: " << _graph->countNumberOfEdges() << endl;
+	cout << "Number of strongly connected components: " << _componentSizes.size() << endl;
+
+	cout << "Number of bits required to store all WAH bitsets: " << this->memoryUsedByBitSets() << endl;
+}

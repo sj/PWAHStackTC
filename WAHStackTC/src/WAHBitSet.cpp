@@ -542,32 +542,12 @@ unsigned int WAHBitSet::size(){
 	return _lastBitIndex + 1;
 }
 
-WAHBitSet WAHBitSet::constructFailingExample1(){
-	WAHBitSet res;
-	res._compressedBits.clear();
-	res._compressedBits.push_back(-2147483645); // 0-fill of 3 block
-	res._compressedBits.push_back(-1073741822); // 1-fill of 2 blocks
-	res._compressedBits.push_back(1526167291); // literal
-	res._compressedBits.push_back(-2147483647); // 0-fill of 1 block
-	res._compressedBits.push_back(-1073741823); // 1-fill of 1 blocks
-	res._compressedBits.push_back(-2147483647); // 0-fill of 1 blocks
-	res._plainWordBlockSeq = 9;
-	res._plainWord = 1893837043; // literal
-	res._lastBitIndex = 309;
-	return res;
-}
-
-WAHBitSet WAHBitSet::constructFailingExample2(){
-	WAHBitSet res;
-	res._compressedBits.clear();
-	res._compressedBits.push_back(237562924); // literal
-	res._compressedBits.push_back(270540582); // literal
-	res._compressedBits.push_back(-1073741822); // 1-fill of 2 block
-	res._compressedBits.push_back(491844537); // literal
-	res._compressedBits.push_back(-2147483647); // 0-fill of 1 block
-	res._compressedBits.push_back(3328389); // literal
-	res._plainWordBlockSeq = 7;
-	res._plainWord = 1784157257; // 306848798
-	res._lastBitIndex = 247;
+/**
+ * Reports the number of bits used to represent this BitSet. This includes the bits
+ * used to store the last plain word, but not the bits in bookkeeping variables
+ */
+long WAHBitSet::memoryUsage(){
+	long res = _compressedBits.size() * 32;
+	res += 1; // plain word
 	return res;
 }

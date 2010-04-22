@@ -29,12 +29,12 @@ int main(int argc, char* argv[]) {
 	//defFilename = "../../Datasets/Semmle graphs/java/depends.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/depends.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/depends.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/successor.graph";
+	defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/successor.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/successors.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/calls.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/categorypagelinks.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/pagelinks.graph";
-	defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/child.graph";
+	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/child.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/samba/setflow.graph";
 
 	typedef map<string,string> mapType;
@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
 
 	string filename = cmdLineArgs["filename"];
 	const int numRuns = atoi(cmdLineArgs["numruns"].c_str());
-	const int numQueries = 100000;
+	const int numQueries = 1000000;
 	double totalConstructionTime = 0;
 	double totalQueryTime = 0;
 
@@ -134,9 +134,9 @@ int main(int argc, char* argv[]) {
 			totalQueryTime += tmp;
 			cout << "done, that took " << tmp << " msecs" << endl;
 			cout << numReachable << " pairs turned out to be reachable." << endl;
-
-			delete rndDst;
-			delete rndSrc;
+			cout << "Number of bits required to store WAH compressed bitsets: " << wstc->memoryUsedByBitSets() << endl;
+			delete[] rndDst;
+			delete[] rndSrc;
 			delete wstc;
 		}
 

@@ -41,6 +41,8 @@ public:
 	string tcToString();
 	long countNumberOfEdgesInTC();
 	bool reachable(int src, int dst);
+	long memoryUsedByBitSets();
+	void reportStatistics();
 };
 
 #endif /* WAHSTACKTC_H_ */

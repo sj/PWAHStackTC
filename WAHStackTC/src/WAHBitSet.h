@@ -75,6 +75,8 @@ public:
 	static WAHBitSet constructFailingExample1();
 	static WAHBitSet constructFailingExample2();
 
+	long memoryUsage();
+
 	friend class WAHBitSetIterator;
 };
 
