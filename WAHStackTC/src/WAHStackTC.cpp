@@ -136,7 +136,6 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 		_componentSizes.push_back(0);
 
 		WAHBitSet* successors = new WAHBitSet();
-		//DynamicBitSet* successors = new DynamicBitSet(newComponentIndex + 1);
 		if (_vStack.top() != vertexIndex || _vertexSelfLoop.get(vertexIndex)){
 			// This component has size > 1 or has an explicit self-loop.
 			if (!_storeComponentVertices && !_reflexitive){
@@ -157,7 +156,6 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 		}
 
 		sort(adjacentComponentIndices, adjacentComponentIndices + numAdjacentComponents);
-		//cout << "checkpoint c: " << _timer.currRunTimeMicro() << " usecs" << endl;
 
 		unsigned int adjacentComponentIndex;
 		for (unsigned int i = 0; i < numAdjacentComponents; i++){
@@ -172,16 +170,13 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 					successors->set(adjacentComponentIndex);
 					if (debug) cout << "Merging successor list of component " <<  newComponentIndex << " with " << adjacentComponentIndex << "... ";
 					if (debug) cout.flush();
-					//cout << successors.toString() << endl;
-					//cout << _componentSuccessors[adjacentComponentIndex].toString() << endl;
+
 					WAHBitSet* oldSuccessors = successors;
 					successors = WAHBitSet::constructByOr(successors, _componentSuccessors[adjacentComponentIndex]);
 					delete oldSuccessors;
 					oldSuccessors = NULL;
 
-					//successors = DynamicBitSet::constructByOr(successors, _componentSuccessors[adjacentComponentIndex]);
 					if (debug) cout << "done!" << endl;
-					//cout << successors.toString() << endl;
 				} else {
 					// adjacent component index already in the successors list, skip merge
 					if (debug) cout << "Not merging successor list of component " <<  newComponentIndex << " with " << adjacentComponentIndex << "... " << endl;
