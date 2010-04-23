@@ -25,18 +25,17 @@ WAHStackTC::~WAHStackTC() {
 	for (unsigned int i = 0; i < _componentSuccessors.size(); i++) delete _componentSuccessors[i];
 
 	delete[] _vertexComponents;
-
-
-	cout << "Destructed WAHStackTC" << endl;
 }
 
-void WAHStackTC::computeTransitiveClosure(){
+void WAHStackTC::computeTransitiveClosure(bool reflexitive, bool storeComponentMembers){
 	unsigned int numVertices = _graph->getNumberOfVertices();
 	_cStack = stack<unsigned int>();
 	_vStack = stack<unsigned int>();
 	_componentSizes.clear();
 	_componentSuccessors.clear();
-	_savedStackSize = new unsigned int[numVertices];
+	_componentVertices.clear();
+	_savedCStackSize = new unsigned int[numVertices];
+	_savedVStackSize = new unsigned int[numVertices];
 	_vertexComponents = new int[numVertices];
 	_vertexCandidateComponentRoot = new unsigned int[numVertices];
 	_visited = DynamicBitSet(numVertices);
@@ -44,13 +43,16 @@ void WAHStackTC::computeTransitiveClosure(){
 	_vertexDFSSeqNo = new int[numVertices];
 	_lastDFSSeqNo = -1;
 	_lastComponentIndex = -1;
+	_reflexitive = reflexitive;
+	_storeComponentVertices = storeComponentMembers;
 
 	for (unsigned int v = 0; v < numVertices; v++){
 		if (!_visited.get(v)) dfsVisit(v);
 	}
 
 
-	delete[] _savedStackSize;
+	delete[] _savedCStackSize;
+	delete[] _savedVStackSize;
 	delete[] _vertexCandidateComponentRoot;
 	delete[] _vertexDFSSeqNo;
 }
@@ -60,8 +62,9 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 
 	if (debug) cout << "Visiting vertex " << vertexIndex << endl;
 	_visited.set(vertexIndex);
+	_savedVStackSize[vertexIndex] = _vStack.size();
 	_vStack.push(vertexIndex);
-	_savedStackSize[vertexIndex] = _cStack.size();
+	_savedCStackSize[vertexIndex] = _cStack.size();
 	_vertexComponents[vertexIndex] = -1;
 	_vertexDFSSeqNo[vertexIndex] = ++_lastDFSSeqNo;
 
@@ -135,18 +138,19 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 		WAHBitSet* successors = new WAHBitSet();
 		//DynamicBitSet* successors = new DynamicBitSet(newComponentIndex + 1);
 		if (_vStack.top() != vertexIndex || _vertexSelfLoop.get(vertexIndex)){
-			// This component has size > 1 or has an explicit self-loop. Include the
-			// component index as successor of itself
-			_cStack.push(newComponentIndex);
+			// This component has size > 1 or has an explicit self-loop.
+			if (!_storeComponentVertices && !_reflexitive){
+				_cStack.push(newComponentIndex);
+			} // else: no need to explicitly store self-loop
 		}
 
 		// Make an overestimation of the number of adjacent components
-		int* adjacentComponentIndices = new int[_cStack.size() - _savedStackSize[vertexIndex]];
+		int* adjacentComponentIndices = new int[_cStack.size() - _savedCStackSize[vertexIndex]];
 		DynamicBitSet tmpAdjacentComponentBits;
 
 		// Pop off all adjacent components from the stack and remove duplicates
 		unsigned int numAdjacentComponents = 0;
-		while (_cStack.size() > _savedStackSize[vertexIndex]){
+		while (_cStack.size() > _savedCStackSize[vertexIndex]){
 			if (tmpAdjacentComponentBits.get(_cStack.top())) continue; // skip duplicate
 			adjacentComponentIndices[numAdjacentComponents++] = _cStack.top();
 			_cStack.pop();
@@ -160,7 +164,7 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 			adjacentComponentIndex = adjacentComponentIndices[i];
 
 			if (adjacentComponentIndex == newComponentIndex){
-				// Self-loop: full union not needed
+				// No need for a full merge, just set the relevant bit.
 				successors->set(newComponentIndex);
 			} else {
 				if (!successors->get(adjacentComponentIndex)){
@@ -192,12 +196,23 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 
 		if (debug) cout << "Adding vertices to new component... ";
 		if (debug) cout.flush();
+
+		if (_storeComponentVertices){
+			// Prepare storing a list of vertices of this component
+			_componentVertices.push_back(new int[_vStack.size() - _savedVStackSize[vertexIndex]]);
+		}
+
 		unsigned int currStackVertexIndex;
+		unsigned int i = 0;
 		do {
 			currStackVertexIndex = _vStack.top();
 			_vStack.pop();
 			_vertexComponents[currStackVertexIndex] = newComponentIndex;
 			_componentSizes[newComponentIndex]++;
+
+			if (_storeComponentVertices){
+				_componentVertices[newComponentIndex][i++] = currStackVertexIndex;
+			}
 		} while (vertexIndex != currStackVertexIndex);
 		if (debug) cout << "done!";
 	} // else: vertex is not a component root
@@ -240,6 +255,42 @@ long WAHStackTC::countNumberOfEdgesInTC(){
 			count += _componentSizes[currSuccessorIndex];
 			currSuccessorIndex = iter.next();
 		}
+
+		if (_reflexitive || _storeComponentVertices){
+			// Self-loops were not stored explicitly, since their existence can be shown
+			// implicitly.
+
+			if (!_reflexitive){
+				// Some components may have self-loops, others not
+				if (_componentSizes[c] > 1){
+					// Self-loop implied
+					count += _componentSizes[c];
+				} else {
+					// Component contains only one vertex
+					if (_vertexSelfLoop.get(_componentVertices[c][0])) count += 1;
+				}
+			} else {
+				// All components have self-loops
+				count += _componentSizes[c];
+			}
+		} else {
+			// Self-loops were stored explicitly, no reason to count them twice...
+
+			// Component has size exactly 1 in a non-reflexitive transitive closure
+			// computation. It's not entirely trivial to determine whether a component
+			// has a self-loop
+			if (_storeComponentVertices){
+				// Members of a component are explicitly stored. From that, it's
+				// possible to determine whether or not a self-loop exists by looking
+				// at the one and only member of this component.
+				if (_vertexSelfLoop.get(_componentVertices[c][0])) count += 1;
+			} else {
+				// Members of a component were not explicitly stored, therefore
+				// any self-loop was explicitly added to the successor lists.
+				// It was counted before in the while-loop, no need to count it twice.
+			}
+		}
+
 		componentVertexSuccessorCount[c] = count;
 	}
 
@@ -257,8 +308,20 @@ bool WAHStackTC::reachable(int src, int dst){
 	if (src >= _graph->getNumberOfVertices()) throw range_error("Source index out of bounds");
 	if (dst >= _graph->getNumberOfVertices()) throw range_error("Source index out of bounds");
 
+	if (src == dst) return _vertexSelfLoop.get(src);
+
 	int srcComponent = _vertexComponents[src];
 	int dstComponent = _vertexComponents[dst];
+	if (srcComponent == dstComponent){
+		// Source and destination are within the same component!
+		// Determine whether the component contains a self-loop
+		if (_reflexitive || _componentSizes[src] > 1){
+			return true;
+		} else if (_componentSizes[src] == 1 && _storeComponentVertices){
+			return _vertexSelfLoop.get(src);
+		} // else: unable to determine which vertex is the only member of the component...
+	}
+
 	return _componentSuccessors[srcComponent]->get(dstComponent);
 }
 
@@ -275,4 +338,15 @@ void WAHStackTC::reportStatistics(){
 	cout << "Number of strongly connected components: " << _componentSizes.size() << endl;
 
 	cout << "Number of bits required to store all WAH bitsets: " << this->memoryUsedByBitSets() << endl;
+}
+
+/**
+ * Stores the transitive closure in a Chaco-formatted file. Can be huge!
+ */
+void WAHStackTC::writeToChacoFile(string filename){
+
+}
+
+int WAHStackTC::getNumberOfComponents(){
+	return _componentSizes.size();
 }

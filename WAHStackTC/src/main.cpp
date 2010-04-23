@@ -29,18 +29,21 @@ int main(int argc, char* argv[]) {
 	//defFilename = "../../Datasets/Semmle graphs/java/depends.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/depends.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/depends.graph";
-	defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/successor.graph";
+	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/successor.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/successors.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/calls.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/categorypagelinks.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/pagelinks.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/child.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/samba/setflow.graph";
+	defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/agrocyc.graph";
 
 	typedef map<string,string> mapType;
 	map<string, string> cmdLineArgs;
 	cmdLineArgs["numruns"] = "1000";
 	cmdLineArgs["filename"] = defFilename;
+	cmdLineArgs["reflexitive"] = "no";
+
 	for (int i = 1; i < argc; i++){
 		string currArg = argv[i];
 		size_t found = string::npos;
@@ -49,10 +52,16 @@ int main(int argc, char* argv[]) {
 	    // Using a const_iterator since we are not going to change the values.
 		for(mapType::const_iterator it = cmdLineArgs.begin(); it != cmdLineArgs.end(); ++it)
 		{
-			string fullArg = "--" + it->first + "=";
+			string fullArg = "--" + it->first;
 			found = currArg.find(fullArg);
 			if (found != string::npos){
-				cmdLineArgs[it->first] = currArg.substr(fullArg.size());
+				if (currArg.find(fullArg + "=") != string::npos){
+					// record value
+					cmdLineArgs[it->first] = currArg.substr(fullArg.size() + 1);
+				} else {
+					// no --argument=value, just --argument
+					cmdLineArgs[it->first] = "";
+				}
 				break;
 			}
 		}
@@ -64,7 +73,8 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	string filename = cmdLineArgs["filename"];
+	const bool reflexitive = (cmdLineArgs["reflexitive"] != "no");
+	const string filename = cmdLineArgs["filename"];
 	const int numRuns = atoi(cmdLineArgs["numruns"].c_str());
 	const int numQueries = 1000000;
 	double totalConstructionTime = 0;
@@ -92,9 +102,13 @@ int main(int argc, char* argv[]) {
 
 			WAHStackTC* wstc = new WAHStackTC(graph);
 
-			cout << "Computing transitive closure... ";
+			if (!reflexitive){
+				cout << "Computing transitive closure... ";
+			} else {
+				cout << "Computing REFLEXITIVE transitive closure... ";
+			}
 			cout.flush();
-			wstc->computeTransitiveClosure();
+			wstc->computeTransitiveClosure(reflexitive, false);
 
 			tmp = timer.reset();
 			totalConstructionTime += tmp;
@@ -102,9 +116,14 @@ int main(int argc, char* argv[]) {
 			cout.flush();
 
 			//cout << wstc.tcToString();
-			cout << "Counting number of edges in TC... ";
+			cout << "Number of components (vertices in condensation graph): " << wstc->getNumberOfComponents() << endl;
+			if (!reflexitive){
+				cout << "Counting number of edges in transitive closure... ";
+			} else {
+				cout << "Counting number of edges in REFLEXITIVE transitive closure... ";
+			}
 			cout.flush();
-			cout << "Transitive closure contains "<< wstc->countNumberOfEdgesInTC() << " edges" << endl;
+			cout << wstc->countNumberOfEdgesInTC() << " edges" << endl;
 
 			if (RAND_MAX < graph.getNumberOfVertices()){
 				cerr << "Warning! RAND_MAX=" << RAND_MAX << ", whilst number of vertices = " << graph.getNumberOfVertices() << ". Not every vertex can possibly be reached." << endl;
@@ -144,6 +163,10 @@ int main(int argc, char* argv[]) {
 		double avgQueryTime = totalQueryTime / ((double)numRuns);
 		cout << "Average construction time over " << numRuns << " runs: " << avgConstructionTime << " msecs" << endl;
 		cout << "Average query time over " << numRuns << " runs: " << avgQueryTime << " msecs for " << numQueries << " queries" << endl;
+
+		// Machine readable
+		cout << "AVG_CONSTR_TIME=" << avgConstructionTime << endl;
+		cout << "AVG_QUERY_TIME=" << avgQueryTime << endl;
 		exit(1);
 	} catch (string str){
 		cerr << "Exception: " << str << endl;
