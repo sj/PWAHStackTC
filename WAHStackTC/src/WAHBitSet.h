@@ -70,6 +70,8 @@ public:
 	static int generateRandomLiteralBlock();
 	static string toBitString(int value);
 	static WAHBitSet* constructByOr(const WAHBitSet* first, const WAHBitSet* second);
+	static void multiOr(const WAHBitSet** bitSets, int numBitSets, WAHBitSet& result);
+
 	void clear();
 
 	static WAHBitSet constructFailingExample1();

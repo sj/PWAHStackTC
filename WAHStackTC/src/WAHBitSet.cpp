@@ -534,6 +534,75 @@ WAHBitSet* WAHBitSet::constructByOr(const WAHBitSet* bs1, const WAHBitSet* bs2){
 	return result;
 }
 
+void WAHBitSet::multiOr(const WAHBitSet** bitSets, int numBitSets, WAHBitSet& result){
+	int rBlockIndex = 0;
+	int* sWordIndex = new int[numBitSets];
+	int* sWordOffset = new int[numBitSets];
+	int* sBlockIndex = new int[numBitSets];
+	int largestOneFill, largestOneFillSize;
+	int shortestZeroFill, shortestZeroFillSize;
+	int currMergedLiteral, currWord, currFillLengthRemaining;
+
+
+	while(true){
+		currMergedLiteral = 0;
+		shortestZeroFillSize = -1;
+		largestOneFillSize = -1;
+
+		// Align BitSets, find largest 1-fill and merge literals in the process
+		for (signed int i = 0; i < numBitSets; i++){
+			if (sBlockIndex[i] < rBlockIndex){
+				// Do some aligning: this BitSet is not yet at block index rBlockIndex
+				// TODO
+			}
+			currWord = bitSets[i]->_compressedBits[sWordIndex[i]];
+
+			if (IS_ONEFILL(currWord)){
+				currFillLengthRemaining = FILL_LENGTH(currWord) - sWordOffset[i];
+				if (currFillLengthRemaining > largestOneFillSize){
+					largestOneFill = i;
+					largestOneFillSize = currFillLengthRemaining;
+				}
+				sBlockIndex[i] += currFillLengthRemaining;
+				sWordIndex[i]++;
+				sWordOffset[i] = 0;
+			} else if (IS_ZEROFILL(currWord)){
+				if (largestOneFill == -1){
+					currFillLengthRemaining = FILL_LENGTH(currWord) - sWordOffset[i];
+					if (currFillLengthRemaining < shortestZeroFillSize || shortestZeroFillSize == -1){
+						shortestZeroFill = i;
+						shortestZeroFillSize = currFillLengthRemaining;
+					}
+				}
+				sBlockIndex[i] += FILL_LENGTH(currWord) - sWordOffset[i];
+				sWordIndex[i]++;
+				sWordOffset[i] = 0;
+			} else {
+				// Literal
+				if (largestOneFillSize != -1) currMergedLiteral |= currWord;
+				sBlockIndex[i]++;
+				sWordIndex[i]++;
+			}
+		}
+
+		// Perform optimal action
+		if (largestOneFill != -1){
+			// Add 1-fill
+			currWord = bitSets[largestOneFill]->_compressedBits[sWordIndex[largestOneFill]];
+			currFillLengthRemaining = FILL_LENGTH(currWord) - sWordOffset[largestOneFill];
+			result.addOneFill(currFillLengthRemaining);
+		} else if (currMergedLiteral != 0){
+			// Add literal
+			result.addLiteral(currMergedLiteral);
+		} else {
+			// Add zero fill
+			currWord = bitSets[shortestZeroFill]->_compressedBits[sWordIndex[shortestZeroFill]];
+			currFillLengthRemaining = FILL_LENGTH(currWord) - sWordOffset[shortestZeroFill];
+			result.addZeroFill(currFillLengthRemaining);
+		}
+	}
+}
+
 bool WAHBitSet::isEmpty(){
 	return _empty;
 }
