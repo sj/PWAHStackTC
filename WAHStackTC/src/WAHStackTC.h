@@ -35,6 +35,7 @@ private:
 	int _lastComponentIndex;
 	bool _reflexitive;
 
+	bool componentHasSelfLoop(int componentIndex);
 	void dfsVisit(unsigned int vertexIndex);
 
 public:
@@ -44,6 +45,7 @@ public:
 	void computeTransitiveClosure(bool reflexitive, bool storeComponentMembers);
 	string tcToString();
 	long countNumberOfEdgesInTC();
+	long countNumberOfEdgesInCondensedTC();
 	int getNumberOfComponents();
 	void writeToChacoFile(string filename);
 	bool reachable(int src, int dst);

@@ -235,6 +235,55 @@ string WAHStackTC::tcToString(){
 	return stream.str();
 }
 
+long WAHStackTC::countNumberOfEdgesInCondensedTC(){
+	long count = 0;
+	int currSuccessorIndex;
+
+
+	for (unsigned int c = 0; c < _componentSizes.size(); c++){
+		WAHBitSetIterator iter(_componentSuccessors[c]);
+		currSuccessorIndex = iter.next();
+		while (currSuccessorIndex != -1){
+			count++;
+			currSuccessorIndex = iter.next();
+		}
+
+		if (_reflexitive || _storeComponentVertices){
+			// Self-loops were not stored explicitly
+			if (this->componentHasSelfLoop(c)) count++;
+		}
+	}
+	return count;
+}
+
+bool WAHStackTC::componentHasSelfLoop(int componentIndex){
+	if (_reflexitive || _storeComponentVertices){
+		// Self-loops were not stored explicitly, since their existence can be shown
+		// implicitly.
+
+		if (!_reflexitive){
+			// Some components may have self-loops, others not
+			if (_componentSizes[componentIndex] > 1){
+				// Self-loop implied
+				return true;
+			} else {
+				// Component contains only one vertex
+				if (_vertexSelfLoop.get(_componentVertices[componentIndex][0])){
+					// That vertex has a self-loop
+					return true;
+				} // else: vertex doesn't have a a self-loop, therefore, the component has no self-loop
+			}
+		} else {
+			// Reflexitive transitive closure: all components have self-loops
+			return true;
+		}
+	} else {
+		// Self-loops were stored explicitly, this function should not be used
+		throw string("WAHStackTC::componentHasSelfLoop can not be used when self-loops are stored explicitly!");
+	}
+	return false;
+}
+
 long WAHStackTC::countNumberOfEdgesInTC(){
 	int* componentVertexSuccessorCount = new int[_componentSizes.size()];
 	int currSuccessorIndex;
@@ -254,37 +303,8 @@ long WAHStackTC::countNumberOfEdgesInTC(){
 		if (_reflexitive || _storeComponentVertices){
 			// Self-loops were not stored explicitly, since their existence can be shown
 			// implicitly.
-
-			if (!_reflexitive){
-				// Some components may have self-loops, others not
-				if (_componentSizes[c] > 1){
-					// Self-loop implied
-					count += _componentSizes[c];
-				} else {
-					// Component contains only one vertex
-					if (_vertexSelfLoop.get(_componentVertices[c][0])) count += 1;
-				}
-			} else {
-				// All components have self-loops
-				count += _componentSizes[c];
-			}
-		} else {
-			// Self-loops were stored explicitly, no reason to count them twice...
-
-			// Component has size exactly 1 in a non-reflexitive transitive closure
-			// computation. It's not entirely trivial to determine whether a component
-			// has a self-loop
-			if (_storeComponentVertices){
-				// Members of a component are explicitly stored. From that, it's
-				// possible to determine whether or not a self-loop exists by looking
-				// at the one and only member of this component.
-				if (_vertexSelfLoop.get(_componentVertices[c][0])) count += 1;
-			} else {
-				// Members of a component were not explicitly stored, therefore
-				// any self-loop was explicitly added to the successor lists.
-				// It was counted before in the while-loop, no need to count it twice.
-			}
-		}
+			if (this->componentHasSelfLoop(c)) count += _componentSizes[c];
+		} // else: self-loops were stored explicitly, no reason to count them twice...
 
 		componentVertexSuccessorCount[c] = count;
 	}
