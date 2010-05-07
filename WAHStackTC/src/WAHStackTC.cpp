@@ -145,18 +145,21 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 
 		// Make an overestimation of the number of adjacent components
 		int* adjacentComponentIndices = new int[_cStack.size() - _savedCStackSize[vertexIndex]];
+		WAHBitSet** adjacentComponentsSuccessors = new WAHBitSet*[_cStack.size() - _savedCStackSize[vertexIndex]];
 		DynamicBitSet tmpAdjacentComponentBits;
 
 		// Pop off all adjacent components from the stack and remove duplicates
 		unsigned int numAdjacentComponents = 0;
 		while (_cStack.size() > _savedCStackSize[vertexIndex]){
 			if (tmpAdjacentComponentBits.get(_cStack.top())) continue; // skip duplicate
+			adjacentComponentsSuccessors[numAdjacentComponents] = _componentSuccessors[_cStack.top()];
 			adjacentComponentIndices[numAdjacentComponents++] = _cStack.top();
 			_cStack.pop();
 		}
 
 		sort(adjacentComponentIndices, adjacentComponentIndices + numAdjacentComponents);
 
+		/** SIMPLE OR
 		unsigned int adjacentComponentIndex;
 		for (unsigned int i = 0; i < numAdjacentComponents; i++){
 			adjacentComponentIndex = adjacentComponentIndices[i];
@@ -182,9 +185,14 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 					if (debug) cout << "Not merging successor list of component " <<  newComponentIndex << " with " << adjacentComponentIndex << "... " << endl;
 				}
 			}
-		}
+		}**/
 
+		// Multi way merge
+		cout << "go multiway!" << endl;
+		WAHBitSet::multiOr(adjacentComponentsSuccessors, (int) numAdjacentComponents, successors);
+		cout << "done multiway!" << endl;
 		delete[] adjacentComponentIndices;
+		delete[] adjacentComponentsSuccessors;
 
 		_componentSuccessors.push_back(successors);
 

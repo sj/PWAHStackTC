@@ -534,7 +534,9 @@ WAHBitSet* WAHBitSet::constructByOr(const WAHBitSet* bs1, const WAHBitSet* bs2){
 	return result;
 }
 
-void WAHBitSet::multiOr(const WAHBitSet** bitSets, int numBitSets, WAHBitSet& result){
+void WAHBitSet::multiOr(WAHBitSet** bitSets, unsigned int numBitSets, WAHBitSet* result){
+	if (numBitSets == 0) return;
+
 	int rBlockIndex = 0;
 	int* sWordIndex = new int[numBitSets];
 	int* sWordOffset = new int[numBitSets];
@@ -542,6 +544,7 @@ void WAHBitSet::multiOr(const WAHBitSet** bitSets, int numBitSets, WAHBitSet& re
 	int largestOneFill, largestOneFillSize;
 	int shortestZeroFill, shortestZeroFillSize;
 	int currMergedLiteral, currWord, currFillLengthRemaining;
+	const bool debug = true;
 
 
 	while(true){
@@ -550,12 +553,59 @@ void WAHBitSet::multiOr(const WAHBitSet** bitSets, int numBitSets, WAHBitSet& re
 		largestOneFillSize = -1;
 
 		// Align BitSets, find largest 1-fill and merge literals in the process
-		for (signed int i = 0; i < numBitSets; i++){
-			if (sBlockIndex[i] < rBlockIndex){
-				// Do some aligning: this BitSet is not yet at block index rBlockIndex
-				// TODO
+		for (unsigned int i = 0; i < numBitSets; i++){
+			if (debug) cout << "Considering BitSet " << i << endl;
+
+			// Check whether the BitSet contains any more interesting bits, to prevent
+			// running out of bounds.
+			if (sWordIndex[i] > bitSets[i]->_compressedBits.size()){
+				// Totally out of bounds. Note that the '>' in stead of '>=' is intentional!
+				// Skip this BitSet
+				break;
+			} else if (sWordIndex[i] < bitSets[i]->_compressedBits.size()){
+				// Still within bounds, but some aligning might be needed
+				while (sBlockIndex[i] < rBlockIndex){
+					if (debug) cout << "Aligning BitSet " << i << endl;
+
+					// Perform some aligning: this BitSet is not yet at block index rBlockIndex
+					if (sWordIndex[i] >= bitSets[i]->_compressedBits.size()){
+						// Out of bounds, no more skipping
+						break;
+					}
+
+					currWord = bitSets[i]->_compressedBits[sWordOffset[i]];
+
+					if (IS_FILL(currWord)){
+						// Fill word. Check length and skip accordingly
+						currFillLengthRemaining = FILL_LENGTH(currWord) - sWordOffset[i];
+						if (currFillLengthRemaining <= rBlockIndex - sBlockIndex[i]){
+							// Skip entire length
+							sWordIndex[i]++;
+							sWordOffset[i] = 0;
+							sBlockIndex[i] += currFillLengthRemaining;
+						} else {
+							// Can't skip the entire length...
+							sWordOffset[i] += rBlockIndex - sBlockIndex[i];
+							sBlockIndex[i] += rBlockIndex - sBlockIndex[i];
+						}
+					} else {
+						// Literal, skip one block
+						sBlockIndex[i]++;
+						sWordIndex[i]++;
+					}
+				}
 			}
-			currWord = bitSets[i]->_compressedBits[sWordIndex[i]];
+
+			if (sWordIndex[i] < bitSets[i]->_compressedBits.size()){
+				// Within bounds
+				currWord = bitSets[i]->_compressedBits[sWordIndex[i]];
+			} else if (sWordIndex[i] == bitSets[i]->_compressedBits.size()){
+				// One out of bound, take plain word
+				currWord = bitSets[i]->_plainWord;
+			} else {
+				// Totally out of bounds, skip this BitSet
+				break;
+			}
 
 			if (IS_ONEFILL(currWord)){
 				currFillLengthRemaining = FILL_LENGTH(currWord) - sWordOffset[i];
@@ -586,19 +636,22 @@ void WAHBitSet::multiOr(const WAHBitSet** bitSets, int numBitSets, WAHBitSet& re
 		}
 
 		// Perform optimal action
-		if (largestOneFill != -1){
+		if (largestOneFillSize != -1){
 			// Add 1-fill
 			currWord = bitSets[largestOneFill]->_compressedBits[sWordIndex[largestOneFill]];
 			currFillLengthRemaining = FILL_LENGTH(currWord) - sWordOffset[largestOneFill];
-			result.addOneFill(currFillLengthRemaining);
+			result->addOneFill(currFillLengthRemaining);
 		} else if (currMergedLiteral != 0){
 			// Add literal
-			result.addLiteral(currMergedLiteral);
-		} else {
+			result->addLiteral(currMergedLiteral);
+		} else if (shortestZeroFillSize != -1){
 			// Add zero fill
 			currWord = bitSets[shortestZeroFill]->_compressedBits[sWordIndex[shortestZeroFill]];
 			currFillLengthRemaining = FILL_LENGTH(currWord) - sWordOffset[shortestZeroFill];
-			result.addZeroFill(currFillLengthRemaining);
+			result->addZeroFill(currFillLengthRemaining);
+		} else {
+			// Nothing more to do!
+			break;
 		}
 	}
 }
