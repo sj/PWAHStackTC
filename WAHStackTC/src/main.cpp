@@ -30,6 +30,7 @@ int main(int argc, char* argv[]) {
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/depends.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/depends.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/successor.graph";
+	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/callgraph.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/successors.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/calls.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/categorypagelinks.graph";
@@ -40,7 +41,7 @@ int main(int argc, char* argv[]) {
 
 	typedef map<string,string> mapType;
 	map<string, string> cmdLineArgs;
-	cmdLineArgs["numruns"] = "1000";
+	cmdLineArgs["numruns"] = "1";
 	cmdLineArgs["filename"] = defFilename;
 	cmdLineArgs["reflexitive"] = "no";
 
@@ -117,6 +118,15 @@ int main(int argc, char* argv[]) {
 
 			//cout << wstc.tcToString();
 			cout << "Number of components (vertices in condensation graph): " << wstc->getNumberOfComponents() << endl;
+
+			if (!reflexitive){
+				cout << "Counting number of edges in condensed transitive closure... ";
+			} else {
+				cout << "Counting number of edges in REFLEXITIVE condensed transitive closure... ";
+			}
+			cout.flush();
+			cout << wstc->countNumberOfEdgesInCondensedTC() << " edges" << endl;
+
 			if (!reflexitive){
 				cout << "Counting number of edges in transitive closure... ";
 			} else {

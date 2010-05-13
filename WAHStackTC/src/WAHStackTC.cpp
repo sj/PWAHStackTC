@@ -5,6 +5,7 @@
  *      Author: bas
  */
 
+
 #include "WAHStackTC.h"
 #include "Graph.h"
 #include "DynamicBitSet.h"
@@ -15,6 +16,8 @@
 #include "WAHBitSetIterator.h"
 #include <stdexcept>
 using namespace std;
+
+//#define USE_MULTIWAY_OR
 
 WAHStackTC::WAHStackTC(Graph& graph) {
 	_graph = &graph;
@@ -132,6 +135,8 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 	if (_vertexCandidateComponentRoot[vertexIndex] == vertexIndex){
 		// This vertex is a component root!
 		unsigned int newComponentIndex = ++_lastComponentIndex;
+		bool explicitlyStoreSelfLoop = false;
+
 		if (debug) cout << "Vertex " << vertexIndex << " is component root, newComponentIndex=" << newComponentIndex << endl;
 		_componentSizes.push_back(0);
 
@@ -139,19 +144,40 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 		if (_vStack.top() != vertexIndex || _vertexSelfLoop.get(vertexIndex)){
 			// This component has size > 1 or has an explicit self-loop.
 			if (!_storeComponentVertices && !_reflexitive){
-				_cStack.push(newComponentIndex);
+				explicitlyStoreSelfLoop = true;
 			} // else: no need to explicitly store self-loop
+		}
+
+#ifdef USE_MULTIWAY_OR
+		bool use_multiway_or = (_cStack.size() - _savedCStackSize[vertexIndex] > 1);
+#else
+		const bool use_multiway_or = false;
+#endif
+
+		if (use_multiway_or){
+			if (explicitlyStoreSelfLoop){
+				// When using regular OR, a self loop should be recorded by pushing the
+				// new component index on the stack with adjacent components
+				_cStack.push(newComponentIndex);
+			}
 		}
 
 		// Make an overestimation of the number of adjacent components
 		int* adjacentComponentIndices = new int[_cStack.size() - _savedCStackSize[vertexIndex]];
-		WAHBitSet** adjacentComponentsSuccessors = new WAHBitSet*[_cStack.size() - _savedCStackSize[vertexIndex]];
+
+		// Note the +1: one slot is allocated in case we'll need to sneak in an extra WAHBitSet
+		// for the MultiWay OR to work.
+		WAHBitSet** adjacentComponentsSuccessors = new WAHBitSet*[_cStack.size() - _savedCStackSize[vertexIndex] + 1];
 		DynamicBitSet tmpAdjacentComponentBits;
 
 		// Pop off all adjacent components from the stack and remove duplicates
 		unsigned int numAdjacentComponents = 0;
 		while (_cStack.size() > _savedCStackSize[vertexIndex]){
-			if (tmpAdjacentComponentBits.get(_cStack.top())) continue; // skip duplicate
+			if (tmpAdjacentComponentBits.get(_cStack.top())){
+				_cStack.pop();
+				continue; // skip duplicate
+			}
+			tmpAdjacentComponentBits.set(_cStack.top());
 			adjacentComponentsSuccessors[numAdjacentComponents] = _componentSuccessors[_cStack.top()];
 			adjacentComponentIndices[numAdjacentComponents++] = _cStack.top();
 			_cStack.pop();
@@ -159,38 +185,62 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 
 		sort(adjacentComponentIndices, adjacentComponentIndices + numAdjacentComponents);
 
-		/** SIMPLE OR
-		unsigned int adjacentComponentIndex;
-		for (unsigned int i = 0; i < numAdjacentComponents; i++){
-			adjacentComponentIndex = adjacentComponentIndices[i];
+		if (use_multiway_or){
+			// Multi way merge
 
-			if (adjacentComponentIndex == newComponentIndex){
-				// No need for a full merge, just set the relevant bit.
+			// TODO: optimise for cases in which only 1 BitSets is OR'red
+
+			// First, construct an extra (sparse) WAHBitSet with the bits representing the indices
+			// of directly adjacent components set. Note that the array 'adjacentComponentIndices'
+			// should be sorted for this to work, since bits of the WAHBitSet can only be set in
+			// increasing order.
+			WAHBitSet* adjacentComponentBits = new WAHBitSet();
+			for (unsigned int i = 0; i < numAdjacentComponents; i++){
+				adjacentComponentBits->set(adjacentComponentIndices[i]);
+			}
+
+			// Sneak the extra WAHBitSet into the list of WAHBitSet objects
+			adjacentComponentsSuccessors[numAdjacentComponents] = adjacentComponentBits;
+
+			// Note the numAdjacentComponents + 1. The +1 indicates the extra WAHBitSet sneaked
+			// into the list
+			WAHBitSet::multiOr(adjacentComponentsSuccessors, numAdjacentComponents + 1, successors);
+
+			delete adjacentComponentBits;
+
+			if (explicitlyStoreSelfLoop){
 				successors->set(newComponentIndex);
-			} else {
-				if (!successors->get(adjacentComponentIndex)){
-					// Merge this successor list with the successor list of the adjacent component
-					successors->set(adjacentComponentIndex);
-					if (debug) cout << "Merging successor list of component " <<  newComponentIndex << " with " << adjacentComponentIndex << "... ";
-					if (debug) cout.flush();
+			}
+		} else {
+			// Simple OR
+			unsigned int adjacentComponentIndex;
+			for (unsigned int i = 0; i < numAdjacentComponents; i++){
+				adjacentComponentIndex = adjacentComponentIndices[i];
 
-					WAHBitSet* oldSuccessors = successors;
-					successors = WAHBitSet::constructByOr(successors, _componentSuccessors[adjacentComponentIndex]);
-					delete oldSuccessors;
-					oldSuccessors = NULL;
-
-					if (debug) cout << "done!" << endl;
+				if (adjacentComponentIndex == newComponentIndex){
+					// No need for a full merge, just set the relevant bit.
+					successors->set(newComponentIndex);
 				} else {
-					// adjacent component index already in the successors list, skip merge
-					if (debug) cout << "Not merging successor list of component " <<  newComponentIndex << " with " << adjacentComponentIndex << "... " << endl;
+					if (!successors->get(adjacentComponentIndex)){
+						// Merge this successor list with the successor list of the adjacent component
+						successors->set(adjacentComponentIndex);
+						if (debug) cout << "Merging successor list of component " <<  newComponentIndex << " with " << adjacentComponentIndex << "... ";
+						if (debug) cout.flush();
+
+						WAHBitSet* oldSuccessors = successors;
+						successors = WAHBitSet::constructByOr(successors, _componentSuccessors[adjacentComponentIndex]);
+						delete oldSuccessors;
+						oldSuccessors = NULL;
+
+						if (debug) cout << "done!" << endl;
+					} else {
+						// adjacent component index already in the successors list, skip merge
+						if (debug) cout << "Not merging successor list of component " <<  newComponentIndex << " with " << adjacentComponentIndex << "... " << endl;
+					}
 				}
 			}
-		}**/
+		}
 
-		// Multi way merge
-		cout << "go multiway!" << endl;
-		WAHBitSet::multiOr(adjacentComponentsSuccessors, (int) numAdjacentComponents, successors);
-		cout << "done multiway!" << endl;
 		delete[] adjacentComponentIndices;
 		delete[] adjacentComponentsSuccessors;
 

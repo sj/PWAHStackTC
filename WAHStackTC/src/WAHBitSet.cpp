@@ -534,8 +534,19 @@ WAHBitSet* WAHBitSet::constructByOr(const WAHBitSet* bs1, const WAHBitSet* bs2){
 	return result;
 }
 
+/**
+ * \brief Merges multiple WAHBitSet objects into a single WAHBitSet by computing the logical OR
+ *
+ * \param bitSets the source WAHBitSet objects
+ * \param numBitSets the number of source WAHBitSet objects
+ * \param result pointer to a WAHBitSet to store the result of the logical OR
+ */
 void WAHBitSet::multiOr(WAHBitSet** bitSets, unsigned int numBitSets, WAHBitSet* result){
+	const bool debug = false;
+	if (debug) cout << "Performing multi-way OR on " << numBitSets << " BitSets" << endl;
 	if (numBitSets == 0) return;
+
+	// TODO: in case of just 1 BitSet: make a copy
 
 	int rBlockIndex = 0;
 	int* sWordIndex = new int[numBitSets];
@@ -544,7 +555,6 @@ void WAHBitSet::multiOr(WAHBitSet** bitSets, unsigned int numBitSets, WAHBitSet*
 	int largestOneFill, largestOneFillSize;
 	int shortestZeroFill, shortestZeroFillSize;
 	int currMergedLiteral, currWord, currFillLengthRemaining;
-	const bool debug = true;
 
 
 	while(true){
@@ -554,57 +564,70 @@ void WAHBitSet::multiOr(WAHBitSet** bitSets, unsigned int numBitSets, WAHBitSet*
 
 		// Align BitSets, find largest 1-fill and merge literals in the process
 		for (unsigned int i = 0; i < numBitSets; i++){
-			if (debug) cout << "Considering BitSet " << i << endl;
+			if (debug) cout << "Considering BitSet with index " << i << " (total number of bitsets = " << numBitSets << ")" << endl;
+			if (debug) cout << "BitSet " << i << " contains " << bitSets[i]->_compressedBits.size() << " compressed words" << endl;
 
 			// Check whether the BitSet contains any more interesting bits, to prevent
 			// running out of bounds.
 			if (sWordIndex[i] > bitSets[i]->_compressedBits.size()){
 				// Totally out of bounds. Note that the '>' in stead of '>=' is intentional!
 				// Skip this BitSet
-				break;
+				if (debug) cout << "BitSet " << i << ": totally out of bounds (" << sWordIndex[i] << " > " << bitSets[i]->_compressedBits.size() << "), skipping..." << endl;
+				continue;
 			} else if (sWordIndex[i] < bitSets[i]->_compressedBits.size()){
 				// Still within bounds, but some aligning might be needed
+				if (debug) cout << "Aligning BitSet " << i << endl;
+
 				while (sBlockIndex[i] < rBlockIndex){
-					if (debug) cout << "Aligning BitSet " << i << endl;
+					if (debug) cout << "BitSet " << i << ": at word " << sWordIndex[i] << endl;
 
 					// Perform some aligning: this BitSet is not yet at block index rBlockIndex
 					if (sWordIndex[i] >= bitSets[i]->_compressedBits.size()){
 						// Out of bounds, no more skipping
+						if (debug) cout << "BitSet " << i << ": running out of bounds, breaking alignment..." << endl;
 						break;
 					}
 
-					currWord = bitSets[i]->_compressedBits[sWordOffset[i]];
+					currWord = bitSets[i]->_compressedBits[sWordIndex[i]];
 
 					if (IS_FILL(currWord)){
 						// Fill word. Check length and skip accordingly
 						currFillLengthRemaining = FILL_LENGTH(currWord) - sWordOffset[i];
 						if (currFillLengthRemaining <= rBlockIndex - sBlockIndex[i]){
 							// Skip entire length
+							if (debug) cout << "BitSet " << i << ": skipping one entire fill word of length " << currFillLengthRemaining << endl;
 							sWordIndex[i]++;
 							sWordOffset[i] = 0;
 							sBlockIndex[i] += currFillLengthRemaining;
 						} else {
 							// Can't skip the entire length...
+							if (debug) cout << "BitSet " << i << ": skipping part of fill word: only " << (rBlockIndex - sBlockIndex[i]) << " of " << currFillLengthRemaining << " blocks" << endl;
 							sWordOffset[i] += rBlockIndex - sBlockIndex[i];
 							sBlockIndex[i] += rBlockIndex - sBlockIndex[i];
 						}
 					} else {
 						// Literal, skip one block
+						if (debug) cout << "BitSet " << i << ": skipping one literal word (one block)" << endl;
 						sBlockIndex[i]++;
 						sWordIndex[i]++;
 					}
-				}
+				} // end while: skipping done
+
+				if (debug) cout << "Done aligning BitSet " << i << endl;
 			}
 
 			if (sWordIndex[i] < bitSets[i]->_compressedBits.size()){
 				// Within bounds
+				if (debug) cout << "Current compressed word of bitset " << i << ": " << toBitString(bitSets[i]->_compressedBits[sWordIndex[i]]) << endl;
 				currWord = bitSets[i]->_compressedBits[sWordIndex[i]];
 			} else if (sWordIndex[i] == bitSets[i]->_compressedBits.size()){
 				// One out of bound, take plain word
+				if (debug) cout << "Considering plain word of bitset " << i << ": " << toBitString(bitSets[i]->_plainWord) << endl;
 				currWord = bitSets[i]->_plainWord;
 			} else {
 				// Totally out of bounds, skip this BitSet
-				break;
+				if (debug) cout << "BitSet " << i << ": totally out of bounds after skipping" << endl;
+				continue;
 			}
 
 			if (IS_ONEFILL(currWord)){
@@ -629,23 +652,30 @@ void WAHBitSet::multiOr(WAHBitSet** bitSets, unsigned int numBitSets, WAHBitSet*
 				sWordOffset[i] = 0;
 			} else {
 				// Literal
-				if (largestOneFillSize != -1) currMergedLiteral |= currWord;
+				if (largestOneFillSize != -1){
+					cout << "BitSet " << i << ": merging literal word in resulting literal" << endl;
+					currMergedLiteral |= currWord;
+				}
 				sBlockIndex[i]++;
 				sWordIndex[i]++;
 			}
-		}
+		} // end for
+		if (debug) cout << "Done considering " << numBitSets << " source BitSets" << endl;
 
 		// Perform optimal action
 		if (largestOneFillSize != -1){
 			// Add 1-fill
+			if (debug) cout << "Adding 1-fill of size " << (FILL_LENGTH(currWord) - sWordOffset[largestOneFill]) << " to result." <<endl;
 			currWord = bitSets[largestOneFill]->_compressedBits[sWordIndex[largestOneFill]];
 			currFillLengthRemaining = FILL_LENGTH(currWord) - sWordOffset[largestOneFill];
 			result->addOneFill(currFillLengthRemaining);
 		} else if (currMergedLiteral != 0){
 			// Add literal
+			if (debug) cout << "Adding literal word to result" << endl;
 			result->addLiteral(currMergedLiteral);
 		} else if (shortestZeroFillSize != -1){
 			// Add zero fill
+			if (debug) cout << "Adding 0-fill of size " << (FILL_LENGTH(currWord) - sWordOffset[shortestZeroFill]) << " to result." <<endl;
 			currWord = bitSets[shortestZeroFill]->_compressedBits[sWordIndex[shortestZeroFill]];
 			currFillLengthRemaining = FILL_LENGTH(currWord) - sWordOffset[shortestZeroFill];
 			result->addZeroFill(currFillLengthRemaining);
@@ -653,7 +683,9 @@ void WAHBitSet::multiOr(WAHBitSet** bitSets, unsigned int numBitSets, WAHBitSet*
 			// Nothing more to do!
 			break;
 		}
-	}
+	} // end while
+
+	if (debug) cout << "done multiway!" << endl;
 }
 
 bool WAHBitSet::isEmpty(){
