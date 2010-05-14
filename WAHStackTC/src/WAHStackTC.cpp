@@ -154,7 +154,7 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 		const bool use_multiway_or = false;
 #endif
 
-		if (use_multiway_or){
+		if (!use_multiway_or){
 			if (explicitlyStoreSelfLoop){
 				// When using regular OR, a self loop should be recorded by pushing the
 				// new component index on the stack with adjacent components
