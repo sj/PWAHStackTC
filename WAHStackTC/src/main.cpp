@@ -24,6 +24,9 @@ int main(int argc, char* argv[]) {
 	cout.setf(ios::fixed,ios::floatfield);
 	cout.precision(4);
 
+	//WAHBitSetTester::testMultiOr();
+	//exit(1);
+
 	string defFilename;
 	//defFilename = "../../Datasets/nuutila32.graph";
 	//defFilename = "../../Datasets/Semmle graphs/java/depends.graph";
@@ -43,7 +46,10 @@ int main(int argc, char* argv[]) {
 	map<string, string> cmdLineArgs;
 	cmdLineArgs["numruns"] = "1";
 	cmdLineArgs["filename"] = defFilename;
-	cmdLineArgs["reflexitive"] = "no";
+	cmdLineArgs["reflexitive"] = "unset";
+
+	// By default: use multi-OR when a component has out-degree of at least 5
+	cmdLineArgs["min-multi-or"] = 5;
 
 	for (int i = 1; i < argc; i++){
 		string currArg = argv[i];
@@ -74,7 +80,8 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	const bool reflexitive = (cmdLineArgs["reflexitive"] != "no");
+	const bool reflexitive = (cmdLineArgs["reflexitive"] != "unset");
+	const int minMultiOR = atoi(cmdLineArgs["min-multi-or"].c_str());
 	const string filename = cmdLineArgs["filename"];
 	const int numRuns = atoi(cmdLineArgs["numruns"].c_str());
 	const int numQueries = 1000000;
@@ -104,12 +111,19 @@ int main(int argc, char* argv[]) {
 			WAHStackTC* wstc = new WAHStackTC(graph);
 
 			if (!reflexitive){
-				cout << "Computing transitive closure... ";
+				cout << "Computing transitive closure ";
 			} else {
-				cout << "Computing REFLEXITIVE transitive closure... ";
+				cout << "Computing REFLEXITIVE transitive closure ";
+			}
+			if (minMultiOR == -1){
+				cout << "(NOT using multi-OR)... ";
+			} else if (minMultiOR == 0){
+				cout << "(ALWAYS using multi-OR)... ";
+			} else {
+				cout << "(using multi-OR when out-degree >= " << minMultiOR << ")... ";
 			}
 			cout.flush();
-			wstc->computeTransitiveClosure(reflexitive, false);
+			wstc->computeTransitiveClosure(reflexitive, false, minMultiOR);
 
 			tmp = timer.reset();
 			totalConstructionTime += tmp;

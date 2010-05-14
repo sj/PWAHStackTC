@@ -80,6 +80,7 @@ public:
 	long memoryUsage();
 
 	friend class WAHBitSetIterator;
+	friend class WAHBitSetTester;
 };
 
 #endif /* WAHBITSET_H_ */

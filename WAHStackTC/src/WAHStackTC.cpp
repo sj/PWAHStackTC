@@ -17,8 +17,6 @@
 #include <stdexcept>
 using namespace std;
 
-//#define USE_MULTIWAY_OR
-
 WAHStackTC::WAHStackTC(Graph& graph) {
 	_graph = &graph;
 }
@@ -30,7 +28,7 @@ WAHStackTC::~WAHStackTC() {
 	delete[] _vertexComponents;
 }
 
-void WAHStackTC::computeTransitiveClosure(bool reflexitive, bool storeComponentMembers){
+void WAHStackTC::computeTransitiveClosure(bool reflexitive, bool storeComponentMembers, int minOutDegreeForMultiOR){
 	unsigned int numVertices = _graph->getNumberOfVertices();
 	_cStack = stack<unsigned int>();
 	_vStack = stack<unsigned int>();
@@ -48,6 +46,7 @@ void WAHStackTC::computeTransitiveClosure(bool reflexitive, bool storeComponentM
 	_lastComponentIndex = -1;
 	_reflexitive = reflexitive;
 	_storeComponentVertices = storeComponentMembers;
+	_minOutDegreeForMultiOR = minOutDegreeForMultiOR;
 
 	for (unsigned int v = 0; v < numVertices; v++){
 		if (!_visited.get(v)) dfsVisit(v);
@@ -148,11 +147,7 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 			} // else: no need to explicitly store self-loop
 		}
 
-#ifdef USE_MULTIWAY_OR
-		bool use_multiway_or = (_cStack.size() - _savedCStackSize[vertexIndex] > 1);
-#else
-		const bool use_multiway_or = false;
-#endif
+		const bool use_multiway_or = _cStack.size() - _savedCStackSize[vertexIndex] > _minOutDegreeForMultiOR && _minOutDegreeForMultiOR >= 0;
 
 		if (!use_multiway_or){
 			if (explicitlyStoreSelfLoop){
@@ -188,8 +183,6 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 		if (use_multiway_or){
 			// Multi way merge
 
-			// TODO: optimise for cases in which only 1 BitSets is OR'red
-
 			// First, construct an extra (sparse) WAHBitSet with the bits representing the indices
 			// of directly adjacent components set. Note that the array 'adjacentComponentIndices'
 			// should be sorted for this to work, since bits of the WAHBitSet can only be set in
@@ -200,6 +193,7 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 			}
 
 			// Sneak the extra WAHBitSet into the list of WAHBitSet objects
+			// (remember the +1 in the size specification of this array!)
 			adjacentComponentsSuccessors[numAdjacentComponents] = adjacentComponentBits;
 
 			// Note the numAdjacentComponents + 1. The +1 indicates the extra WAHBitSet sneaked

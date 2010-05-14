@@ -9,6 +9,8 @@
 #include <string>
 #include <sstream>
 #include <stdexcept>
+#include <stdio.h>
+#include <string.h>
 #include "WAHBitSet.h"
 #include <stdlib.h>
 #include "IntMacros.cpp"
@@ -58,11 +60,6 @@ void WAHBitSet::set(int bitIndex, bool value){
 		// to the _compressedBits.
 		if (DEBUGGING) cout << "WAHBitSet::set compressing plain word.." << endl;
 
-		// Prepare exception...
-		stringstream stream;
-		stream << "Cannot create a fill consisting of > " << MAX_BLOCKS_IN_FILL << " blocks!";
-		string maxBlocksExceededException = stream.str();
-
 		// blockSeq is the sequence number of the block in which the bitIndex belongs
 		// Example: for BLOCKSIZE = 31, bits 0 ... 30 go in block with sequence no 0,
 		// bits 31 ... 61 go in block with seq. no 1, and so on.
@@ -73,18 +70,21 @@ void WAHBitSet::set(int bitIndex, bool value){
 		// Number of 0-fills which should be inserted
 		int numNewZeroFills = blockSeq - _plainWordBlockSeq -1;
 
+		const int tmpPlainWord = _plainWord;
+		_plainWord = 0;
+
 		// First, store the current plain block in the vector with compressed bits
-		if (_plainWord == BLOCK_ZEROES){
+		if (tmpPlainWord == BLOCK_ZEROES){
 			// The _plainBlock can be represented as a 0-fill. It might be needed to
 			// append some more 0-fills. When the last block on the _compressedBits is
 			// also a 0-fill, that 0-fill should be extended (if possible)
 			this->addZeroFill(++numNewZeroFills);
 		} else {
-			if (_plainWord == BLOCK_ONES){
+			if (tmpPlainWord == BLOCK_ONES){
 				this->addOneFill(1);
 			} else {
 				// literal block. Store _plainBlock as-is (it already contains a preceding 0).
-				this->addLiteral(_plainWord);
+				this->addLiteral(tmpPlainWord);
 			}
 
 			// Append 0-fills when needed
@@ -92,7 +92,6 @@ void WAHBitSet::set(int bitIndex, bool value){
 		}
 
 		// Now, reset the _plainBlock and determine its offset
-		_plainWord = 0;
 		_plainWordBlockSeq = blockSeq;
 	}
 
@@ -168,7 +167,7 @@ string WAHBitSet::toString(){
 	}
 
 	if (_plainWord != 0){
-		res << endl << "Plain block:" << endl;
+		res << endl << "Plain block (blockseq=" << _plainWordBlockSeq << "):" << endl;
 		res << toBitString(_plainWord) << endl;
 	}
 
@@ -181,6 +180,8 @@ void WAHBitSet::clear(){
 
 void WAHBitSet::addOneFill(int numBlocks){
 	if (numBlocks < 1) throw range_error("Cannot add 1-fill of size < 1");
+	if (_plainWord != 0) throw string("Cannot use WAHBitSet::addOneFill(...) after WAHBitSet::set(...)");
+
 	_empty = false;
 	int lastWordIndex = _compressedBits.size() - 1;
 
@@ -194,10 +195,14 @@ void WAHBitSet::addOneFill(int numBlocks){
 		// No 1-fill on the back of the list, just append simple 1-fill
 		_compressedBits.push_back(numBlocks | EMPTY_ONEFILL);
 	}
+
+	_plainWordBlockSeq += numBlocks;
+	_lastBitIndex += numBlocks * BLOCKSIZE;
 }
 
 void WAHBitSet::addZeroFill(int numBlocks){
 	if (numBlocks < 1) throw range_error("Cannot add 0-fill of size < 1");
+	if (_plainWord != 0) throw string("Cannot use WAHBitSet::addZeroFill(...) after WAHBitSet::set(...)");
 	int lastWordIndex = _compressedBits.size() - 1;
 
 	if (lastWordIndex >= 0 && IS_ZEROFILL(_compressedBits[lastWordIndex])){
@@ -212,14 +217,22 @@ void WAHBitSet::addZeroFill(int numBlocks){
 		if (numBlocks > MAX_BLOCKS_IN_FILL) throw range_error("Number of zero blocks exceeds maximum number of blocks in a fill");
 		_compressedBits.push_back((numBlocks | EMPTY_ZEROFILL));
 	}
+
+	_plainWordBlockSeq += numBlocks;
+	_lastBitIndex += numBlocks * BLOCKSIZE;
 }
 
 void WAHBitSet::addLiteral(int value){
 	if (value != 0) _empty = false;
+	if (_plainWord != 0) throw string("Cannot use WAHBitSet::addLiteral(...) after WAHBitSet::set(...)");
 
 	if (IS_LITERAL_ZEROFILL(value)) addZeroFill(1);
 	else if (IS_LITERAL_ONEFILL(value)) addOneFill(1);
-	else _compressedBits.push_back(value);
+	else {
+		_compressedBits.push_back(value);
+		_plainWordBlockSeq++;
+		_lastBitIndex += BLOCKSIZE;
+	}
 }
 
 /**
@@ -548,14 +561,18 @@ void WAHBitSet::multiOr(WAHBitSet** bitSets, unsigned int numBitSets, WAHBitSet*
 
 	// TODO: in case of just 1 BitSet: make a copy
 
-	int rBlockIndex = 0;
-	int* sWordIndex = new int[numBitSets];
-	int* sWordOffset = new int[numBitSets];
-	int* sBlockIndex = new int[numBitSets];
+	unsigned int rBlockIndex = 0;
+	unsigned int* sWordIndex = new unsigned int[numBitSets];
+	unsigned int* sWordOffset = new unsigned int[numBitSets];
+	unsigned int* sBlockIndex = new unsigned int[numBitSets];
 	int largestOneFill, largestOneFillSize;
 	int shortestZeroFill, shortestZeroFillSize;
 	int currMergedLiteral, currWord, currFillLengthRemaining;
 
+	// Initialize values in int arrays to 0.
+	memset(sWordIndex, 0, numBitSets * sizeof(int));
+	memset(sWordOffset, 0, numBitSets * sizeof(int));
+	memset(sBlockIndex, 0, numBitSets * sizeof(int));
 
 	while(true){
 		currMergedLiteral = 0;
@@ -565,21 +582,24 @@ void WAHBitSet::multiOr(WAHBitSet** bitSets, unsigned int numBitSets, WAHBitSet*
 		// Align BitSets, find largest 1-fill and merge literals in the process
 		for (unsigned int i = 0; i < numBitSets; i++){
 			if (debug) cout << "Considering BitSet with index " << i << " (total number of bitsets = " << numBitSets << ")" << endl;
-			if (debug) cout << "BitSet " << i << " contains " << bitSets[i]->_compressedBits.size() << " compressed words" << endl;
+			if (debug) cout << "BitSet " << i << " contains " << bitSets[i]->_compressedBits.size() << " compressed words, is now at blockindex " << sBlockIndex[i] << " which is in wordindex " << sWordIndex[i] << endl;
 
-			// Check whether the BitSet contains any more interesting bits, to prevent
-			// running out of bounds.
-			if (sWordIndex[i] > bitSets[i]->_compressedBits.size()){
+			if (sBlockIndex[i] > rBlockIndex){
+				// Implicitly skipping over blocks of a 0-fill in this BitSet. Ignore this BitSet
+				// until the end of the 0-fill has been reached.
+				if (debug) cout << "BitSet " << i << ": rBlockIndex=" << rBlockIndex << ", whilst sBlockIndex of this BitSet=" << sBlockIndex[i] << ", skipping BitSet..." << endl;
+				continue;
+			} else if (sWordIndex[i] > bitSets[i]->_compressedBits.size()){
 				// Totally out of bounds. Note that the '>' in stead of '>=' is intentional!
 				// Skip this BitSet
 				if (debug) cout << "BitSet " << i << ": totally out of bounds (" << sWordIndex[i] << " > " << bitSets[i]->_compressedBits.size() << "), skipping..." << endl;
 				continue;
 			} else if (sWordIndex[i] < bitSets[i]->_compressedBits.size()){
 				// Still within bounds, but some aligning might be needed
-				if (debug) cout << "Aligning BitSet " << i << endl;
+				if (debug) cout << "Aligning BitSet " << i << ", currently at block " << sBlockIndex[i] << ", should be at block " << rBlockIndex << endl;
 
 				while (sBlockIndex[i] < rBlockIndex){
-					if (debug) cout << "BitSet " << i << ": at word " << sWordIndex[i] << endl;
+					if (debug) cout << "BitSet " << i << ": at block " << sBlockIndex[i] << endl;
 
 					// Perform some aligning: this BitSet is not yet at block index rBlockIndex
 					if (sWordIndex[i] >= bitSets[i]->_compressedBits.size()){
@@ -613,8 +633,8 @@ void WAHBitSet::multiOr(WAHBitSet** bitSets, unsigned int numBitSets, WAHBitSet*
 					}
 				} // end while: skipping done
 
-				if (debug) cout << "Done aligning BitSet " << i << endl;
-			}
+				if (debug) cout << "Done aligning BitSet " << i << ", now at word " << sWordIndex[i] << endl;
+			} // else: start using plain word, see below
 
 			if (sWordIndex[i] < bitSets[i]->_compressedBits.size()){
 				// Within bounds
@@ -623,6 +643,7 @@ void WAHBitSet::multiOr(WAHBitSet** bitSets, unsigned int numBitSets, WAHBitSet*
 			} else if (sWordIndex[i] == bitSets[i]->_compressedBits.size()){
 				// One out of bound, take plain word
 				if (debug) cout << "Considering plain word of bitset " << i << ": " << toBitString(bitSets[i]->_plainWord) << endl;
+				//sBlockIndex[i] = bitSets[i]->_plainWordBlockSeq;
 				currWord = bitSets[i]->_plainWord;
 			} else {
 				// Totally out of bounds, skip this BitSet
@@ -636,54 +657,78 @@ void WAHBitSet::multiOr(WAHBitSet** bitSets, unsigned int numBitSets, WAHBitSet*
 					largestOneFill = i;
 					largestOneFillSize = currFillLengthRemaining;
 				}
-				sBlockIndex[i] += currFillLengthRemaining;
-				sWordIndex[i]++;
-				sWordOffset[i] = 0;
 			} else if (IS_ZEROFILL(currWord)){
-				if (largestOneFill == -1){
-					currFillLengthRemaining = FILL_LENGTH(currWord) - sWordOffset[i];
-					if (currFillLengthRemaining < shortestZeroFillSize || shortestZeroFillSize == -1){
-						shortestZeroFill = i;
-						shortestZeroFillSize = currFillLengthRemaining;
-					}
+				// Zero fills are boring. Skip the 0-fill, move on to the next word of this BitSet
+				if (debug) cout << "BitSet " << i << ": 0-fill of length " << FILL_LENGTH(currWord) << " detected, skipping to next word..." << endl;
+				currFillLengthRemaining = FILL_LENGTH(currWord) - sWordOffset[i];
+
+				if (currFillLengthRemaining < shortestZeroFillSize || shortestZeroFillSize == -1){
+					// This 0-fill is the shortest one
+					shortestZeroFillSize = currFillLengthRemaining;
+					shortestZeroFill = i;
 				}
-				sBlockIndex[i] += FILL_LENGTH(currWord) - sWordOffset[i];
+
 				sWordIndex[i]++;
 				sWordOffset[i] = 0;
+				sBlockIndex[i] += currFillLengthRemaining;
 			} else {
 				// Literal
-				if (largestOneFillSize != -1){
-					cout << "BitSet " << i << ": merging literal word in resulting literal" << endl;
+				if (largestOneFillSize == -1){
+					if (debug) cout << "BitSet " << i << ": merging literal word in resulting literal" << endl;
 					currMergedLiteral |= currWord;
 				}
 				sBlockIndex[i]++;
 				sWordIndex[i]++;
 			}
 		} // end for
-		if (debug) cout << "Done considering " << numBitSets << " source BitSets" << endl;
+		if (debug) cout << "Done preprocessing " << numBitSets << " source BitSets, writing word to result" << endl;
 
 		// Perform optimal action
 		if (largestOneFillSize != -1){
 			// Add 1-fill
-			if (debug) cout << "Adding 1-fill of size " << (FILL_LENGTH(currWord) - sWordOffset[largestOneFill]) << " to result." <<endl;
 			currWord = bitSets[largestOneFill]->_compressedBits[sWordIndex[largestOneFill]];
-			currFillLengthRemaining = FILL_LENGTH(currWord) - sWordOffset[largestOneFill];
-			result->addOneFill(currFillLengthRemaining);
+
+			if (debug) cout << "Adding 1-fill of size " << largestOneFillSize << " to result (blockindex=" << rBlockIndex << ")" <<endl;
+			result->addOneFill(largestOneFillSize);
+			rBlockIndex += largestOneFillSize;
+
+			// Increase position in BitSet which was just used
+			sBlockIndex[largestOneFill] += largestOneFillSize;
+			sWordIndex[largestOneFill]++;
+			sWordOffset[largestOneFill] = 0;
 		} else if (currMergedLiteral != 0){
 			// Add literal
-			if (debug) cout << "Adding literal word to result" << endl;
+			if (debug) cout << "Adding literal word to result (blockindex=" << rBlockIndex << "): " << toBitString(currMergedLiteral) << endl;
 			result->addLiteral(currMergedLiteral);
+			rBlockIndex++;
 		} else if (shortestZeroFillSize != -1){
+			// All BitSets are currently showing a 0-fill. Add a zero fill of length minimal length,
+			// and jump to the first possible block for which at least one BitSet shows a literal
+			// or a 1-fill.
+
 			// Add zero fill
-			if (debug) cout << "Adding 0-fill of size " << (FILL_LENGTH(currWord) - sWordOffset[shortestZeroFill]) << " to result." <<endl;
-			currWord = bitSets[shortestZeroFill]->_compressedBits[sWordIndex[shortestZeroFill]];
-			currFillLengthRemaining = FILL_LENGTH(currWord) - sWordOffset[shortestZeroFill];
-			result->addZeroFill(currFillLengthRemaining);
+			if (debug) cout << "Adding 0-fill of size " << shortestZeroFillSize << " to result (blockindex=" << rBlockIndex << ")" <<endl;
+
+			result->addZeroFill(shortestZeroFillSize);
+			rBlockIndex += shortestZeroFillSize;
 		} else {
 			// Nothing more to do!
+			if (debug) cout << "Nothing to write to result, merging done!" << endl;
 			break;
 		}
 	} // end while
+
+	if (debug) cout << "Cleaning up..." << endl;
+	delete[] sWordIndex;
+	delete[] sWordOffset;
+	delete[] sBlockIndex;
+
+	// Decompress last word of resulting BitSet to plain word
+	if (result->_compressedBits.size()){
+		result->_plainWord = result->_compressedBits.back();
+		result->_compressedBits.pop_back();
+		result->_plainWordBlockSeq--;
+	}
 
 	if (debug) cout << "done multiway!" << endl;
 }

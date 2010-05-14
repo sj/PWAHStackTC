@@ -56,6 +56,57 @@ void WAHBitSetTester::testIterator(){
 	}
 }
 
+void WAHBitSetTester::testMultiOr(){
+	srand ( time(NULL) );
+	PerformanceTimer timer = PerformanceTimer::start();
+
+	cout << "go" << endl;
+	WAHBitSet** bitsets = new WAHBitSet*[2];
+	cout << "array done" << endl;
+	bitsets[0] = new WAHBitSet();
+	bitsets[0]->addLiteral(4360); // 3, 8, 12
+	bitsets[0]->addOneFill(2);
+	bitsets[0]->addLiteral(33554960); // 4, 9, ...
+	bitsets[0]->addZeroFill(2);
+	bitsets[0]->addOneFill(3);
+	bitsets[0]->addLiteral(64); // 6
+	//bitsets[0]->set(380);
+	bitsets[0]->set(499);
+
+	cout << "done init 0:" << endl;
+	cout << bitsets[0]->toString() << endl;
+
+	bitsets[1] = new WAHBitSet();
+	bitsets[1]->addZeroFill(2);
+	bitsets[1]->addLiteral(8720); // 4, 9, 13
+	bitsets[1]->addLiteral(67109920); // 5, 10, ...
+	bitsets[1]->addOneFill(3);
+	//bitsets[1]->set(382);
+	bitsets[1]->set(500);
+
+	cout << "done init 1" << endl;
+	cout << bitsets[1]->toString() << endl;
+
+	WAHBitSet* resultMulti = new WAHBitSet();
+
+	cout << "starting multior" << endl;
+	WAHBitSet::multiOr(bitsets, 2, resultMulti);
+	cout << "done multior" << endl;
+
+	cout << "starting simpleor" << endl;
+	WAHBitSet* resultSimple = WAHBitSet::constructByOr(bitsets[0], bitsets[1]);
+	cout << "done simpleor" << endl;
+
+	cout << "Multi-or result:" << endl;
+	cout << resultMulti->toString() << endl;
+
+	cout << endl << endl << "single or result:" << endl;
+	cout << resultSimple->toString() << endl;
+
+	cout << "done!" << endl;
+}
+
+
 void WAHBitSetTester::testOr(){
 	srand ( time(NULL) );
 	PerformanceTimer timer = PerformanceTimer::start();

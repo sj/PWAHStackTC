@@ -34,6 +34,7 @@ private:
 	int _lastDFSSeqNo;
 	int _lastComponentIndex;
 	bool _reflexitive;
+	int _minOutDegreeForMultiOR;
 
 	bool componentHasSelfLoop(int componentIndex);
 	void dfsVisit(unsigned int vertexIndex);
@@ -42,7 +43,7 @@ public:
 	WAHStackTC(Graph& graph);
 	virtual ~WAHStackTC();
 
-	void computeTransitiveClosure(bool reflexitive, bool storeComponentMembers);
+	void computeTransitiveClosure(bool reflexitive, bool storeComponentMembers, int minOutDegreeForMultiOR);
 	string tcToString();
 	long countNumberOfEdgesInTC();
 	long countNumberOfEdgesInCondensedTC();
