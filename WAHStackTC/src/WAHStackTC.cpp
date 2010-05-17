@@ -164,22 +164,23 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 		// for the MultiWay OR to work.
 		WAHBitSet** adjacentComponentsSuccessors;
 		if (use_multiway_or) adjacentComponentsSuccessors = new WAHBitSet*[_cStack.size() - _savedCStackSize[vertexIndex] + 1];
-		StaticBitSet tmpAdjacentComponentBits(newComponentIndex + 1);
+		//StaticBitSet tmpAdjacentComponentBits(newComponentIndex + 1);
 
 		// Pop off all adjacent components from the stack and remove duplicates
 		unsigned int numAdjacentComponents = 0;
 		while (_cStack.size() > _savedCStackSize[vertexIndex]){
-			if (tmpAdjacentComponentBits.get(_cStack.top())){
-				_cStack.pop();
-				continue; // skip duplicate
-			}
-			tmpAdjacentComponentBits.set(_cStack.top());
+			//if (tmpAdjacentComponentBits.get(_cStack.top())){
+			//	_cStack.pop();
+			//	continue; // skip duplicate
+			//}
+			//tmpAdjacentComponentBits.set(_cStack.top());
 			if (use_multiway_or) adjacentComponentsSuccessors[numAdjacentComponents] = _componentSuccessors[_cStack.top()];
 			adjacentComponentIndices[numAdjacentComponents++] = _cStack.top();
 			_cStack.pop();
 		}
 
 		sort(adjacentComponentIndices, adjacentComponentIndices + numAdjacentComponents);
+		// TODO: remove staticbitset and perform second pass over sorted components to remove duplicates
 
 		if (use_multiway_or){
 			// Multi way merge
@@ -212,8 +213,10 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 		} else {
 			// Simple OR
 			unsigned int adjacentComponentIndex;
+			int lastAdjacentComponentIndex = -1;
 			for (unsigned int i = 0; i < numAdjacentComponents; i++){
 				adjacentComponentIndex = adjacentComponentIndices[i];
+				if (adjacentComponentIndex == lastAdjacentComponentIndex) continue;
 
 				if (adjacentComponentIndex == newComponentIndex){
 					// No need for a full merge, just set the relevant bit.
@@ -236,6 +239,8 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 						if (debug) cout << "Not merging successor list of component " <<  newComponentIndex << " with " << adjacentComponentIndex << "... " << endl;
 					}
 				}
+
+				lastAdjacentComponentIndex = adjacentComponentIndex;
 			}
 		}
 
