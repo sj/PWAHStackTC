@@ -62,7 +62,8 @@ void DynamicBitSet::set(int bitIndex, bool value){
 	unsigned int vecElemIndex = bitIndex / 64;
 	if (debug) cout << "DynamicBitSet: setting bit " << bitIndex << ", at vec element index " << vecElemIndex << ", bit " << (bitIndex % 64) << endl;
 
-	while(_vec.size() <= vecElemIndex){
+	while(_vec.capacity() <= vecElemIndex){
+		cout << "expanding..." << endl;
 		_vec.push_back(0);
 	}
 

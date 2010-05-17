@@ -34,12 +34,13 @@ int main(int argc, char* argv[]) {
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/successor.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/callgraph.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/successors.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/calls.graph";
+	defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/child.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/categorypagelinks.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/pagelinks.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/child.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/samba/setflow.graph";
-	defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/agrocyc.graph";
+	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/agrocyc.graph";
+	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/kegg.graph";
 
 	typedef map<string,string> mapType;
 	map<string, string> cmdLineArgs;
@@ -48,7 +49,7 @@ int main(int argc, char* argv[]) {
 	cmdLineArgs["reflexitive"] = "unset";
 
 	// By default: use multi-OR when a component has out-degree of at least 5
-	cmdLineArgs["min-multi-or"] = 5;
+	cmdLineArgs["min-multi-or"] = "5";
 
 	for (int i = 1; i < argc; i++){
 		string currArg = argv[i];

@@ -536,7 +536,7 @@ WAHBitSet* WAHBitSet::constructByOr(const WAHBitSet* bs1, const WAHBitSet* bs2){
 	} // end while
 
 	// Decompress last word of resulting BitSet to plain word
-	if (result->_compressedBits.size() > 0) result->decompressLastWord();
+	if (result->_compressedBits.size() > 0 && !IS_FILL(result->_compressedBits.back())) result->decompressLastWord();
 
 	result->_lastBitIndex = max(bs1->_lastBitIndex, bs2->_lastBitIndex);
 	return result;

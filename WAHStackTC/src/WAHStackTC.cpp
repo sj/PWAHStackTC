@@ -14,6 +14,7 @@
 #include <algorithm> // for sorting vectors
 #include "PerformanceTimer.h"
 #include "WAHBitSetIterator.h"
+#include <bitset>
 #include <stdexcept>
 using namespace std;
 
@@ -36,7 +37,7 @@ void WAHStackTC::computeTransitiveClosure(bool reflexitive, bool storeComponentM
 	_componentSuccessors.clear();
 	_componentVertices.clear();
 	_savedCStackSize = new unsigned int[numVertices];
-	_savedVStackSize = new unsigned int[numVertices];
+	if (_storeComponentVertices) _savedVStackSize = new unsigned int[numVertices];
 	_vertexComponents = new int[numVertices];
 	_vertexCandidateComponentRoot = new unsigned int[numVertices];
 	_visited = DynamicBitSet(numVertices);
@@ -54,7 +55,7 @@ void WAHStackTC::computeTransitiveClosure(bool reflexitive, bool storeComponentM
 
 
 	delete[] _savedCStackSize;
-	delete[] _savedVStackSize;
+	if (_storeComponentVertices) delete[] _savedVStackSize;
 	delete[] _vertexCandidateComponentRoot;
 	delete[] _vertexDFSSeqNo;
 }
@@ -64,7 +65,7 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 
 	if (debug) cout << "Visiting vertex " << vertexIndex << endl;
 	_visited.set(vertexIndex);
-	_savedVStackSize[vertexIndex] = _vStack.size();
+	if (_storeComponentVertices) _savedVStackSize[vertexIndex] = _vStack.size();
 	_vStack.push(vertexIndex);
 	_savedCStackSize[vertexIndex] = _cStack.size();
 	_vertexComponents[vertexIndex] = -1;
@@ -147,7 +148,7 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 			} // else: no need to explicitly store self-loop
 		}
 
-		const bool use_multiway_or = _cStack.size() - _savedCStackSize[vertexIndex] > _minOutDegreeForMultiOR && _minOutDegreeForMultiOR >= 0;
+		const bool use_multiway_or = false; //(_cStack.size() - _savedCStackSize[vertexIndex] > _minOutDegreeForMultiOR) && _minOutDegreeForMultiOR >= 0;
 
 		if (!use_multiway_or){
 			if (explicitlyStoreSelfLoop){
@@ -162,8 +163,10 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 
 		// Note the +1: one slot is allocated in case we'll need to sneak in an extra WAHBitSet
 		// for the MultiWay OR to work.
-		WAHBitSet** adjacentComponentsSuccessors = new WAHBitSet*[_cStack.size() - _savedCStackSize[vertexIndex] + 1];
-		DynamicBitSet tmpAdjacentComponentBits;
+		WAHBitSet** adjacentComponentsSuccessors;
+		if (use_multiway_or) adjacentComponentsSuccessors = new WAHBitSet*[_cStack.size() - _savedCStackSize[vertexIndex] + 1];
+		const size_t bla = newComponentIndex;
+		bitset<bla> tmpAdjacentComponentBits;
 
 		// Pop off all adjacent components from the stack and remove duplicates
 		unsigned int numAdjacentComponents = 0;
@@ -173,7 +176,7 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 				continue; // skip duplicate
 			}
 			tmpAdjacentComponentBits.set(_cStack.top());
-			adjacentComponentsSuccessors[numAdjacentComponents] = _componentSuccessors[_cStack.top()];
+			if (use_multiway_or) adjacentComponentsSuccessors[numAdjacentComponents] = _componentSuccessors[_cStack.top()];
 			adjacentComponentIndices[numAdjacentComponents++] = _cStack.top();
 			_cStack.pop();
 		}
