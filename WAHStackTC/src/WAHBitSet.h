@@ -25,7 +25,7 @@ private:
 	void addZeroFill(int numBlocks);
 	void addLiteral(int value);
 	void init();
-
+	void decompressLastWord();
 
 public:
 	static const bool DEBUGGING = false;
@@ -54,7 +54,7 @@ public:
 	// 0-fill of length 1
 	static const int SIMPLE_ZEROFILL = 0b10000000000000000000000000000001;
 
-	WAHBitSet(DynamicBitSet& dynamicBitSet);
+	WAHBitSet(DynamicBitSet* dynamicBitSet);
 	WAHBitSet();
 	virtual ~WAHBitSet();
 

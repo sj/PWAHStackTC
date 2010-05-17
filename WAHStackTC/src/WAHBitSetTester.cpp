@@ -28,17 +28,17 @@ void WAHBitSetTester::testIterator(){
 	srand ( time(NULL) );
 
 	while (true){
-		WAHBitSet wbs;
+		WAHBitSet* wbs;
 		int maxBits = 5000;
 		randomise(wbs, maxBits);
 
-		cout << wbs.toString() << endl;
-		WAHBitSetIterator iter(&wbs);
+		cout << wbs->toString() << endl;
+		WAHBitSetIterator iter(wbs);
 		int nextIndex = iter.next();
 
 		stringstream message;
 		for (int i = 0; i < maxBits; i++){
-			if (wbs.get(i)){
+			if (wbs->get(i)){
 				// Bit is set, check whether iterator agrees
 				if (nextIndex != i){
 					message << "Bit with index " << i << " is set, but iterator doesn't think so?";
@@ -53,6 +53,8 @@ void WAHBitSetTester::testIterator(){
 				}
 			}
 		}
+
+		delete wbs;
 	}
 }
 
@@ -60,29 +62,66 @@ void WAHBitSetTester::testMultiOr(){
 	srand ( time(NULL) );
 	PerformanceTimer timer = PerformanceTimer::start();
 
+	int numSourceBitSets = 20;
+	int numBits = 560;
+
 	cout << "go" << endl;
-	WAHBitSet** bitsets = new WAHBitSet*[2];
+	while (true){
+		WAHBitSet** bitsets = new WAHBitSet*[numSourceBitSets];
+
+		for (int i = 0; i < numSourceBitSets; i++){
+			bitsets[i] = new WAHBitSet();
+			randomise(bitsets[i], numBits);
+			cout << "BitSet " << i << endl;
+			cout << bitsets[i]->toString() << endl << endl;
+		}
+
+		// Compute simple or
+		WAHBitSet* simpleOrRes = new WAHBitSet();
+		for (int i = 0; i < numSourceBitSets; i++){
+			simpleOrRes = WAHBitSet::constructByOr(simpleOrRes, bitsets[i]);
+		}
+
+		// Multi or
+		WAHBitSet* multiOrRes = new WAHBitSet();
+		WAHBitSet::multiOr(bitsets, numSourceBitSets, multiOrRes);
+
+		cout << endl << endl << "Simple OR result:" << endl;
+		cout << simpleOrRes->toString() << endl << endl;
+
+		cout << "Multi OR result:" << endl;
+		cout << multiOrRes->toString() << endl << endl;
+
+		// Compare results
+		if (simpleOrRes->_compressedBits.size() != multiOrRes->_compressedBits.size()){
+			throw string("Sizes do not match!");
+		}
+		for (int i = 0; i < simpleOrRes->_compressedBits.size(); i++){
+			if (simpleOrRes->_compressedBits[i] != multiOrRes->_compressedBits[i]){
+				throw string("Compressed bits mismatch");
+			}
+		}
+
+		cout << "ALL OK!" << endl;
+
+		delete simpleOrRes;
+		delete multiOrRes;
+		delete[] bitsets;
+	}
+
 	cout << "array done" << endl;
+	WAHBitSet** bitsets = new WAHBitSet*[2];
 	bitsets[0] = new WAHBitSet();
-	bitsets[0]->addLiteral(4360); // 3, 8, 12
-	bitsets[0]->addOneFill(2);
-	bitsets[0]->addLiteral(33554960); // 4, 9, ...
-	bitsets[0]->addZeroFill(2);
-	bitsets[0]->addOneFill(3);
-	bitsets[0]->addLiteral(64); // 6
-	//bitsets[0]->set(380);
-	bitsets[0]->set(499);
+	bitsets[0]->addZeroFill(2); // 0-fill of size 2
+	bitsets[0]->addLiteral(2147483647); // 1-fill as plain word
+	bitsets[0]->decompressLastWord();
 
 	cout << "done init 0:" << endl;
 	cout << bitsets[0]->toString() << endl;
 
 	bitsets[1] = new WAHBitSet();
-	bitsets[1]->addZeroFill(2);
-	bitsets[1]->addLiteral(8720); // 4, 9, 13
-	bitsets[1]->addLiteral(67109920); // 5, 10, ...
-	bitsets[1]->addOneFill(3);
-	//bitsets[1]->set(382);
-	bitsets[1]->set(500);
+	bitsets[1]->addLiteral(581261521); // 10001011000110101010010101000100
+	bitsets[1]->decompressLastWord();
 
 	cout << "done init 1" << endl;
 	cout << bitsets[1]->toString() << endl;
@@ -115,8 +154,8 @@ void WAHBitSetTester::testOr(){
 		//WAHBitSet wahbs1, wahbs2;
 		cout << "Creating 2 random DynamicBitSet objects... ";
 		cout.flush();
-		DynamicBitSet dbs1; //(wahbs1);
-		DynamicBitSet dbs2; //(wahbs2);
+		DynamicBitSet* dbs1 = new DynamicBitSet(); //(wahbs1);
+		DynamicBitSet* dbs2 = new DynamicBitSet(); //(wahbs2);
 		randomise(dbs1, 100000);
 		randomise(dbs2, 100000);
 		cout << "done, that took " << timer.reset() << " msecs" << endl;
@@ -144,7 +183,7 @@ void WAHBitSetTester::testOr(){
 		timer.reset();
 		WAHBitSet* wahres = WAHBitSet::constructByOr(&wahbs1, &wahbs2);
 		cout << "WAHBitSets merged, that took " << timer.reset() << " msecs" << endl;
-		DynamicBitSet* dbsres = DynamicBitSet::constructByOr(&dbs1, &dbs2);
+		DynamicBitSet* dbsres = DynamicBitSet::constructByOr(dbs1, dbs2);
 		cout << "DynamicBitSets merged, that took " << timer.reset() << " msecs" << endl;
 
 		cout << "Comparing merge results... ";
@@ -156,12 +195,14 @@ void WAHBitSetTester::testOr(){
 			cerr << wahbs2.toString() << endl << endl << endl;
 
 			cerr << "=== INPUT 1 (plain) ===" << endl;
-			cerr << dbs1.toString() << endl << endl;
+			cerr << dbs1->toString() << endl << endl;
 			cerr << "=== INPUT 2 (plain) ===" << endl;
-			cerr << dbs2.toString() << endl;
+			cerr << dbs2->toString() << endl;
 			throw string("MERGE FAIL!");
 		}
 		cout << "done, that took " << timer.reset() << " msecs" << endl << endl;
+		delete dbs1;
+		delete dbs2;
 		delete wahres;
 		delete dbsres;
 
@@ -169,8 +210,8 @@ void WAHBitSetTester::testOr(){
 	}
 }
 
-void WAHBitSetTester::randomise(BitSet& bitset, int maxBits){
-	bitset.clear();
+void WAHBitSetTester::randomise(BitSet* bitset, int maxBits){
+	bitset->clear();
 
 	// Probability of constructing a fill-bit
 	float fillProb = RAND_FLOAT();
@@ -180,7 +221,7 @@ void WAHBitSetTester::randomise(BitSet& bitset, int maxBits){
 
 	// Fill the bit set with a random number of bits, somewhere between 0 and a big number
 	//int numBlocks = (rand() % 10000000) / 31;
-	int numBits = 4 * 31 + (rand() % maxBits);
+	int numBits = rand() % maxBits;
 	int numBlocks = numBits / 31 + 1;
 	int offset;
 
@@ -191,12 +232,12 @@ void WAHBitSetTester::randomise(BitSet& bitset, int maxBits){
 			// Construct a block in such a way that a fill will occur
 			if (RAND_FLOAT() <= oneFillProb){
 				// 1-fill
-				for (int bit = offset; bit < offset + 31; bit++) bitset.set(bit);
+				for (int bit = offset; bit < offset + 31; bit++) bitset->set(bit);
 			} // else: 0-fill, do nothing
 		} else {
 			// Construct a block with random bits
 			if (DEBUGGING) cout << "Constructing block " << block << ": will be stored as literal word" << endl;
-			for (int bit = offset; bit < offset + 31; bit++) if (RAND_FLOAT() < 0.5) bitset.set(bit);
+			for (int bit = offset; bit < offset + 31; bit++) if (RAND_FLOAT() < 0.5) bitset->set(bit);
 		}
 	}
 }

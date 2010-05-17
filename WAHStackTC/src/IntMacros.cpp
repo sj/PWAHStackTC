@@ -42,11 +42,22 @@
 #define IS_ZEROFILL(var) (IS_FILL(var) && !GET_BIT(var,30))
 
 /**
+ * Define a 1-fill, disguised as a literal word
+ */
+#define LITERAL_ONEFILL 0b01111111111111111111111111111111
+
+/**
+ * Define a 0-fill, disguised as a literal word
+ */
+#define LITERAL_ZEROFILL 0b00000000000000000000000000000000
+
+
+/**
  * Macro to determine whether a var is a literal concealing a 1-fill
  */
-#define IS_LITERAL_ONEFILL(var) ((var) == 0b01111111111111111111111111111111)
+#define IS_LITERAL_ONEFILL(var) ((var) == LITERAL_ONEFILL)
 
 /**
  * Macro to determine whether a var is a literal concealing a 0-fill
  */
-#define IS_LITERAL_ZEROFILL(var) ((var) == 0b00000000000000000000000000000000)
+#define IS_LITERAL_ZEROFILL(var) ((var) == LITERAL_ZEROFILL)

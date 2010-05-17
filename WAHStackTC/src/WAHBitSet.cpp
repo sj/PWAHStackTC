@@ -26,9 +26,9 @@ WAHBitSet::WAHBitSet() {
 WAHBitSet::~WAHBitSet() {
 }
 
-WAHBitSet::WAHBitSet(DynamicBitSet& dynamicBitSet){
+WAHBitSet::WAHBitSet(DynamicBitSet* dynamicBitSet){
 	init();
-	for (unsigned int i = 0; i < dynamicBitSet.size(); i++) this->set(i, dynamicBitSet.get(i));
+	for (unsigned int i = 0; i < dynamicBitSet->size(); i++) this->set(i, dynamicBitSet->get(i));
 }
 
 void WAHBitSet::set(int bitIndex){
@@ -48,7 +48,7 @@ void WAHBitSet::set(int bitIndex, bool value){
 	if (bitIndex < _plainWordBlockSeq * BLOCKSIZE){
 		// The passed bit was already compressed. Can't do anything about that.
 		stringstream stream;
-		stream << "Cannot set/unset bit at index " << bitIndex << ": bit is already compressed!";
+		stream << "Cannot set/unset bit at index " << bitIndex << ": bit is already compressed! (plainWordBlockSeq=" << _plainWordBlockSeq << ")";
 		throw stream.str();
 	}
 
@@ -224,7 +224,7 @@ void WAHBitSet::addZeroFill(int numBlocks){
 
 void WAHBitSet::addLiteral(int value){
 	if (value != 0) _empty = false;
-	if (_plainWord != 0) throw string("Cannot use WAHBitSet::addLiteral(...) after WAHBitSet::set(...)");
+	if (_plainWord != 0) throw string("Plain word already set");
 
 	if (IS_LITERAL_ZEROFILL(value)) addZeroFill(1);
 	else if (IS_LITERAL_ONEFILL(value)) addOneFill(1);
@@ -535,14 +535,9 @@ WAHBitSet* WAHBitSet::constructByOr(const WAHBitSet* bs1, const WAHBitSet* bs2){
 		}
 	} // end while
 
-	// If the last word of the result is a literal, store that one uncompressed
-	if (result->_compressedBits.size() > 0 && !IS_FILL(result->_compressedBits.back())){
-		result->_plainWord = result->_compressedBits.back();
-		result->_compressedBits.pop_back();
-		result->_plainWordBlockSeq = max(bs1->_plainWordBlockSeq, bs2->_plainWordBlockSeq);
-	} else {
-		result->_plainWordBlockSeq = max(bs1->_plainWordBlockSeq, bs2->_plainWordBlockSeq) + 1;
-	}
+	// Decompress last word of resulting BitSet to plain word
+	if (result->_compressedBits.size() > 0) result->decompressLastWord();
+
 	result->_lastBitIndex = max(bs1->_lastBitIndex, bs2->_lastBitIndex);
 	return result;
 }
@@ -566,7 +561,7 @@ void WAHBitSet::multiOr(WAHBitSet** bitSets, unsigned int numBitSets, WAHBitSet*
 	unsigned int* sWordOffset = new unsigned int[numBitSets];
 	unsigned int* sBlockIndex = new unsigned int[numBitSets];
 	int largestOneFill, largestOneFillSize;
-	int shortestZeroFill, shortestZeroFillSize;
+	int shortestZeroFillSize;
 	int currMergedLiteral, currWord, currFillLengthRemaining;
 
 	// Initialize values in int arrays to 0.
@@ -575,6 +570,7 @@ void WAHBitSet::multiOr(WAHBitSet** bitSets, unsigned int numBitSets, WAHBitSet*
 	memset(sBlockIndex, 0, numBitSets * sizeof(int));
 
 	while(true){
+		if (debug) cout << "Composing result block with index " << rBlockIndex << "..." << endl;
 		currMergedLiteral = 0;
 		shortestZeroFillSize = -1;
 		largestOneFillSize = -1;
@@ -584,64 +580,67 @@ void WAHBitSet::multiOr(WAHBitSet** bitSets, unsigned int numBitSets, WAHBitSet*
 			if (debug) cout << "Considering BitSet with index " << i << " (total number of bitsets = " << numBitSets << ")" << endl;
 			if (debug) cout << "BitSet " << i << " contains " << bitSets[i]->_compressedBits.size() << " compressed words, is now at blockindex " << sBlockIndex[i] << " which is in wordindex " << sWordIndex[i] << endl;
 
+			// Before skipping, check whether it actually makes sense to skip.
 			if (sBlockIndex[i] > rBlockIndex){
 				// Implicitly skipping over blocks of a 0-fill in this BitSet. Ignore this BitSet
 				// until the end of the 0-fill has been reached.
 				if (debug) cout << "BitSet " << i << ": rBlockIndex=" << rBlockIndex << ", whilst sBlockIndex of this BitSet=" << sBlockIndex[i] << ", skipping BitSet..." << endl;
+				if (sBlockIndex[i] - rBlockIndex < shortestZeroFillSize || shortestZeroFillSize == -1) shortestZeroFillSize = sBlockIndex[i] - rBlockIndex;
 				continue;
 			} else if (sWordIndex[i] > bitSets[i]->_compressedBits.size()){
 				// Totally out of bounds. Note that the '>' in stead of '>=' is intentional!
 				// Skip this BitSet
 				if (debug) cout << "BitSet " << i << ": totally out of bounds (" << sWordIndex[i] << " > " << bitSets[i]->_compressedBits.size() << "), skipping..." << endl;
 				continue;
-			} else if (sWordIndex[i] < bitSets[i]->_compressedBits.size()){
-				// Still within bounds, but some aligning might be needed
-				if (debug) cout << "Aligning BitSet " << i << ", currently at block " << sBlockIndex[i] << ", should be at block " << rBlockIndex << endl;
+			}
 
-				while (sBlockIndex[i] < rBlockIndex){
-					if (debug) cout << "BitSet " << i << ": at block " << sBlockIndex[i] << endl;
+			if (debug) cout << "Aligning BitSet " << i << ", currently at block " << sBlockIndex[i] << ", should be at block " << rBlockIndex << endl;
+			while (sBlockIndex[i] < rBlockIndex){
+				if (debug) cout << "BitSet " << i << ": at block " << sBlockIndex[i] << endl;
 
-					// Perform some aligning: this BitSet is not yet at block index rBlockIndex
-					if (sWordIndex[i] >= bitSets[i]->_compressedBits.size()){
-						// Out of bounds, no more skipping
-						if (debug) cout << "BitSet " << i << ": running out of bounds, breaking alignment..." << endl;
-						break;
-					}
+				// Perform some aligning: this BitSet is not yet at block index rBlockIndex
+				if (sWordIndex[i] >= bitSets[i]->_compressedBits.size()){
+					// Out of bounds of compressed bits, no more skipping
+					if (debug) cout << "BitSet " << i << ": running out of bounds, breaking alignment..." << endl;
+					break;
+				}
 
-					currWord = bitSets[i]->_compressedBits[sWordIndex[i]];
+				currWord = bitSets[i]->_compressedBits[sWordIndex[i]];
 
-					if (IS_FILL(currWord)){
-						// Fill word. Check length and skip accordingly
-						currFillLengthRemaining = FILL_LENGTH(currWord) - sWordOffset[i];
-						if (currFillLengthRemaining <= rBlockIndex - sBlockIndex[i]){
-							// Skip entire length
-							if (debug) cout << "BitSet " << i << ": skipping one entire fill word of length " << currFillLengthRemaining << endl;
-							sWordIndex[i]++;
-							sWordOffset[i] = 0;
-							sBlockIndex[i] += currFillLengthRemaining;
-						} else {
-							// Can't skip the entire length...
-							if (debug) cout << "BitSet " << i << ": skipping part of fill word: only " << (rBlockIndex - sBlockIndex[i]) << " of " << currFillLengthRemaining << " blocks" << endl;
-							sWordOffset[i] += rBlockIndex - sBlockIndex[i];
-							sBlockIndex[i] += rBlockIndex - sBlockIndex[i];
-						}
-					} else {
-						// Literal, skip one block
-						if (debug) cout << "BitSet " << i << ": skipping one literal word (one block)" << endl;
-						sBlockIndex[i]++;
+				if (IS_FILL(currWord)){
+					// Fill word. Check length and skip accordingly
+					currFillLengthRemaining = FILL_LENGTH(currWord) - sWordOffset[i];
+					if (currFillLengthRemaining <= rBlockIndex - sBlockIndex[i]){
+						// Skip entire length
+						if (debug) cout << "BitSet " << i << ": skipping one entire fill word of length " << currFillLengthRemaining << endl;
 						sWordIndex[i]++;
+						sWordOffset[i] = 0;
+						sBlockIndex[i] += currFillLengthRemaining;
+					} else {
+						// Can't skip the entire length...
+						if (debug) cout << "BitSet " << i << ": skipping part of fill word: only " << (rBlockIndex - sBlockIndex[i]) << " of " << currFillLengthRemaining << " blocks" << endl;
+						sWordOffset[i] += rBlockIndex - sBlockIndex[i];
+						sBlockIndex[i] += rBlockIndex - sBlockIndex[i];
 					}
-				} // end while: skipping done
-
-				if (debug) cout << "Done aligning BitSet " << i << ", now at word " << sWordIndex[i] << endl;
-			} // else: start using plain word, see below
+				} else {
+					// Literal, skip one block
+					if (debug) cout << "BitSet " << i << ": skipping one literal word (one block)" << endl;
+					sBlockIndex[i]++;
+					sWordIndex[i]++;
+				}
+			} // end while: skipping done
+			if (rBlockIndex > sBlockIndex[i]){
+				if (debug) cout << "Alignment of BitSet " << i << " failed, skipping BitSet..." << endl;
+				continue;
+			}
+			if (debug) cout << "Done aligning BitSet " << i << ", now at word " << sWordIndex[i] << endl;
 
 			if (sWordIndex[i] < bitSets[i]->_compressedBits.size()){
 				// Within bounds
 				if (debug) cout << "Current compressed word of bitset " << i << ": " << toBitString(bitSets[i]->_compressedBits[sWordIndex[i]]) << endl;
 				currWord = bitSets[i]->_compressedBits[sWordIndex[i]];
 			} else if (sWordIndex[i] == bitSets[i]->_compressedBits.size()){
-				// One out of bound, take plain word
+				// One out of bounds, take plain word
 				if (debug) cout << "Considering plain word of bitset " << i << ": " << toBitString(bitSets[i]->_plainWord) << endl;
 				//sBlockIndex[i] = bitSets[i]->_plainWordBlockSeq;
 				currWord = bitSets[i]->_plainWord;
@@ -659,18 +658,18 @@ void WAHBitSet::multiOr(WAHBitSet** bitSets, unsigned int numBitSets, WAHBitSet*
 				}
 			} else if (IS_ZEROFILL(currWord)){
 				// Zero fills are boring. Skip the 0-fill, move on to the next word of this BitSet
-				if (debug) cout << "BitSet " << i << ": 0-fill of length " << FILL_LENGTH(currWord) << " detected, skipping to next word..." << endl;
 				currFillLengthRemaining = FILL_LENGTH(currWord) - sWordOffset[i];
 
 				if (currFillLengthRemaining < shortestZeroFillSize || shortestZeroFillSize == -1){
 					// This 0-fill is the shortest one
 					shortestZeroFillSize = currFillLengthRemaining;
-					shortestZeroFill = i;
 				}
 
 				sWordIndex[i]++;
 				sWordOffset[i] = 0;
 				sBlockIndex[i] += currFillLengthRemaining;
+				if (debug) cout << "BitSet " << i << ": 0-fill of length " << currFillLengthRemaining << " detected, skipping to blockindex " << sBlockIndex[i] << "..." << endl;
+
 			} else {
 				// Literal
 				if (largestOneFillSize == -1){
@@ -724,13 +723,34 @@ void WAHBitSet::multiOr(WAHBitSet** bitSets, unsigned int numBitSets, WAHBitSet*
 	delete[] sBlockIndex;
 
 	// Decompress last word of resulting BitSet to plain word
-	if (result->_compressedBits.size()){
-		result->_plainWord = result->_compressedBits.back();
-		result->_compressedBits.pop_back();
-		result->_plainWordBlockSeq--;
-	}
+	if (result->_compressedBits.size() > 0) result->decompressLastWord();
 
 	if (debug) cout << "done multiway!" << endl;
+}
+
+void WAHBitSet::decompressLastWord(){
+	if (this->size() == 0) throw string ("Can't decompress last word, BitSet has no compressed words!");
+	if (this->_plainWord != 0) throw string ("Can't decompress last word, plain word != 0");
+
+	if (IS_FILL(this->_compressedBits.back())){
+		unsigned int fillLength = FILL_LENGTH(this->_compressedBits.back());
+
+		if (IS_ONEFILL(this->_compressedBits.back())){
+			this->_plainWord = LITERAL_ONEFILL;
+			this->_compressedBits.pop_back();
+
+			if (fillLength >= 2) _compressedBits.push_back((fillLength - 1) | EMPTY_ONEFILL);
+		} else {
+			this->_plainWord = LITERAL_ZEROFILL;
+			this->_compressedBits.pop_back();
+			if (fillLength >= 2) _compressedBits.push_back((fillLength - 1) | EMPTY_ZEROFILL);
+		}
+	} else {
+		this->_plainWord = this->_compressedBits.back();
+		this->_compressedBits.pop_back();
+	}
+
+	_plainWordBlockSeq--;
 }
 
 bool WAHBitSet::isEmpty(){

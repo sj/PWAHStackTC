@@ -24,8 +24,7 @@ int main(int argc, char* argv[]) {
 	cout.setf(ios::fixed,ios::floatfield);
 	cout.precision(4);
 
-	//WAHBitSetTester::testMultiOr();
-	//exit(1);
+
 
 	string defFilename;
 	//defFilename = "../../Datasets/nuutila32.graph";
@@ -44,7 +43,7 @@ int main(int argc, char* argv[]) {
 
 	typedef map<string,string> mapType;
 	map<string, string> cmdLineArgs;
-	cmdLineArgs["numruns"] = "1";
+	cmdLineArgs["num-runs"] = "1";
 	cmdLineArgs["filename"] = defFilename;
 	cmdLineArgs["reflexitive"] = "unset";
 
@@ -83,12 +82,14 @@ int main(int argc, char* argv[]) {
 	const bool reflexitive = (cmdLineArgs["reflexitive"] != "unset");
 	const int minMultiOR = atoi(cmdLineArgs["min-multi-or"].c_str());
 	const string filename = cmdLineArgs["filename"];
-	const int numRuns = atoi(cmdLineArgs["numruns"].c_str());
+	const int numRuns = atoi(cmdLineArgs["num-runs"].c_str());
 	const int numQueries = 1000000;
 	double totalConstructionTime = 0;
 	double totalQueryTime = 0;
 
 	try {
+		//WAHBitSetTester::testMultiOr();
+		//exit(1);
 		/**WAHBitSetTester::testIterator();
 		cout << "done testing iterator" << endl;
 		exit(1);**/
