@@ -13,6 +13,7 @@
 #include <vector>
 #include <stack>
 #include "PerformanceTimer.h"
+#include "StaticBitSet.h"
 using namespace std;
 
 class WAHStackTC {

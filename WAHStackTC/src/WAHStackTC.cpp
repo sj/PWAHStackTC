@@ -14,7 +14,7 @@
 #include <algorithm> // for sorting vectors
 #include "PerformanceTimer.h"
 #include "WAHBitSetIterator.h"
-#include <bitset>
+#include "StaticBitSet.h"
 #include <stdexcept>
 using namespace std;
 
@@ -52,7 +52,6 @@ void WAHStackTC::computeTransitiveClosure(bool reflexitive, bool storeComponentM
 	for (unsigned int v = 0; v < numVertices; v++){
 		if (!_visited.get(v)) dfsVisit(v);
 	}
-
 
 	delete[] _savedCStackSize;
 	if (_storeComponentVertices) delete[] _savedVStackSize;
@@ -165,8 +164,7 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 		// for the MultiWay OR to work.
 		WAHBitSet** adjacentComponentsSuccessors;
 		if (use_multiway_or) adjacentComponentsSuccessors = new WAHBitSet*[_cStack.size() - _savedCStackSize[vertexIndex] + 1];
-		const size_t bla = newComponentIndex;
-		bitset<bla> tmpAdjacentComponentBits;
+		StaticBitSet tmpAdjacentComponentBits(newComponentIndex + 1);
 
 		// Pop off all adjacent components from the stack and remove duplicates
 		unsigned int numAdjacentComponents = 0;
@@ -191,8 +189,11 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 			// should be sorted for this to work, since bits of the WAHBitSet can only be set in
 			// increasing order.
 			WAHBitSet* adjacentComponentBits = new WAHBitSet();
+			int lastIndex = -1;
 			for (unsigned int i = 0; i < numAdjacentComponents; i++){
+				if (adjacentComponentIndices[i] == lastIndex) continue;
 				adjacentComponentBits->set(adjacentComponentIndices[i]);
+				lastIndex = adjacentComponentIndices[i];
 			}
 
 			// Sneak the extra WAHBitSet into the list of WAHBitSet objects
@@ -239,7 +240,7 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 		}
 
 		delete[] adjacentComponentIndices;
-		delete[] adjacentComponentsSuccessors;
+		if (use_multiway_or) delete[] adjacentComponentsSuccessors;
 
 		_componentSuccessors.push_back(successors);
 
