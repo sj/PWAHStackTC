@@ -14,6 +14,7 @@
 #include <stack>
 #include "PerformanceTimer.h"
 #include "StaticBitSet.h"
+#include "DynamicStack.h"
 using namespace std;
 
 class WAHStackTC {
@@ -26,11 +27,12 @@ private:
 	vector<int*> _componentVertices; // stores the vertices in each component
 	vector<unsigned int> _componentSizes; // stores the size of strongly connected components
 	DynamicBitSet _visited; // records visited vertices
-	stack<unsigned int> _vStack, _cStack; // vertex and component stacks
+	DynamicStack* _vStack; // stack for vertices
+	DynamicStack* _cStack; // stack for components
 	unsigned int* _savedVStackSize; // size of stack _vStack upon detection of a vertex
 	unsigned int* _savedCStackSize; // size of stack _cStack upon detection of a vertex
 	unsigned int* _vertexCandidateComponentRoot; // candidate component root for each vertex
-	DynamicBitSet _vertexSelfLoop; // records vertex self loops
+	StaticBitSet* _vertexSelfLoop; // records vertex self loops
 	int* _vertexDFSSeqNo; // record DFS sequence number of every vertex
 	int _lastDFSSeqNo;
 	int _lastComponentIndex;
