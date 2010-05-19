@@ -18,6 +18,7 @@
 #include <sstream>
 #include <iostream>
 #include <map>
+#include "Validator.h"
 using namespace std;
 
 int main(int argc, char* argv[]) {
@@ -48,9 +49,10 @@ int main(int argc, char* argv[]) {
 	cmdLineArgs["num-runs"] = "1";
 	cmdLineArgs["filename"] = defFilename;
 	cmdLineArgs["reflexitive"] = "unset";
+	cmdLineArgs["run-validator"] = "unset";
 
 	// By default: use multi-OR when a component has out-degree of at least 5
-	cmdLineArgs["min-multi-or"] = "5";
+	cmdLineArgs["min-multi-or"] = "0";
 
 	for (int i = 1; i < argc; i++){
 		string currArg = argv[i];
@@ -88,6 +90,11 @@ int main(int argc, char* argv[]) {
 	const int numQueries = 1000000;
 	double totalConstructionTime = 0;
 	double totalQueryTime = 0;
+
+	if (cmdLineArgs["run-validator"] != "unset"){
+		Validator::validate();
+		exit(0);
+	}
 
 	try {
 		//WAHBitSetTester::testMultiOr();
