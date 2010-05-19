@@ -12,8 +12,10 @@ using namespace std;
 
 class DynamicStack {
 private:
-	vector<int> _elements;
+	int* _elements;
+	int _capacity;
 	int _lastIndexSet;
+	void reserve(unsigned int minCapacity);
 
 public:
 	DynamicStack(unsigned int capacity);

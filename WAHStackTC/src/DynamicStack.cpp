@@ -10,18 +10,32 @@
 #include <string.h>
 #include <vector>
 #include <iostream>
+#include <stdio.h>
 using namespace std;
 
-DynamicStack::DynamicStack(unsigned int capacity) {
+DynamicStack::DynamicStack(unsigned int initialCapacity) {
 	_lastIndexSet = -1;
-	_elements = vector<int>(capacity);
+	_capacity = initialCapacity;
+	_elements = new int[initialCapacity];
 }
 
-DynamicStack::~DynamicStack() {}
+DynamicStack::~DynamicStack() {
+	delete _elements;
+}
+
+void DynamicStack::reserve(unsigned int minCapacity){
+	if (minCapacity < _capacity) throw string("Cannot reduce capacity!");
+
+	int* newElements = new int[minCapacity];
+	memcpy(newElements, _elements, _capacity * sizeof(int));
+	delete _elements;
+	_elements = newElements;
+	_capacity = minCapacity;
+}
 
 void DynamicStack::push(int value){
-	if (_lastIndexSet >= 0 && _lastIndexSet >= _elements.capacity() - 1){
-		_elements.reserve(_elements.capacity() * 2);
+	if (_lastIndexSet >= 0 && _lastIndexSet >= _capacity - 1){
+		reserve(_capacity * 2);
 	}
 	_elements[++_lastIndexSet] = value;
 }
