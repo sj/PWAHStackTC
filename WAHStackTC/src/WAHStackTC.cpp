@@ -173,8 +173,10 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 			if (!use_multiway_or){
 				if (explicitlyStoreSelfLoop){
 					// When using regular OR, a self loop should be recorded by pushing the
-					// new component index on the stack with adjacent components
+					// new component index on the stack with adjacent components. In case of multi-way
+					// or, the self loop will
 					_cStack->push(newComponentIndex);
+					numAdjacentComponents++;
 				}
 			}
 
@@ -185,7 +187,6 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 			// of memory again, effectively overwriting the values which were popped off the stack!
 			// Ergo: never call a push() after having completely finished processing all elements
 			// returned by the multiPop(...)
-
 			int* adjacentComponentIndices = _cStack->multiPop(numAdjacentComponents);
 			int* uniqueAdjacentComponentIndices = new int[numAdjacentComponents];
 
@@ -303,16 +304,15 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 			_componentSizes[newComponentIndex]++;
 
 			if (_storeComponentVertices){
-				cout << "storing" << endl;
 				_componentVertices[newComponentIndex][i++] = currStackVertexIndex;
 			}
 		} while (vertexIndex != currStackVertexIndex);
 		if (debug) cout << "done!";
 
 
-		cout << "storing component " << newComponentIndex << "...";
-		if (successors != NULL) cout << " using " << successors->memoryUsage() << " bits" << endl;
-		else cout << endl;
+		//cout << "storing component " << newComponentIndex << "...";
+		//if (successors != NULL) cout << " using " << successors->memoryUsage() << " bits" << endl;
+		//else cout << endl;
 		_componentSuccessors.push_back(successors);
 	} // else: vertex is not a component root
 
