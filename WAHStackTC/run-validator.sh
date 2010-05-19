@@ -1,6 +1,14 @@
 #!/bin/bash
 
 logfile="/home/bas/wahstacktc-validator/`date +%s`.log"
+#useconfiguration="Debug"
+useconfiguration="Release"
+
+if [ ! -d "$useconfiguration" ]; then
+	echo "Can not find build configuration dir '$useconfiguration' in current directory?!" >&2
+	exit 1
+fi
+
 if [ ! -d "`dirname $logfile`" ]; then
 	mkdir "`dirname $logfile`"
 fi
@@ -13,7 +21,7 @@ echo >> $logfile
 echo "======= Build log =======" >> $logfile
 
 tmplogfile=`mktemp`
-cd Debug
+cd $useconfiguration
 make all &> $tmplogfile
 buildres="$?"
 cat $tmplogfile >> $logfile
