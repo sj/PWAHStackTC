@@ -341,24 +341,70 @@ string WAHStackTC::tcToString(){
 	return stream.str();
 }
 
+/**
+ * \brief Counts the number of edges in the condensed transitive closure. This includes all kinds of self-loops
+ *
+ * Edges in the condensed transitive closure are basically all edges between components. Duplicate edges
+ * between components (i.e. when multiple vertices from component A are connected to one or more vertices
+ * in component B) are ignored.
+ */
 long WAHStackTC::countNumberOfEdgesInCondensedTC(){
+	return countNumberOfEdgesInCondensedTC(false, false);
+}
+
+/**
+ * \brief Counts the number of edges in the condensed transitive closure. Optionally, some kinds of
+ * self-loops are not counted
+ *
+ * Edges in the condensed transitive closure are basically all edges between components. Duplicate edges
+ * between components (i.e. when multiple vertices from component A are connected to one or more vertices
+ * in component B) are ignored.
+ *
+ * \param ignoreSelfLoops Ignore all self-loops in the condensed transitive closure (note that
+ * a component has a self loop when the number of vertices in the component > 1!)
+ * \param ignoreSingletonSelfLoops Ignore all self-loops of singleton components (components consisting
+ * of only one vertex)
+ */
+long WAHStackTC::countNumberOfEdgesInCondensedTC(bool ignoreSelfLoops, bool ignoreSingletonSelfLoops){
 	long count = 0;
 	int currSuccessorIndex;
 
+	if (ignoreSelfLoops) ignoreSingletonSelfLoops = true;
 
 	for (unsigned int c = 0; c < _componentSizes.size(); c++){
 		if (_componentSuccessors[c] != NULL){
 			WAHBitSetIterator iter(_componentSuccessors[c]);
 			currSuccessorIndex = iter.next();
 			while (currSuccessorIndex != -1){
-				count++;
+
+				// The number of if-statements can be reduced, but is preserved like this for
+				// sake of clarity.
+				if (currSuccessorIndex == c){
+					// Self-loop!
+					if (!ignoreSelfLoops){
+						// Self-loops need to be processed
+						if (_componentSizes[c] == 1 && !ignoreSingletonSelfLoops){
+							// Trivial component (consisting of only 1 vertex)
+							count++;
+						} else if (_componentSizes[c] > 1){
+							// Non-trivial component: count self loop
+							count++;
+						}
+					} // else: all self-loops are ignored
+				} else {
+					// Not a self-loop
+					count++;
+				}
+
 				currSuccessorIndex = iter.next();
 			}
 		}
 
-		if (_reflexitive || _storeComponentVertices){
-			// Self-loops were not stored explicitly
-			if (this->componentHasSelfLoop(c)) count++;
+		if (!ignoreSelfLoops){
+			if (_reflexitive || _storeComponentVertices){
+				// Self-loops were not stored explicitly
+				if (this->componentHasSelfLoop(c)) count++;
+			}
 		}
 	}
 	return count;

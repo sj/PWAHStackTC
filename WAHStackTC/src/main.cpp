@@ -30,13 +30,14 @@ int main(int argc, char* argv[]) {
 	string defFilename;
 	//defFilename = "../../Datasets/nuutila32.graph";
 	//defFilename = "../../Datasets/Semmle graphs/java/depends.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/depends.graph";
+	defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/depends.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/depends.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/successor.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/callgraph.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/successors.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/child.graph";
-	defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/polycalls.graph";
+	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/polycalls.graph";
+	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/child.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/categorypagelinks.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/pagelinks.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/child.graph";

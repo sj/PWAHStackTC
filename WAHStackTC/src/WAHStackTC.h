@@ -50,6 +50,7 @@ public:
 	string tcToString();
 	long countNumberOfEdgesInTC();
 	long countNumberOfEdgesInCondensedTC();
+	long countNumberOfEdgesInCondensedTC(bool ignoreSelfLoops, bool ignoreSingletonSelfLoops);
 	int getNumberOfComponents();
 	void writeToChacoFile(string filename);
 	bool reachable(int src, int dst);
@@ -58,3 +59,4 @@ public:
 };
 
 #endif /* WAHSTACKTC_H_ */
+
