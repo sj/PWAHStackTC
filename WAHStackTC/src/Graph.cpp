@@ -24,7 +24,7 @@ Graph::~Graph() {
 	// TODO Auto-generated destructor stub
 }
 
-int Graph::getNumberOfVertices(){
+unsigned int Graph::getNumberOfVertices(){
 	return _vertices.size();
 }
 
@@ -32,7 +32,7 @@ vector<int>* Graph::getChildren(unsigned int vertexIndex){
 	return &_vertices[vertexIndex];
 }
 
-int Graph::countNumberOfEdges(){
+unsigned int Graph::countNumberOfEdges(){
 	int numEdges = 0;
 	for (int v = 0; v < this->getNumberOfVertices(); v++){
 		numEdges += _vertices[v].size();
@@ -53,6 +53,56 @@ vector<string> &Graph::split(const string &s, char delim, vector<string> &elems)
 vector<string> Graph::split(const string &s, char delim) {
 	vector<string> elems;
 	return split(s, delim, elems);
+}
+
+float Graph::computeAvgOutDegree(){
+	long totalOutDegree = -1;
+	for (unsigned int v = 0; v < getNumberOfVertices(); v++){
+		totalOutDegree += getChildren(v)->size();
+	}
+	return (float) totalOutDegree / getNumberOfVertices();
+}
+
+int Graph::findMaxOutDegreeVertex(){
+	if (getNumberOfVertices() == 0) return -1;
+
+	unsigned int maxOutDegree = getChildren(0)->size();
+	unsigned int maxOutDegreeVertex = 0;
+	for (unsigned int v = 1; v < getNumberOfVertices(); v++){
+		if (getChildren(v)->size() > maxOutDegree){
+			maxOutDegree = getChildren(v)->size();
+			maxOutDegreeVertex = v;
+		}
+	}
+	return maxOutDegreeVertex;
+}
+
+int Graph::findMinOutDegreeVertex(){
+	if (getNumberOfVertices() == 0) return -1;
+
+	unsigned int minOutDegree = getChildren(0)->size();
+	unsigned int minOutDegreeVertex = 0;
+	for (unsigned int v = 1; v < getNumberOfVertices(); v++){
+		if (getChildren(v)->size() < minOutDegree){
+			minOutDegree = getChildren(v)->size();
+			minOutDegreeVertex = v;
+		}
+	}
+	return minOutDegreeVertex;
+}
+
+int Graph::computeMinOutDegree(){
+	int v = findMinOutDegreeVertex();
+	if (v == -1) return -1;
+
+	return getChildren(v)->size();
+}
+
+int Graph::computeMaxOutDegree(){
+	int v = findMaxOutDegreeVertex();
+	if (v == -1) return -1;
+
+	return getChildren(v)->size();
 }
 
 Graph Graph::parseChacoFile(string filename){

@@ -19,8 +19,15 @@ public:
 	Graph();
 	virtual ~Graph();
 
-	int getNumberOfVertices();
-	int countNumberOfEdges();
+	unsigned int getNumberOfVertices();
+	unsigned int countNumberOfEdges();
+
+	float computeAvgOutDegree();
+	int computeMaxOutDegree();
+	int findMaxOutDegreeVertex();
+	int computeMinOutDegree();
+	int findMinOutDegreeVertex();
+
 	vector<int>* getChildren(unsigned int vertexIndex);
 
 	static Graph parseChacoFile(string filename);
