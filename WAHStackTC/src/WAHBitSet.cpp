@@ -767,6 +767,6 @@ unsigned int WAHBitSet::size(){
  */
 long WAHBitSet::memoryUsage(){
 	long res = _compressedBits.size() * 32;
-	res += 1; // plain word
+	res += 32; // plain word
 	return res;
 }
