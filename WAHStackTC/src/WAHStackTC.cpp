@@ -50,6 +50,8 @@ void WAHStackTC::computeTransitiveClosure(bool reflexitive, bool storeComponentM
 	_reflexitive = reflexitive;
 	_storeComponentVertices = storeComponentMembers;
 	_minOutDegreeForMultiOR = minOutDegreeForMultiOR;
+	_mergeTimer.resetAndStop();
+
 
 	for (unsigned int v = 0; v < numVertices; v++){
 		if (!_visited.get(v)){
@@ -230,6 +232,7 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 				// of directly adjacent components set. Note that the array 'adjacentComponentIndices'
 				// should be sorted for this to work, since bits of the WAHBitSet can only be set in
 				// increasing order.
+				_mergeTimer.resume();
 				WAHBitSet* adjacentComponentBits = new WAHBitSet();
 				int lastIndex = -1;
 				for (unsigned int i = 0; i < numUniqueAdjacentComponents; i++){
@@ -251,8 +254,10 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 				if (explicitlyStoreSelfLoop){
 					successors->set(newComponentIndex);
 				}
+				_mergeTimer.pause();
 			} else {
 				// Simple OR
+				_mergeTimer.resume();
 				unsigned int adjacentComponentIndex;
 				for (unsigned int i = 0; i < numUniqueAdjacentComponents; i++){
 					adjacentComponentIndex = uniqueAdjacentComponentIndices[i];
@@ -282,6 +287,7 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 						}
 					}
 				}
+				_mergeTimer.pause();
 			}
 
 			// Clean up dynamically allocated memory used for merge operations

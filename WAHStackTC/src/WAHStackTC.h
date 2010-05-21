@@ -38,6 +38,7 @@ private:
 	int _lastComponentIndex;
 	bool _reflexitive;
 	int _minOutDegreeForMultiOR;
+	PerformanceTimer _mergeTimer;
 
 	bool componentHasSelfLoop(int componentIndex);
 	void dfsVisit(unsigned int vertexIndex);
