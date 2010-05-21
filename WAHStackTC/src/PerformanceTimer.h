@@ -12,18 +12,23 @@
 
 class PerformanceTimer {
 private:
-	struct timeval _startTime;
+	struct timeval* _startTime;
+	double _storedRunTime;
 
 public:
 	PerformanceTimer();
 	virtual ~PerformanceTimer();
 
 	static PerformanceTimer start();
-	static double diffTimeMilliSecs(const timeval& time1, const timeval& time2);
-	static long diffTimeMicroSecs(const timeval& time1, const timeval& time2);
+	static double diffTimeMilliSecs(const timeval* time1, const timeval* time2);
+	static long diffTimeMicroSecs(const timeval* time1, const timeval* time2);
 	double reset();
+	double resetAndStop();
 	double currRunTime();
 	long currRunTimeMicro();
+	void pause();
+	void resume();
+	bool running();
 };
 
 #endif /* PERFORMANCETIMER_H_ */
