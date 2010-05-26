@@ -22,9 +22,20 @@
 #include "PWAHBitSet.h"
 using namespace std;
 
+void runValidatorWhenRequested(int argc, char* argv[]){
+	if (argc == 2){
+		string arg = argv[1];
+		if (arg == "--run-validator"){
+			Validator::validate();
+			exit(0);
+		}
+	}
+}
+
 int main(int argc, char* argv[]) {
 	cout.setf(ios::fixed,ios::floatfield);
 	cout.precision(4);
+	runValidatorWhenRequested(argc, argv);
 
 	PWAHBitSet<8> pwbs = PWAHBitSet<8>();
 	pwbs.set(7);
@@ -97,8 +108,9 @@ int main(int argc, char* argv[]) {
 	double totalQueryTime = 0;
 
 	if (cmdLineArgs["run-validator"] != "unset"){
-		Validator::validate();
-		exit(0);
+		// Validation should have been performed earlier?!
+		cerr << "Something's wrong with the validator!" << endl;
+		exit(1);
 	}
 
 	try {
