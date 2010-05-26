@@ -63,6 +63,14 @@ float Graph::computeAvgOutDegree(){
 	return (float) totalOutDegree / getNumberOfVertices();
 }
 
+float Graph::computeAvgInDegree(){
+	long totalInDegree = -1;
+	for (unsigned int v = 0; v < getNumberOfVertices(); v++){
+		totalInDegree += _vertexIndegree[v];
+	}
+	return (float) totalInDegree / getNumberOfVertices();
+}
+
 int Graph::findMaxOutDegreeVertex(){
 	if (getNumberOfVertices() == 0) return -1;
 
@@ -91,6 +99,45 @@ int Graph::findMinOutDegreeVertex(){
 	return minOutDegreeVertex;
 }
 
+int Graph::findMinInDegreeVertex(){
+	if (getNumberOfVertices() == 0) return -1;
+
+	unsigned int minInDegree = _vertexIndegree[0];
+	unsigned int minInDegreeVertex = 0;
+	for (unsigned int v = 1; v < getNumberOfVertices(); v++){
+		if (_vertexIndegree[v] < minInDegree){
+			minInDegree = getChildren(v)->size();
+			minInDegreeVertex = v;
+		}
+	}
+	return minInDegreeVertex;
+}
+
+int Graph::computeMinInDegree(){
+	int v = findMinInDegreeVertex();
+	if (v == -1) return -1;
+
+	return _vertexIndegree[v];
+}
+
+int Graph::findMaxInDegreeVertex(){
+	if (getNumberOfVertices() == 0) return -1;
+
+	unsigned int maxInDegree = getChildren(0)->size();
+	unsigned int maxInDegreeVertex = 0;
+	for (unsigned int v = 1; v < getNumberOfVertices(); v++){
+		if (_vertexIndegree[v] > maxInDegree){
+			maxInDegree = _vertexIndegree[v];
+			maxInDegreeVertex = v;
+		}
+	}
+	return maxInDegreeVertex;
+}
+
+unsigned int Graph::vertexInDegree(int v){
+	return _vertexIndegree[v];
+}
+
 int Graph::computeMinOutDegree(){
 	int v = findMinOutDegreeVertex();
 	if (v == -1) return -1;
@@ -103,6 +150,13 @@ int Graph::computeMaxOutDegree(){
 	if (v == -1) return -1;
 
 	return getChildren(v)->size();
+}
+
+int Graph::computeMaxInDegree(){
+	int v = findMaxInDegreeVertex();
+	if (v == -1) return -1;
+
+	return _vertexIndegree[v];
 }
 
 Graph Graph::parseChacoFile(string filename){
@@ -154,6 +208,7 @@ Graph Graph::parseChacoFile(string filename){
 			numEdges = atoi(neighbours[1].c_str());
 
 			graph._vertices = vector<vector<int> >(numVertices);
+			graph._vertexIndegree = vector<int>(numVertices);
 		} else {
 			// Parse 'regular' lines: line number indicates vertex
 			// index, integers on the line indicate adjacent vertex
@@ -170,6 +225,7 @@ Graph Graph::parseChacoFile(string filename){
 				currNeighbourIndex = atoi(neighbours[i].c_str()) - 1;
 				if (debug) cout << currVertexIndex << " has neighbour " << currNeighbourIndex << endl;
 				graph._vertices[currVertexIndex].push_back(currNeighbourIndex);
+				graph._vertexIndegree[currNeighbourIndex]++;
 				edgeCount++;
 			}
 		}

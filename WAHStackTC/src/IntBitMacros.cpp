@@ -9,22 +9,22 @@
 /**
  * Macro to check the bit at position pos of variable var
  */
-#define GET_BIT(var, pos) ((var) & (1 << (pos)))
+#define I_GET_BIT(var, pos) ((var) & (1 << (pos)))
 
 /**
  * Macro to set the bit at position pos of variable var
  */
-#define SET_BIT(var, pos) ((var) |= 1 << (pos))
+#define I_SET_BIT(var, pos) ((var) |= 1 << (pos))
 
 /**
- * Macro to clear the bit at position pos of variable vat
+ * Macro to clear the bit at position pos of variable var
  */
-#define CLEAR_BIT(var, pos) ((var) &= ~(1 << (pos)))
+#define I_CLEAR_BIT(var, pos) ((var) &= ~(1 << (pos)))
 
 /**
  * Macro to determine whether a var represents a FILL or LITERAL
  */
-#define IS_FILL(var) (GET_BIT(var,31))
+#define IS_FILL(var) (I_GET_BIT(var,31))
 
 /**
  * Macro to determine the length of a FILL
@@ -34,12 +34,12 @@
 /**
  * Macro to determine whether a var represents a 1-fill
  */
-#define IS_ONEFILL(var) (IS_FILL(var) && GET_BIT(var,30))
+#define IS_ONEFILL(var) (IS_FILL(var) && I_GET_BIT(var,30))
 
 /**
  * Macro to determine whether a var represents a 0-fill
  */
-#define IS_ZEROFILL(var) (IS_FILL(var) && !GET_BIT(var,30))
+#define IS_ZEROFILL(var) (IS_FILL(var) && !I_GET_BIT(var,30))
 
 /**
  * Define a 1-fill, disguised as a literal word

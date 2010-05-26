@@ -13,7 +13,7 @@
 #include <string.h>
 #include "WAHBitSet.h"
 #include <stdlib.h>
-#include "IntMacros.cpp"
+#include "IntBitMacros.cpp"
 using namespace std;
 
 #define RAND_FLOAT() ((rand() % 1000) / 1000.0)
@@ -97,8 +97,8 @@ void WAHBitSet::set(int bitIndex, bool value){
 
 	// BitIndex is within the boundaries of the plain word: change bit of the plain block.
 	//if (DEBUGGING) cout << "Bitindex " << bitIndex << " == index " << (bitIndex - _plainWordOffset) << " of plain word" << endl;
-	if (value) SET_BIT(_plainWord, bitIndex - _plainWordBlockSeq * BLOCKSIZE);
-	else CLEAR_BIT(_plainWord, bitIndex - _plainWordBlockSeq * BLOCKSIZE);
+	if (value) I_SET_BIT(_plainWord, bitIndex - _plainWordBlockSeq * BLOCKSIZE);
+	else I_CLEAR_BIT(_plainWord, bitIndex - _plainWordBlockSeq * BLOCKSIZE);
 
 	if (DEBUGGING) cout << "WAHBitSet::set done setting bit with index " << bitIndex <<  "!" << endl;
 }
@@ -132,7 +132,7 @@ bool WAHBitSet::get(int bitIndex){
 					// Requested bit is sitting somewhere in this literal word
 					//bitIndex -= firstBitIndex;
 					if (debug) cout << "Bit with index " << bitIndex << " is located in literal word " << i << " (" << firstBitIndex << "--" << lastBitIndex << "): " << toBitString(currWord) << endl;
-					return GET_BIT(currWord, bitIndex % 31);
+					return I_GET_BIT(currWord, bitIndex % 31);
 				}
 			}
 
@@ -141,7 +141,7 @@ bool WAHBitSet::get(int bitIndex){
 	} else if (bitIndex < _plainWordBlockSeq * BLOCKSIZE + BLOCKSIZE){
 		// BitIndex is within the boundaries of the plain block: fetch bit from plain block.
 		if (debug) cout << "Bit with index " << bitIndex << " is sitting in plain word..." << endl;
-		return GET_BIT(_plainWord, bitIndex - _plainWordBlockSeq * BLOCKSIZE);
+		return I_GET_BIT(_plainWord, bitIndex - _plainWordBlockSeq * BLOCKSIZE);
 	} else {
 		// Out of bounds, that's a 0-bit
 		if (debug) cout << "Bit with index " << bitIndex << " out of bounds..." << endl;
@@ -153,7 +153,7 @@ bool WAHBitSet::get(int bitIndex){
 string WAHBitSet::toBitString(int value){
 	stringstream res;
 	for (int bit = 0; bit < 32; bit++){
-		if (GET_BIT(value, bit)) res << "1";
+		if (I_GET_BIT(value, bit)) res << "1";
 		else res << "0";
 	}
 	res << " (= " << value << ")";
@@ -162,6 +162,7 @@ string WAHBitSet::toBitString(int value){
 
 string WAHBitSet::toString(){
 	stringstream res;
+
 	for (unsigned int i = 0; i < _compressedBits.size(); i++){
 		res << toBitString(_compressedBits[i]) << endl;
 	}
@@ -191,6 +192,7 @@ void WAHBitSet::addOneFill(int numBlocks){
 		if (numOneFills > MAX_BLOCKS_IN_FILL) throw range_error("Number of one blocks exceeds maximum number of blocks in a fill");
 
 		_compressedBits[lastWordIndex] = numOneFills | EMPTY_ONEFILL;
+		cout << numOneFills << " 1-fills!" << endl;
 	} else {
 		// No 1-fill on the back of the list, just append simple 1-fill
 		_compressedBits.push_back(numBlocks | EMPTY_ONEFILL);
@@ -212,6 +214,7 @@ void WAHBitSet::addZeroFill(int numBlocks){
 
 		// And replace the last word of the vector
 		_compressedBits[lastWordIndex] = numZeroFills | EMPTY_ZEROFILL;
+		cout << numZeroFills << " 1-fills!" << endl;
 	} else {
 		// No 0-fill on the back of the list, just append a number of 0-fills
 		if (numBlocks > MAX_BLOCKS_IN_FILL) throw range_error("Number of zero blocks exceeds maximum number of blocks in a fill");
@@ -242,7 +245,7 @@ int WAHBitSet::generateRandomLiteralBlock(){
 	int value = 0;
 
 	for (int i = 0; i < 31; i++){
-		if (RAND_FLOAT() > 0.5) SET_BIT(value, i);
+		if (RAND_FLOAT() > 0.5) I_SET_BIT(value, i);
 	}
 
 	if (value == BLOCK_ONES || value == BLOCK_ZEROES) return generateRandomLiteralBlock();

@@ -19,12 +19,12 @@ using namespace std;
 /**
  * Macro to check the bit at position pos of variable var
  */
-#define GET_BIT(var, pos) ((var) & (1L << (pos)))
+#define I_GET_BIT(var, pos) ((var) & (1L << (pos)))
 
 /**
  * Macro to set the bit at position pos of variable var
  */
-#define SET_BIT(var, pos) ((var) |= 1L << (pos))
+#define I_SET_BIT(var, pos) ((var) |= 1L << (pos))
 
 /**
  * Macro to clear the bit at position pos of variable vat
@@ -69,7 +69,7 @@ void DynamicBitSet::set(int bitIndex, bool value){
 
 	if (value){
 		if (debug) cout << "setting bit " << (bitIndex % 64) << " in " << toBitString(_vec[vecElemIndex]) << endl;
-		SET_BIT(_vec[vecElemIndex], bitIndex % 64);
+		I_SET_BIT(_vec[vecElemIndex], bitIndex % 64);
 		if (debug) cout << "Total resulting DynamicBitSet:" << endl << this->toString() <<endl;
 	} else {
 		CLEAR_BIT(_vec[vecElemIndex], bitIndex % 64);
@@ -79,7 +79,7 @@ void DynamicBitSet::set(int bitIndex, bool value){
 
 bool DynamicBitSet::get(int bitIndex){
 	if (bitIndex > _lastBitIndex) return false;
-	return GET_BIT(_vec[bitIndex / 64], bitIndex % 64);
+	return I_GET_BIT(_vec[bitIndex / 64], bitIndex % 64);
 }
 
 string DynamicBitSet::toString(){
@@ -93,7 +93,7 @@ string DynamicBitSet::toString(){
 string DynamicBitSet::toBitString(long value){
 	stringstream res;
 	for (int bit = 0; bit < 64; bit++){
-		if (GET_BIT(value, bit)) res << "1";
+		if (I_GET_BIT(value, bit)) res << "1";
 		else res << "0";
 	}
 	res << " (= " << value << ")";

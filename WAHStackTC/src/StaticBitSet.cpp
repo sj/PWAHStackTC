@@ -16,23 +16,9 @@
 #include <string>
 #include <string.h>
 #include <sstream>
+#include "LongBitMacros.cpp"
 using namespace std;
 
-
-/**
- * Macro to check the bit at position pos of variable var
- */
-#define GET_BIT(var, pos) ((var) & (1L << (pos)))
-
-/**
- * Macro to set the bit at position pos of variable var
- */
-#define SET_BIT(var, pos) ((var) |= 1L << (pos))
-
-/**
- * Macro to clear the bit at position pos of variable vat
- */
-#define CLEAR_BIT(var, pos) ((var) &= ~(1L << (pos)))
 
 StaticBitSet::StaticBitSet(int initialCapacity) {
 	init(initialCapacity);
@@ -70,17 +56,17 @@ void StaticBitSet::set(int bitIndex, bool value){
 
 	if (value){
 		if (debug) cout << "setting bit " << (bitIndex % sizeof(long)) << " in " << toBitString(_bits[longElemIndex]) << endl;
-		SET_BIT(_bits[longElemIndex], bitIndex % sizeof(long));
+		L_SET_BIT(_bits[longElemIndex], bitIndex % sizeof(long));
 		if (debug) cout << "Total resulting DynamicBitSet:" << endl << this->toString() <<endl;
 	} else {
-		CLEAR_BIT(_bits[longElemIndex], bitIndex % sizeof(long));
+		L_CLEAR_BIT(_bits[longElemIndex], bitIndex % sizeof(long));
 	}
 
 }
 
 bool StaticBitSet::get(int bitIndex){
 	if (bitIndex >= _capacity) throw string ("Index out of bounds");
-	return GET_BIT(_bits[bitIndex / sizeof(long)], bitIndex % sizeof(long));
+	return L_GET_BIT(_bits[bitIndex / sizeof(long)], bitIndex % sizeof(long));
 }
 
 string StaticBitSet::toString(){
@@ -94,7 +80,7 @@ string StaticBitSet::toString(){
 string StaticBitSet::toBitString(long value){
 	stringstream res;
 	for (unsigned int bit = 0; bit < sizeof(long); bit++){
-		if (GET_BIT(value, bit)) res << "1";
+		if (L_GET_BIT(value, bit)) res << "1";
 		else res << "0";
 	}
 	res << " (= " << value << ")";

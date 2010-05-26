@@ -14,6 +14,7 @@ using namespace std;
 class Graph {
 private:
 	vector<vector<int> > _vertices; // adjacency list
+	vector<int> _vertexIndegree; // indegree of vertices
 
 public:
 	Graph();
@@ -27,6 +28,14 @@ public:
 	int findMaxOutDegreeVertex();
 	int computeMinOutDegree();
 	int findMinOutDegreeVertex();
+
+	int computeMaxInDegree();
+	int findMaxInDegreeVertex();
+	float computeAvgInDegree();
+	int computeMinInDegree();
+	int findMinInDegreeVertex();
+
+	unsigned int vertexInDegree(int v);
 
 	vector<int>* getChildren(unsigned int vertexIndex);
 

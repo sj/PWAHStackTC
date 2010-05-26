@@ -19,31 +19,35 @@
 #include <iostream>
 #include <map>
 #include "Validator.h"
+#include "PWAHBitSet.h"
 using namespace std;
 
 int main(int argc, char* argv[]) {
 	cout.setf(ios::fixed,ios::floatfield);
 	cout.precision(4);
 
-
+	PWAHBitSet<8> pwbs = PWAHBitSet<8>();
+	pwbs.set(7);
+	exit(1);
 
 	string defFilename;
 	//defFilename = "../../Datasets/nuutila32.graph";
 	//defFilename = "../../Datasets/Semmle graphs/java/depends.graph";
 	defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/depends.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/depends.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/successor.graph";
+	defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/successor.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/callgraph.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/successors.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/child.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/polycalls.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/child.graph";
+	//defFilename = "/home/bas/afstuderen/Datasets/Pajek/patents.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/categorypagelinks.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/pagelinks.graph";
+	defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/pagelinks.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/child.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/samba/setflow.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/agrocyc.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/kegg.graph";
+	defFilename = "/home/bas/afstuderen/Datasets/Pajek/patents.graph";
 
 	typedef map<string,string> mapType;
 	map<string, string> cmdLineArgs;
@@ -53,7 +57,7 @@ int main(int argc, char* argv[]) {
 	cmdLineArgs["run-validator"] = "unset";
 
 	// By default: use multi-OR when a component has out-degree of at least 5
-	cmdLineArgs["min-multi-or"] = "0";
+	cmdLineArgs["min-multi-or"] = "5";
 
 	for (int i = 1; i < argc; i++){
 		string currArg = argv[i];
@@ -114,6 +118,13 @@ int main(int argc, char* argv[]) {
 		cout << "done, that took " << timer.reset() << " msecs" << endl;
 		cout << "Number of vertices: " << graph.getNumberOfVertices() << ", ";
 		cout << "number of edges: " << graph.countNumberOfEdges() << endl;
+		cout << "Min, max, average out degree: ";
+		cout << graph.computeMinOutDegree() << ", " << graph.computeMaxOutDegree() << ", " << graph.computeAvgOutDegree() << endl;
+		cout << "Min, max, average in degree: ";
+		cout << graph.computeMinInDegree() << ", " << graph.computeMaxInDegree() << ", " << graph.computeAvgInDegree() << endl;
+
+
+
 		double tmp;
 
 		for (int i = 0; i < numRuns; i++){

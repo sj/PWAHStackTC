@@ -6,7 +6,7 @@
  */
 
 #include "WAHBitSetIterator.h"
-#include "IntMacros.cpp"
+#include "IntBitMacros.cpp"
 #include <stdexcept>
 #include <iostream>
 using namespace std;
@@ -101,7 +101,7 @@ int WAHBitSetIterator::next(){
 					break;
 				} // else: bit within this literal
 
-				if (GET_BIT(currWord, _lastBlockBitIndex)){
+				if (I_GET_BIT(currWord, _lastBlockBitIndex)){
 					// Encountered a 1-bit! Return its absolute position within this BitSet
 					return _lastBlockIndex * WAHBitSet::BLOCKSIZE + _lastBlockBitIndex;
 				} // else: 0-bit, check next bit in this literal word

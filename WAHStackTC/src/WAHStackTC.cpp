@@ -33,6 +33,7 @@ WAHStackTC::~WAHStackTC() {
 
 void WAHStackTC::computeTransitiveClosure(bool reflexitive, bool storeComponentMembers, int minOutDegreeForMultiOR){
 	unsigned int numVertices = _graph->getNumberOfVertices();
+
 	_cStack = new DynamicStack(numVertices);
 	_vStack = new DynamicStack(numVertices);
 	_componentSizes.clear();
@@ -52,10 +53,43 @@ void WAHStackTC::computeTransitiveClosure(bool reflexitive, bool storeComponentM
 	_minOutDegreeForMultiOR = minOutDegreeForMultiOR;
 	_mergeTimer.resetAndStop();
 
+	int maxInDegree = _graph->computeMaxInDegree();
+	unsigned int stepFactor = 10; // steps of 10%
+	unsigned int stepSize = numVertices / stepFactor;
+	cout << "[";
+	cout.flush();
 
-	for (unsigned int v = 0; v < numVertices; v++){
-		if (!_visited.get(v)){
-			dfsVisit(v);
+
+	int verticesDone = 0;
+	for (unsigned int inDegree = 0; inDegree <= maxInDegree; inDegree++){
+		for (unsigned int v = 0; v < numVertices; v++){
+			if (_graph->vertexInDegree(v) == inDegree){
+				if (!_visited.get(v)){
+					dfsVisit(v);
+				}
+				verticesDone++;
+				if (verticesDone % stepSize == 0){
+					cout << " " << (verticesDone / stepSize * stepFactor) << "% ";
+					cout.flush();
+				} else if (verticesDone % stepSize == stepSize / 2){
+					cout << "=";
+					cout.flush();
+				}
+
+
+				if (verticesDone > 100000) goto endloop;
+				cout << "done " << verticesDone << endl;
+			}
+		}
+	}
+	endloop:
+	cout << "] ";
+	cout.flush();
+
+	for (int i = 0; i < _componentSizes.size(); i++){
+		if (_componentSuccessors[i] != NULL){
+			cout << "Component " << i << endl;
+			cout << _componentSuccessors[i]->toString() << endl << endl;
 		}
 	}
 
@@ -142,6 +176,7 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 	if (_vertexCandidateComponentRoot[vertexIndex] == vertexIndex){
 		// This vertex is a component root!
 		unsigned int newComponentIndex = ++_lastComponentIndex;
+
 		bool explicitlyStoreSelfLoop = false;
 
 		if (debug) cout << "Vertex " << vertexIndex << " is component root, newComponentIndex=" << newComponentIndex << endl;
@@ -315,11 +350,9 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 		} while (vertexIndex != currStackVertexIndex);
 		if (debug) cout << "done!";
 
-
-		//cout << "storing component " << newComponentIndex << "...";
-		//if (successors != NULL) cout << " using " << successors->memoryUsage() << " bits" << endl;
-		//else cout << endl;
 		_componentSuccessors.push_back(successors);
+		//_componentSuccessors.push_back(NULL);
+		//delete successors;
 	} // else: vertex is not a component root
 
 
