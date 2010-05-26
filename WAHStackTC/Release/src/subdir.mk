@@ -8,7 +8,9 @@ CPP_SRCS += \
 ../src/DynamicBitSet.cpp \
 ../src/DynamicStack.cpp \
 ../src/Graph.cpp \
-../src/IntMacros.cpp \
+../src/IntBitMacros.cpp \
+../src/LongBitMacros.cpp \
+../src/PWAHBitSet.cpp \
 ../src/PerformanceTimer.cpp \
 ../src/StaticBitSet.cpp \
 ../src/Validator.cpp \
@@ -23,7 +25,9 @@ OBJS += \
 ./src/DynamicBitSet.o \
 ./src/DynamicStack.o \
 ./src/Graph.o \
-./src/IntMacros.o \
+./src/IntBitMacros.o \
+./src/LongBitMacros.o \
+./src/PWAHBitSet.o \
 ./src/PerformanceTimer.o \
 ./src/StaticBitSet.o \
 ./src/Validator.o \
@@ -38,7 +42,9 @@ CPP_DEPS += \
 ./src/DynamicBitSet.d \
 ./src/DynamicStack.d \
 ./src/Graph.d \
-./src/IntMacros.d \
+./src/IntBitMacros.d \
+./src/LongBitMacros.d \
+./src/PWAHBitSet.d \
 ./src/PerformanceTimer.d \
 ./src/StaticBitSet.d \
 ./src/Validator.d \
