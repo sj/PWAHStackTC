@@ -1,6 +1,12 @@
 #!/bin/bash
 
+if [ ! "`whoami`" = "bas" ]; then
+	echo "Can not run as any user other than 'bas'" >&2
+	exit 1
+fi
+
 svnusername="wahstacktc-validator"
+svnpassword="aORj37uMtQuN2"
 svnurl="https://guust.tuxes.nl/svn/bas/studie/0910-afstuderen/Implementations/c++/WAHStackTC"
 logfile="/home/bas/wahstacktc-validator/`date +%s`.log"
 #useconfiguration="Debug"
@@ -15,7 +21,7 @@ cd $tmpdir
 
 date >> $logfile
 echo -n "Checking out latest revision in $tmpdir... " >> $logfile
-svn --username=$svnusername co "$svnurl" . > /dev/null
+svn --non-interactive --password="$svnpassword" --username=$svnusername co "$svnurl" . > /dev/null
 svnres="$?"
 
 if [ ! "$svnres" = "0" ]; then
