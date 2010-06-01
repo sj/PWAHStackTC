@@ -20,6 +20,7 @@
 #include <map>
 #include "Validator.h"
 #include "PWAHBitSet.h"
+#include "LongBitMacros.cpp"
 using namespace std;
 
 void runValidatorWhenRequested(int argc, char* argv[]){
@@ -37,8 +38,24 @@ int main(int argc, char* argv[]) {
 	cout.precision(4);
 	runValidatorWhenRequested(argc, argv);
 
-	PWAHBitSet<8> pwbs = PWAHBitSet<8>();
-	pwbs.set(7);
+	try {
+		long test = 0b1000000000000000000000000000000000000000000000000000000000000000;
+		if (L_GET_BIT(test, 0)){
+			cout << "0 = set" << endl;
+		} else {
+			cout << "0 = not set" << endl;
+		}
+		if (L_GET_BIT(test, 63)){
+			cout << "63 = set" << endl;
+		} else {
+			cout << "63 = not set" << endl;
+		}
+		PWAHBitSet<8> pwbs = PWAHBitSet<8>();
+		pwbs.set(7);
+		cout << pwbs.toString() << endl;
+	} catch (int e){
+		cerr << "Exception: " << e << endl;;
+	}
 	exit(1);
 
 	string defFilename;
