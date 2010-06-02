@@ -50,9 +50,12 @@ int main(int argc, char* argv[]) {
 		} else {
 			cout << "63 = not set" << endl;
 		}
+		cout << test << endl;
 		PWAHBitSet<8> pwbs = PWAHBitSet<8>();
 		pwbs.set(7);
-		cout << pwbs.toString() << endl;
+		//cout << pwbs.toString() << endl;
+
+		cout << "fill length: " << PWAHBitSet<2>::fill_length(0b1110000000000000000000000000000111000000000000000000000000000010,0) << endl;
 	} catch (int e){
 		cerr << "Exception: " << e << endl;;
 	}

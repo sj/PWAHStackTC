@@ -25,10 +25,13 @@ public:
 	bool get(int bitIndex);
 	unsigned int size();
 
+	inline static long fill_length(long bits, unsigned short partitionIndex);
+
 private:
 	static const long _maxBlocksPerFill;
 	static const int _blockSize;
 	static const int _partitionOffsets[P];
+	static const bool _VERIFY = true;
 
 	int _lastBitSet;
 	int _lastUsedPartition; // partition index of last used partition
@@ -40,7 +43,7 @@ private:
 	inline static bool is_onefill(long bits, unsigned short partitionIndex);
 	inline static bool is_zerofill(long bits, unsigned short partitionIndex);
 	inline static bool is_literal(long bits, unsigned short partitionIndex);
-	inline static long fill_length(long bits, unsigned short partitionIndex);
+
 
 	void compressPlainBlock();
 	void addOneFill(int numBlocks);
