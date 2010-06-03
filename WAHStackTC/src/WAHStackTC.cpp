@@ -233,7 +233,8 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 			int* adjacentComponentIndices = _cStack->multiPop(numAdjacentComponents);
 			int* uniqueAdjacentComponentIndices = new int[numAdjacentComponents];
 
-			// Sort the component indices. This serves two purposes:
+			// Sort the component indices in increasing order. Ergo: in order of detection.
+			// This serves two purposes:
 			//  1) the WAHBitSet is only capable of setting bits in increasing order
 			//  2) it enables us to find duplicates, effectively decreasing the number of required OR-operations
 			sort(adjacentComponentIndices, adjacentComponentIndices + numAdjacentComponents);

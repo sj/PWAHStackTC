@@ -59,7 +59,7 @@ int main(int argc, char* argv[]) {
 	} catch (int e){
 		cerr << "Exception: " << e << endl;;
 	}
-	exit(1);
+	//exit(1);
 
 	string defFilename;
 	//defFilename = "../../Datasets/nuutila32.graph";
@@ -78,7 +78,7 @@ int main(int argc, char* argv[]) {
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/samba/setflow.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/agrocyc.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/kegg.graph";
-	defFilename = "/home/bas/afstuderen/Datasets/Pajek/patents.graph";
+	//defFilename = "/home/bas/afstuderen/Datasets/Pajek/patents.graph";
 
 	typedef map<string,string> mapType;
 	map<string, string> cmdLineArgs;

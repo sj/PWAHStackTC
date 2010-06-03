@@ -274,13 +274,16 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet** bitSets, unsig
 
 	// Some bookkeeping
 	int largestOneFill, largestOneFillSize;
+	int postponedOneFillSize = 0;
+	int postponedZeroFillSize = 0;
 	int shortestZeroFillSize;
 	int currMergedLiteral, currFillLengthRemaining;
 	long currWord;
 
 	// Initialize values in int arrays to 0.
 	memset(sWordIndex, 0, numBitSets * sizeof(int));
-	memset(sWordOffset, 0, numBitSets * sizeof(int));
+	memset(sPartitionIndex, 0, numBitSets * sizeof(int));
+	memset(sPartitionOffset, 0, numBitSets * sizeof(int));
 	memset(sBlockIndex, 0, numBitSets * sizeof(int));
 
 	while(true){
@@ -351,9 +354,11 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet** bitSets, unsig
 					// Partition contains literal. Can be skipped without additional checks
 					sBlockIndex[i]++;
 					sPartitionIndex[i]++;
+
+					currMergedLiteral |= CANT DO THIS currWord;
 				}
 
-				// Some additional bookkeeping
+				// Some additional bookkeeping regarding partitions in words
 				if (sPartitionIndex[i] == P){
 					// Jump to next word!
 					sPartitionIndex[i] = 0;
@@ -366,6 +371,41 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet** bitSets, unsig
 						currWord = bitSets[i]->_compressedWords[sWordIndex[i]];
 					}
 				}
+			} // end while: aligning words
+
+			// Now decide on the most efficient operation to perform on the result
+			if (largestOneFillSize != -1){
+				// Do something w.r.t. 1-fill
+
+				// First check whether there is a postponed 0-fill floating around
+				if (postponedZeroFillSize != 0){
+					result->addZeroFill(postponedZeroFillSize);
+					postponedZeroFillSize = 0;
+				}
+
+
+			} else if (currMergedLiteral != 0){
+				// No 1-fill available, store merged literal
+
+				// First, check whether there is a postponed 0-fill or 1-fill floating around
+				if (postponedOneFillSize != 0){
+					result->addOneFill(postponedOneFillSize);
+					postponedOneFillSize = 0;
+				} else if (postponedZeroFillSize != 0){
+					result->addZeroFill(postponedZeroFillSize);
+					postponedZeroFillSize = 0;
+				}
+
+				// Add literal to the result
+				result->addLiteral(currMergedLiteral);
+			} else if (shortestZeroFillSize) {
+				// No 1-fill or literals seen, but a 0-fill is available
+
+				// First, check whether there is a postponed 1-fill floating around
+
+			} else {
+				// Nothing more to do!
+				break;
 			}
 		}
 	} // end while
@@ -464,6 +504,15 @@ template<> inline bool PWAHBitSet<8>::is_onefill(long bits, unsigned short parti
 		throw string("invalid partitionIndex")
 	);
 	return (bits & mask) == mask;
+}
+
+/**
+ * \brief Extract a partition from a word.
+ *
+ * Will not return the type of the partition (fill / literal), only its contents
+ */
+template<> inline bool PWAHBitSet<1>::extract_partition(long word, unsigned short partitionIndex){
+
 }
 
 /**
