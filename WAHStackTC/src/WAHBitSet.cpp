@@ -192,7 +192,6 @@ void WAHBitSet::addOneFill(int numBlocks){
 		if (numOneFills > MAX_BLOCKS_IN_FILL) throw range_error("Number of one blocks exceeds maximum number of blocks in a fill");
 
 		_compressedBits[lastWordIndex] = numOneFills | EMPTY_ONEFILL;
-		cout << numOneFills << " 1-fills!" << endl;
 	} else {
 		// No 1-fill on the back of the list, just append simple 1-fill
 		_compressedBits.push_back(numBlocks | EMPTY_ONEFILL);
@@ -214,7 +213,6 @@ void WAHBitSet::addZeroFill(int numBlocks){
 
 		// And replace the last word of the vector
 		_compressedBits[lastWordIndex] = numZeroFills | EMPTY_ZEROFILL;
-		cout << numZeroFills << " 1-fills!" << endl;
 	} else {
 		// No 0-fill on the back of the list, just append a number of 0-fills
 		if (numBlocks > MAX_BLOCKS_IN_FILL) throw range_error("Number of zero blocks exceeds maximum number of blocks in a fill");

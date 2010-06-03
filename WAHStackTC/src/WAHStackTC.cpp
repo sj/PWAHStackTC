@@ -53,7 +53,8 @@ void WAHStackTC::computeTransitiveClosure(bool reflexitive, bool storeComponentM
 	_minOutDegreeForMultiOR = minOutDegreeForMultiOR;
 	_mergeTimer.resetAndStop();
 
-	int maxInDegree = _graph->computeMaxInDegree();
+	/*** Process vertices in order of increasing InDegree ***/
+	/**int maxInDegree = _graph->computeMaxInDegree();
 	unsigned int stepFactor = 10; // steps of 10%
 	unsigned int stepSize = numVertices / stepFactor;
 	cout << "[";
@@ -90,6 +91,11 @@ void WAHStackTC::computeTransitiveClosure(bool reflexitive, bool storeComponentM
 		if (_componentSuccessors[i] != NULL){
 			cout << "Component " << i << endl;
 			cout << _componentSuccessors[i]->toString() << endl << endl;
+		}
+	}**/
+	for (unsigned int v = 0; v < numVertices; v++){
+		if (!_visited.get(v)){
+			dfsVisit(v);
 		}
 	}
 
