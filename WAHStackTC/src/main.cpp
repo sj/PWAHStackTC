@@ -252,3 +252,11 @@ int main(int argc, char* argv[]) {
 	}
 	return 0;
 }
+
+/**
+ * Tell the compiler which instantiations of PWAHBitSet to generate
+ */
+template class PWAHBitSet<1>;
+template class PWAHBitSet<2>;
+template class PWAHBitSet<4>;
+template class PWAHBitSet<8>;
