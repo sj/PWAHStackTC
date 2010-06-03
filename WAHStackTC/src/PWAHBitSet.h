@@ -24,8 +24,10 @@ public:
 	void clear();
 	bool get(int bitIndex);
 	unsigned int size();
-
+	static void multiOr(PWAHBitSet** bitSets, unsigned int numBitSets, PWAHBitSet* result);
+	static string toBitString(int value);
 	inline static long fill_length(long bits, unsigned short partitionIndex);
+
 
 private:
 	static const long _maxBlocksPerFill;
@@ -33,11 +35,12 @@ private:
 	static const int _partitionOffsets[P];
 	static const bool _VERIFY = true;
 
-	int _lastBitSet;
-	int _lastUsedPartition; // partition index of last used partition
-	int _plainBlockIndex; // the block index of the plain block
+	long _lastBitSet;
+	int _lastUsedPartition; // partition index of last used partition within the last compressed word
+	long _plainBlockIndex; // the block index of the plain block
 	long _plainBlock;
-	vector<long> _compressedBlocks;
+	long _numBlocks;
+	vector<long> _compressedWords;
 
 	inline static bool is_fill(long bits, unsigned short partitionIndex);
 	inline static bool is_onefill(long bits, unsigned short partitionIndex);

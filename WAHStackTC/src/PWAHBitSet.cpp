@@ -17,10 +17,10 @@ using namespace std;
 /**
  * Define the offset of partitions within the 64 bit word.
  */
-template<> const int PWAHBitSet<1>::_partitionOffsets[1] = {1};
-template<> const int PWAHBitSet<2>::_partitionOffsets[2] = {2, 33};
-template<> const int PWAHBitSet<4>::_partitionOffsets[4] = {4, 19, 34, 49};
-template<> const int PWAHBitSet<8>::_partitionOffsets[8] = {8, 15, 22, 29, 36, 43, 50, 57};
+template<> const int PWAHBitSet<1>::_partitionOffsets[1] = {0};
+template<> const int PWAHBitSet<2>::_partitionOffsets[2] = {0, 31};
+template<> const int PWAHBitSet<4>::_partitionOffsets[4] = {0, 15, 30, 45};
+template<> const int PWAHBitSet<8>::_partitionOffsets[8] = {0, 7, 14, 21, 28, 35, 42, 49};
 
 /**
  * Define the block size for every possible number of partitions
@@ -44,7 +44,7 @@ template<> const long PWAHBitSet<8>::_maxBlocksPerFill = pow(2,7) - 1;  // 2^7 -
  */
 template<unsigned int P> PWAHBitSet<P>::PWAHBitSet():
 			// Initialise variables
-			_plainBlockIndex(0), _plainBlock(0), _lastBitSet(-1), _compressedBlocks(vector<long>()){
+			_plainBlockIndex(0), _plainBlock(0), _lastBitSet(-1), _compressedWords(vector<long>()){
 
 	// Assert to check whether the long primitive type consists of 64 bits. Might the data type
 	// consist of any other number of bits, weird things will happen...
@@ -54,7 +54,7 @@ template<unsigned int P> PWAHBitSet<P>::PWAHBitSet():
 template<unsigned int P> void PWAHBitSet<P>::clear(){
 	_plainBlockIndex = 0;
 	_plainBlock = 0;
-	_compressedBlocks.clear();
+	_compressedWords.clear();
 	_lastBitSet = 0;
 }
 
@@ -71,8 +71,8 @@ template<unsigned int P> bool PWAHBitSet<P>::get(int bitIndex){
 		// Iterate over all words
 		long currWord;
 		long currBlockIndex = -1;
-		for (unsigned int w = 0; w < _compressedBlocks.size(); w++){
-			currWord = _compressedBlocks[w];
+		for (unsigned int w = 0; w < _compressedWords.size(); w++){
+			currWord = _compressedWords[w];
 
 			// Iterate over partitions in this word
 			for (unsigned int p = 0; p < P; p++){
@@ -143,7 +143,7 @@ template<unsigned int P> void PWAHBitSet<P>::set(int bitIndex, bool value){
 }
 
 /**
- * \brief Compressed the plain block _plainBlock to _compressedBlocks
+ * \brief Compressed the plain block _plainBlock to _compressedWords
  *
  * Note that this method does not increase the index _plainBlockIndex! The method will
  * reset the value of _plainBlock, though.
@@ -174,7 +174,7 @@ template<unsigned int P> void PWAHBitSet<P>::addLiteral(long value){
  * new partition to the vector with compressed bits.
  *
  * Example for the PWAHBitSet<4> case:
- *  - each long word on vector<long> _compressedBlocks consists of 5 parts:
+ *  - each long word on vector<long> _compressedWords consists of 5 parts:
  *    - 4 bits header, indicating whether each of the 4 partitions is a fill or literal (0 = literal, 1 = fill)
  *    - 15 bits partition 0
  *    - 15 bits partition 1
@@ -204,28 +204,182 @@ template<unsigned int P> void PWAHBitSet<P>::addLiteral(long value){
  *	Note that all bits denoted with an underscore are ignored!
  */
 template<unsigned int P> void PWAHBitSet<P>::addPartition(bool isFill, long value){
-	if (_lastUsedPartition == P - 1 || _compressedBlocks.size() == 0){
+	if (_lastUsedPartition == P - 1 || _compressedWords.size() == 0){
 		// Add new empty long to the vector
-		_compressedBlocks.push_back(0L);
+		_compressedWords.push_back(0L);
 		_lastUsedPartition = 0;
 	} else {
 		_lastUsedPartition++;
 	}
 
-	// The long value should be shifted at least 1, 2, 4 or 8 positions to the right. These
-	// first positions are considered to be the header of the long word on the vector<long>
-	// and should most certainly not be touched by the new long value.
-	// Furthermore, an additional _lastUsedPartition * _blockSize positions should be shifted
-	// to store the partition at the correct offset.
+	if (_VERIFY){
+		// Make sure the input doesn't extend too far
+		long oldvalue = value;
 
-	// For the example case of PWAHBitSet<4>, _blockSize equals 15 and the header consists
-	// of 4 bits. Suppose this partition will be the partition with index 2. In that case,
-	// the values in 'value' will be shifted 4 + 2 * 15 = 34 positions to the right. Bit 0 will
-	// become bit 34 in the long word, the last bit (index 14) will end up at index 48.
-	value >>= (P + _lastUsedPartition * _blockSize);
+		P == 1 ? value &= 0b0111111111111111111111111111111111111111111111111111111111111111 :
+		P == 2 ? value &= 0b0000000000000000000000000000000001111111111111111111111111111111 :
+		P == 4 ? value &= 0b0000000000000000000000000000000000000000000000000111111111111111 :
+				 value &= 0b0000000000000000000000000000000000000000000000000000000001111111;
 
-	// Now, it's safe to merge the value with the last long of the vector
-	_compressedBlocks[_compressedBlocks.size() - 1] |= value;
+		if (value != oldvalue){
+			throw string("long value passed to addPartition too big?!");
+		}
+	}
+
+	// Partition 0 is stored using the least significant bits, partition P-1 is stored using the
+	// most significant bits. Therefore, the input value should be shifted
+	// _lastUsedPartition * _blockSize positions to the left to store the partition at the
+	// correct offset. Note that the counter _lastUsedPartition was already updated in the first
+	// lines of code of this method!
+	// For the example case of PWAHBitSet<4>, _blockSize equals 15. Suppose this partition
+	// will be the partition with index 2. In that case, the values in 'value' will be shifted
+	// 2 * 15 = 30 positions to the left. Bit 0 will become bit 30 in the long word, the last
+	// bit (index 14) will end up at index 44.
+	value <<= (_lastUsedPartition * _blockSize);
+
+	if (isFill){
+		// Set the correct bit in the header of the word
+		P == 1 ? value |= 0b1000000000000000000000000000000000000000000000000000000000000000 :
+		P == 2 ? L_SET_BIT(value, 62 + _lastUsedPartition) :
+		P == 4 ? L_SET_BIT(value, 60 + _lastUsedPartition) :
+				 L_SET_BIT(value, 56 + _lastUsedPartition);
+	}
+
+	_compressedWords[_compressedWords.size() - 1] |= value;
+}
+
+
+/**
+ * \brief Merges multiple WAHBitSet objects into a single WAHBitSet by computing the logical OR
+ *
+ * \param bitSets the source WAHBitSet objects
+ * \param numBitSets the number of source WAHBitSet objects
+ * \param result pointer to a WAHBitSet to store the result of the logical OR
+ */
+template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet** bitSets, unsigned int numBitSets, PWAHBitSet* result){
+	const bool debug = true;
+	if (debug) cout << "Performing multi-way OR on " << numBitSets << " BitSets" << endl;
+	if (numBitSets == 0) return;
+
+	// TODO: in case of just 1 BitSet: make a copy
+
+	// Current position in result BitSet: block index
+	unsigned int rBlockIndex = 0;
+
+	// Current position in source BitSets:
+	unsigned int* sBlockIndex = new unsigned int[numBitSets];		// block index
+	unsigned int* sWordIndex = new unsigned int[numBitSets];		// word index
+	unsigned int* sPartitionIndex = new unsigned int[numBitSets];	// partition within word
+	unsigned int* sPartitionOffset = new unsigned int[numBitSets];	// offset within partition
+
+	// Some bookkeeping
+	int largestOneFill, largestOneFillSize;
+	int shortestZeroFillSize;
+	int currMergedLiteral, currFillLengthRemaining;
+	long currWord;
+
+	// Initialize values in int arrays to 0.
+	memset(sWordIndex, 0, numBitSets * sizeof(int));
+	memset(sWordOffset, 0, numBitSets * sizeof(int));
+	memset(sBlockIndex, 0, numBitSets * sizeof(int));
+
+	while(true){
+		if (debug) cout << "Composing result block with index " << rBlockIndex << "..." << endl;
+		currMergedLiteral = 0;
+		shortestZeroFillSize = -1;
+		largestOneFillSize = -1;
+
+		// Align BitSets, find largest 1-fill and merge literals in the process
+		for (unsigned int i = 0; i < numBitSets; i++){
+			if (debug) cout << "Considering BitSet with index " << i << " (total number of bitsets = " << numBitSets << ")" << endl;
+			if (debug) cout << "BitSet " << i << " contains " << bitSets[i]->_compressedWords.size() << " compressed words, is now at blockindex " << sBlockIndex[i] << " which is in wordindex " << sWordIndex[i] << endl;
+
+			// Some very simple checks
+			if (sBlockIndex[i] == rBlockIndex){
+				// This BitSet is aligned correctly
+				continue;
+			} else if (sWordIndex[i] > bitSets[i]->_compressedWords.size()){
+				// This BitSet is totally out of bounds
+				continue;
+			} else if (sBlockIndex[i] > rBlockIndex){
+				// This BitSet was skipped to far as a result of a 0-fill.
+				if (sBlockIndex[i] - rBlockIndex < shortestZeroFillSize || shortestZeroFillSize == -1){
+					shortestZeroFillSize = sBlockIndex[i] - rBlockIndex;
+				}
+				continue;
+			}
+
+			currWord = bitSets[i]->_compressedWords[sWordIndex[i]];
+			while (rBlockIndex > sBlockIndex[i]){
+				// Skip!
+				if (is_onefill(currWord, sPartitionIndex[i])){
+					currFillLengthRemaining = fill_length(currWord, sPartitionIndex[i]) - sPartitionOffset[i];
+
+					if (currFillLengthRemaining > largestOneFillSize){
+						largestOneFillSize = currFillLengthRemaining;
+						largestOneFill = i;
+					}
+
+					// Lets see whether the complete remaining length can be skipped
+					if (currFillLengthRemaining > rBlockIndex - sBlockIndex[i]){
+						// Can't skip complete length
+						sBlockIndex[i] = rBlockIndex;
+						sPartitionOffset[i] += rBlockIndex - sBlockIndex[i];
+					} else {
+						// Skip complete length.
+
+						// TODO: a fill might span multiple partitions! Check whether multiple
+						// partitions should be skipped!
+						sBlockIndex[i] += currFillLengthRemaining;
+						sPartitionOffset[i] = 0;
+						sPartitionIndex[i]++;
+					}
+				} else if (is_zerofill(currWord, sPartitionIndex[i])){
+					currFillLengthRemaining = fill_length(currWord, sPartitionIndex[i]) - sPartitionOffset[i];
+
+					if (currFillLengthRemaining < shortestZeroFillSize || shortestZeroFillSize == -1){
+						shortestZeroFillSize = currFillLengthRemaining;
+					}
+
+					// 0-fills are boring: skip complete length
+					// TODO: the fill might span over multiple partitions. If so, multiple partitions
+					// should be skipped!
+					sBlockIndex[i] += currFillLengthRemaining;
+					sPartitionIndex[i]++;
+					sPartitionOffset[i] = 0;
+				} else {
+					// Partition contains literal. Can be skipped without additional checks
+					sBlockIndex[i]++;
+					sPartitionIndex[i]++;
+				}
+
+				// Some additional bookkeeping
+				if (sPartitionIndex[i] == P){
+					// Jump to next word!
+					sPartitionIndex[i] = 0;
+					sWordIndex[i]++;
+
+					if (sWordIndex[i] == bitSets[i]->_compressedWords.size()){
+						// Out of bounds by one: consider plain block
+						currWord = bitSets[i]->_plainBlock;
+					} else {
+						currWord = bitSets[i]->_compressedWords[sWordIndex[i]];
+					}
+				}
+			}
+		}
+	} // end while
+
+	if (debug) cout << "Cleaning up..." << endl;
+	delete[] sWordIndex;
+	delete[] sWordOffset;
+	delete[] sBlockIndex;
+
+	// Decompress last word of resulting BitSet to plain word
+	// TODO
+	//if (result->_compressedWords.size() > 0) result->decompressLastWord();
+
+	if (debug) cout << "done multiway!" << endl;
 }
 
 
@@ -361,7 +515,7 @@ template<> inline long PWAHBitSet<2>::fill_length(long bits, unsigned short part
 	// PWAHBitSet<2> case: two partitions consisting of 31 bits. The two most significant bits
 	// of the (indices 63 & 62) of the 64-bit word tell us whether the partitions contain
 	// literal data or represent fills. The most significant bits of each partition (bit index
-	// 61 for partition 0, bit index 30 for partition 1) denote the type of the fill.
+	// 61 for partition 1, bit index 30 for partition 0) denote the type of the fill.
 	// In case of an extended fill (see extensive description above), both partitions need to
 	// be glued together.
 
@@ -372,9 +526,12 @@ template<> inline long PWAHBitSet<2>::fill_length(long bits, unsigned short part
 			// length of partition 1 is considered undefined.
 
 			if (L_GET_BIT(bits, 63) && L_GET_BIT(bits, 62)){
+				// Both partitions represent a fill
+
 				if (
 						(L_GET_BIT(bits, 61) != 0 && L_GET_BIT(bits, 30) != 0) ||
 						(L_GET_BIT(bits, 61) == 0 && L_GET_BIT(bits, 30) == 0)){
+					// Both partitions represent the _same type_ of fill
 					throw string("Fill length of fill in partition is undefined");
 				}
 			}
@@ -382,45 +539,48 @@ template<> inline long PWAHBitSet<2>::fill_length(long bits, unsigned short part
 
 		// No need to check for extended fills, since this is the last partition of this word
 		// and extended fills do not span multiple words.
-		// Bit 30 denotes the type of fill, bits 0-29 denote the length of the fill. By just
-		// trashing bits 63-30, the length of the fill will show.
-		return (bits & 0b0000000000000000000000000000000000111111111111111111111111111111);
+		// Bit 61 denotes the type of fill, bits 31-60 denote the length of the fill. After clearing
+		// the other bits, shifting the bits 31-60 to the right (31 positions) will yield the length
+		// of the fill.
+		return ((bits & 0b0001111111111111111111111111111110000000000000000000000000000000) >> 31);
 	} else if (partitionIndex == 0){
-		// Check whether the fill spans partitions 0 and 1
+		// Check whether the fill spans both partitions 0 and 1
 		long andRes = (bits & 0b1110000000000000000000000000000001000000000000000000000000000000);
 		long extOneFill = andRes;
 		long extZeroFill = 0b1100000000000000000000000000000000000000000000000000000000000000;
 		if (andRes == extZeroFill || andRes == extOneFill){
 			// Extended fill! Take bits 60-31 and 29-0, concatenate => length of the fill emerges
 
-			// Bits from partition 0 denoting length: bits 60-31
-			long part0 = (bits & 0b0001111111111111111111111111111110000000000000000000000000000000);
+			// Bits from partition 0 denoting length: bits 0-29
+			long part0 = (bits & 0b0000000000000000000000000000000000111111111111111111111111111111);
 
-			// Bits from partition 1 denoting length: bits 29-0
-			long part1 = (bits & 0b0000000000000000000000000000000000111111111111111111111111111111);
+			// Bits from partition 1 denoting length: bits 31-60
+			long part1 = (bits & 0b0001111111111111111111111111111110000000000000000000000000000000);
 
-			// Shift the bits from partition 0 one position to the right, and return the logical OR
-			// with the bits from partition1.
-			return ((part0 >> 1) | part1);
+
+			// Shift the bits from partition 1 one position to the right, and return the logical OR
+			// with the bits from partition0.
+			return ((part1 >> 1) | part0);
 		} else {
-			// Regular fill, just check the length of the fill in partition 0. The two most
-			// significant bits are reserved for the word header. The third most significant
-			// bit (index 61) tells whether the fill in partition 0 consists of 1-bits or 0-bits.
-			// Bits 60-31 store the length of the fill. Bits 30 to 0 store information about partition
-			// 1, and are therefore irrelevant
-
-			// Make sure only bits 60 up to (and including) 31 are preserved
-			long length = (bits & 0b0001111111111111111111111111111110000000000000000000000000000000);
-
-			// Shift bits 31 positions to the right, bit 60 becomes bit 30, bit 31 becomes bit 0
-			length >>= 31;
-
-			return length;
+			// Regular fill, just check the length of the fill in partition 0. Partition 0 resides
+			// in the least significant bits of the 64-bit word. The type of the fill is stored
+			// in bit 30, bits 0-29 are used to indicate the length of the fill.
+			// Simply clearing all other bits will yield the requested length.
+			return (bits & 0b0000000000000000000000000000000000111111111111111111111111111111);
 		}
 	}
 	throw string("Invalid partition index");
 }
 
+template<unsigned int P> string PWAHBitSet<P>::toBitString(int value){
+	stringstream res;
+	for (int bit = 0; bit < 32; bit++){
+		if (L_GET_BIT(value, bit)) res << "1";
+		else res << "0";
+	}
+	res << " (= " << value << ")";
+	return res.str();
+}
 
 
 /**
