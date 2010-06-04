@@ -16,14 +16,15 @@
 #include "WAHBitSetIterator.h"
 #include "StaticBitSet.h"
 #include "DynamicStack.h"
+#include "PWAHBitSet.h"
 #include <stdexcept>
 using namespace std;
 
-WAHStackTC::WAHStackTC(Graph& graph) {
+template<class B> WAHStackTC<B>::WAHStackTC(Graph& graph) {
 	_graph = &graph;
 }
 
-WAHStackTC::~WAHStackTC() {
+template<class B> WAHStackTC<B>::~WAHStackTC() {
 	// Free allocated memory for WAHBitSet objects representing successor sets
 	for (unsigned int i = 0; i < _componentSuccessors.size(); i++) delete _componentSuccessors[i];
 
@@ -31,7 +32,7 @@ WAHStackTC::~WAHStackTC() {
 	delete _vertexSelfLoop;
 }
 
-void WAHStackTC::computeTransitiveClosure(bool reflexitive, bool storeComponentMembers, int minOutDegreeForMultiOR){
+template<class B> void WAHStackTC<B>::computeTransitiveClosure(bool reflexitive, bool storeComponentMembers, int minOutDegreeForMultiOR){
 	unsigned int numVertices = _graph->getNumberOfVertices();
 
 	_cStack = new DynamicStack(numVertices);
@@ -107,7 +108,7 @@ void WAHStackTC::computeTransitiveClosure(bool reflexitive, bool storeComponentM
 	delete[] _vertexDFSSeqNo;
 }
 
-void WAHStackTC::dfsVisit(unsigned int vertexIndex){
+template<class B> void WAHStackTC<B>::dfsVisit(unsigned int vertexIndex){
 	const bool debug = false;
 
 	if (debug) cout << "Visiting vertex " << vertexIndex << endl;
@@ -194,7 +195,7 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 			} // else: no need to explicitly store self-loop
 		}
 
-		PWAHBitSet<2>* successors = NULL;
+		B* successors = NULL;
 		unsigned int numAdjacentComponents = _cStack->size() - _savedCStackSize[vertexIndex];
 		_componentSizes.push_back(0);
 
@@ -202,14 +203,14 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 		if (numAdjacentComponents == 0){
 			// No adjacent components! Nothing to merge!
 			if (explicitlyStoreSelfLoop){
-				successors = new PWAHBitSet<2>();
+				successors = new B();
 				successors->set(newComponentIndex);
 			} else {
 				// else: no need to store a WAHBitSet for this component!
 			}
 		} else {
 			// Number of adjacent components > 0
-			successors = new PWAHBitSet<2>();
+			successors = new B();
 
 			const bool use_multiway_or = (numAdjacentComponents > _minOutDegreeForMultiOR) && _minOutDegreeForMultiOR >= 0;
 
@@ -242,8 +243,8 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 			// Prepare array of successor lists in case of multi-way OR
 			// Note the +1: one slot is allocated in case we'll need to sneak in an extra WAHBitSet
 			// for the MultiWay OR to work.
-			PWAHBitSet<2>** adjacentComponentsSuccessors;
-			if (use_multiway_or) adjacentComponentsSuccessors = new PWAHBitSet<2>*[numAdjacentComponents + 1];
+			B** adjacentComponentsSuccessors;
+			if (use_multiway_or) adjacentComponentsSuccessors = new B*[numAdjacentComponents + 1];
 
 			// Loop over the adjacent component indices to obtain the successor lists and
 			// remove duplicates
@@ -275,7 +276,7 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 				// should be sorted for this to work, since bits of the WAHBitSet can only be set in
 				// increasing order.
 				_mergeTimer.resume();
-				PWAHBitSet<2>* adjacentComponentBits = new PWAHBitSet<2>();
+				B* adjacentComponentBits = new B();
 				int lastIndex = -1;
 				for (unsigned int i = 0; i < numUniqueAdjacentComponents; i++){
 					if (uniqueAdjacentComponentIndices[i] == lastIndex) continue;
@@ -289,7 +290,7 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 
 				// Note the numAdjacentComponents + 1. The +1 indicates the extra WAHBitSet sneaked
 				// into the list
-				PWAHBitSet<2>::multiOr(adjacentComponentsSuccessors, numUniqueNonNullAdjacentComponents + 1, successors);
+				B::multiOr(adjacentComponentsSuccessors, numUniqueNonNullAdjacentComponents + 1, successors);
 
 				delete adjacentComponentBits;
 
@@ -316,8 +317,8 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 								if (debug) cout << "Merging successor list of component " <<  newComponentIndex << " with " << adjacentComponentIndex << "... ";
 								if (debug) cout.flush();
 
-								PWAHBitSet<2>* oldSuccessors = successors;
-								successors = PWAHBitSet<2>::constructByOr(successors, _componentSuccessors[adjacentComponentIndex]);
+								B* oldSuccessors = successors;
+								successors = B::constructByOr(successors, _componentSuccessors[adjacentComponentIndex]);
 								delete oldSuccessors;
 								oldSuccessors = NULL;
 
@@ -366,7 +367,7 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 	if (debug) cout << "Done visiting " << vertexIndex << ", returning DFS call" << endl;
 }
 
-string WAHStackTC::tcToString(){
+template<class B> string WAHStackTC<B>::tcToString(){
 	stringstream stream;
 	stream << "== Vertices and components ==" << endl;
 	for (int v = 0; v < _graph->getNumberOfVertices(); v++){
@@ -394,7 +395,7 @@ string WAHStackTC::tcToString(){
  * between components (i.e. when multiple vertices from component A are connected to one or more vertices
  * in component B) are ignored.
  */
-long WAHStackTC::countNumberOfEdgesInCondensedTC(){
+template<class B> long WAHStackTC<B>::countNumberOfEdgesInCondensedTC(){
 	return countNumberOfEdgesInCondensedTC(false, false);
 }
 
@@ -411,7 +412,7 @@ long WAHStackTC::countNumberOfEdgesInCondensedTC(){
  * \param ignoreSingletonSelfLoops Ignore all self-loops of singleton components (components consisting
  * of only one vertex)
  */
-long WAHStackTC::countNumberOfEdgesInCondensedTC(bool ignoreSelfLoops, bool ignoreSingletonSelfLoops){
+template<class B> long WAHStackTC<B>::countNumberOfEdgesInCondensedTC(bool ignoreSelfLoops, bool ignoreSingletonSelfLoops){
 	long count = 0;
 	int currSuccessorIndex;
 
@@ -457,7 +458,7 @@ long WAHStackTC::countNumberOfEdgesInCondensedTC(bool ignoreSelfLoops, bool igno
 	return count;
 }
 
-bool WAHStackTC::componentHasSelfLoop(int componentIndex){
+template<class B> bool WAHStackTC<B>::componentHasSelfLoop(int componentIndex){
 	if (_reflexitive || _storeComponentVertices){
 		// Self-loops were not stored explicitly, since their existence can be shown
 		// implicitly.
@@ -485,7 +486,7 @@ bool WAHStackTC::componentHasSelfLoop(int componentIndex){
 	return false;
 }
 
-long WAHStackTC::countNumberOfEdgesInTC(){
+template<class B> long WAHStackTC<B>::countNumberOfEdgesInTC(){
 	int* componentVertexSuccessorCount = new int[_componentSizes.size()];
 	int currSuccessorIndex;
 	long count;
@@ -522,7 +523,7 @@ long WAHStackTC::countNumberOfEdgesInTC(){
 	return count;
 }
 
-bool WAHStackTC::reachable(int src, int dst){
+template<class B> bool WAHStackTC<B>::reachable(int src, int dst){
 	if (src >= _graph->getNumberOfVertices()) throw range_error("Source index out of bounds");
 	if (dst >= _graph->getNumberOfVertices()) throw range_error("Source index out of bounds");
 
@@ -547,14 +548,15 @@ bool WAHStackTC::reachable(int src, int dst){
 	return _componentSuccessors[srcComponent]->get(dstComponent);
 }
 
-long WAHStackTC::memoryUsedByBitSets(){
+template<class B> long WAHStackTC<B>::memoryUsedByBitSets(){
 	long totalBits = 0;
 	for (unsigned int i = 0; i < _componentSizes.size(); i++){
 		if (_componentSuccessors[i] != NULL) totalBits += _componentSuccessors[i]->memoryUsage();
 	}
 	return totalBits;
 }
-void WAHStackTC::reportStatistics(){
+
+template<class B> void WAHStackTC<B>::reportStatistics(){
 	cout << "Number of vertices: " << _graph->getNumberOfVertices() << endl;
 	cout << "Number of edges: " << _graph->countNumberOfEdges() << endl;
 	cout << "Number of strongly connected components: " << _componentSizes.size() << endl;
@@ -565,10 +567,16 @@ void WAHStackTC::reportStatistics(){
 /**
  * Stores the transitive closure in a Chaco-formatted file. Can be huge!
  */
-void WAHStackTC::writeToChacoFile(string filename){
+template<class B> void WAHStackTC<B>::writeToChacoFile(string filename){
 
 }
 
-int WAHStackTC::getNumberOfComponents(){
+template<class B> int WAHStackTC<B>::getNumberOfComponents(){
 	return _componentSizes.size();
 }
+
+/**
+ * Instruct the compiler which templates to instantiate
+ */
+template class WAHStackTC<WAHBitSet>;
+template class WAHStackTC<PWAHBitSet<2> >;

@@ -162,7 +162,7 @@ int main(int argc, char* argv[]) {
 		for (int i = 0; i < numRuns; i++){
 			timer.reset();
 
-			WAHStackTC* wstc = new WAHStackTC(graph);
+			WAHStackTC<WAHBitSet>* wstc = new WAHStackTC<WAHBitSet>(graph);
 
 			if (!reflexitive){
 				cout << "Computing transitive closure ";

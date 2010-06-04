@@ -66,7 +66,7 @@ void Validator::validate(){
 		double time1, time2;
 		long numEdges;
 		PerformanceTimer timer;
-		WAHStackTC* wstc;
+		WAHStackTC<WAHBitSet>* wstc;
 
 		for (int i = 0; i < numTests; i++){
 			string filename = baseDir + "/" + filenames[i];
@@ -75,7 +75,7 @@ void Validator::validate(){
 			cout << "Expecting " << expectedNumEdges[i] << " edges in TC, " << expectedReflexitiveNumEdges[i] << " edges in reflexitive TC..." << endl;
 			Graph graph = Graph::parseChacoFile(filename);
 
-			wstc = new WAHStackTC(graph);
+			wstc = new WAHStackTC<WAHBitSet>(graph);
 			timer.reset();
 			wstc->computeTransitiveClosure(false, false, 5);
 			time1 = timer.reset();
@@ -91,7 +91,7 @@ void Validator::validate(){
 			}
 			delete wstc;
 
-			wstc = new WAHStackTC(graph);
+			wstc = new WAHStackTC<WAHBitSet>(graph);
 			timer.reset();
 			wstc->computeTransitiveClosure(true, false, 5);
 			time2 = timer.reset();
