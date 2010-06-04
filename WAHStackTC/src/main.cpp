@@ -88,7 +88,7 @@ int main(int argc, char* argv[]) {
 	cmdLineArgs["run-validator"] = "unset";
 
 	// By default: use multi-OR when a component has out-degree of at least 5
-	cmdLineArgs["min-multi-or"] = "5";
+	cmdLineArgs["min-multi-or"] = "0";
 
 	for (int i = 1; i < argc; i++){
 		string currArg = argv[i];
@@ -162,7 +162,7 @@ int main(int argc, char* argv[]) {
 		for (int i = 0; i < numRuns; i++){
 			timer.reset();
 
-			WAHStackTC<WAHBitSet>* wstc = new WAHStackTC<WAHBitSet>(graph);
+			WAHStackTC<PWAHBitSet<2> >* wstc = new WAHStackTC<PWAHBitSet<2> >(graph);
 
 			if (!reflexitive){
 				cout << "Computing transitive closure ";

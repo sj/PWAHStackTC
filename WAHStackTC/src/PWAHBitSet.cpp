@@ -161,15 +161,21 @@ template<unsigned int P> void PWAHBitSet<P>::addOneFill(int numBlocks){
 		throw string("not implemented: number of blocks in fill exceeds _maxBlocksPerFill");
 	}
 
-	throw string("not implemented");
+	P == 1 ? addPartition(true, (numBlocks | 0b0100000000000000000000000000000000000000000000000000000000000000)) :
+	P == 2 ? addPartition(true, (numBlocks | 0b0000000000000000000000000000000001000000000000000000000000000000)) :
+	P == 4 ? addPartition(true, (numBlocks | 0b0000000000000000000000000000000000000000000000000100000000000000)) :
+			 addPartition(true, (numBlocks | 0b0000000000000000000000000000000000000000000000000000000001000000));
 }
 
 template<unsigned int P> void PWAHBitSet<P>::addZeroFill(int numBlocks){
-	throw string("not implemented");
+	if (numBlocks > _maxBlocksPerFill){
+		throw string("not implemented: number of blocks in fill exceeds _maxBlocksPerFill");
+	}
+	addPartition(true, numBlocks);
 }
 
 template<unsigned int P> void PWAHBitSet<P>::addLiteral(long value){
-	throw string("not implemented");
+	addPartition(false, value);
 }
 
 /**
