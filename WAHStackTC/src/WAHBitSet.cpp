@@ -771,3 +771,7 @@ long WAHBitSet::memoryUsage(){
 	res += 32; // plain word
 	return res;
 }
+
+BitSetIterator* WAHBitSet::iterator(){
+	return new WAHBitSetIterator(this);
+}

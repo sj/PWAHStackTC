@@ -31,6 +31,8 @@ public:
 	string toBitString(long value);
 	unsigned int capacity();
 	unsigned int size();
+
+	BitSetIterator* iterator();
 };
 
 #endif /* STATICBITSET_H_ */

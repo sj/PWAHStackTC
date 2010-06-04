@@ -194,7 +194,7 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 			} // else: no need to explicitly store self-loop
 		}
 
-		WAHBitSet* successors = NULL;
+		PWAHBitSet<2>* successors = NULL;
 		unsigned int numAdjacentComponents = _cStack->size() - _savedCStackSize[vertexIndex];
 		_componentSizes.push_back(0);
 
@@ -202,14 +202,14 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 		if (numAdjacentComponents == 0){
 			// No adjacent components! Nothing to merge!
 			if (explicitlyStoreSelfLoop){
-				successors = new WAHBitSet();
+				successors = new PWAHBitSet<2>();
 				successors->set(newComponentIndex);
 			} else {
 				// else: no need to store a WAHBitSet for this component!
 			}
 		} else {
 			// Number of adjacent components > 0
-			successors = new WAHBitSet();
+			successors = new PWAHBitSet<2>();
 
 			const bool use_multiway_or = (numAdjacentComponents > _minOutDegreeForMultiOR) && _minOutDegreeForMultiOR >= 0;
 
@@ -242,8 +242,8 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 			// Prepare array of successor lists in case of multi-way OR
 			// Note the +1: one slot is allocated in case we'll need to sneak in an extra WAHBitSet
 			// for the MultiWay OR to work.
-			WAHBitSet** adjacentComponentsSuccessors;
-			if (use_multiway_or) adjacentComponentsSuccessors = new WAHBitSet*[numAdjacentComponents + 1];
+			PWAHBitSet<2>** adjacentComponentsSuccessors;
+			if (use_multiway_or) adjacentComponentsSuccessors = new PWAHBitSet<2>*[numAdjacentComponents + 1];
 
 			// Loop over the adjacent component indices to obtain the successor lists and
 			// remove duplicates
@@ -275,7 +275,7 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 				// should be sorted for this to work, since bits of the WAHBitSet can only be set in
 				// increasing order.
 				_mergeTimer.resume();
-				WAHBitSet* adjacentComponentBits = new WAHBitSet();
+				PWAHBitSet<2>* adjacentComponentBits = new PWAHBitSet<2>();
 				int lastIndex = -1;
 				for (unsigned int i = 0; i < numUniqueAdjacentComponents; i++){
 					if (uniqueAdjacentComponentIndices[i] == lastIndex) continue;
@@ -289,7 +289,7 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 
 				// Note the numAdjacentComponents + 1. The +1 indicates the extra WAHBitSet sneaked
 				// into the list
-				WAHBitSet::multiOr(adjacentComponentsSuccessors, numUniqueNonNullAdjacentComponents + 1, successors);
+				PWAHBitSet<2>::multiOr(adjacentComponentsSuccessors, numUniqueNonNullAdjacentComponents + 1, successors);
 
 				delete adjacentComponentBits;
 
@@ -316,8 +316,8 @@ void WAHStackTC::dfsVisit(unsigned int vertexIndex){
 								if (debug) cout << "Merging successor list of component " <<  newComponentIndex << " with " << adjacentComponentIndex << "... ";
 								if (debug) cout.flush();
 
-								WAHBitSet* oldSuccessors = successors;
-								successors = WAHBitSet::constructByOr(successors, _componentSuccessors[adjacentComponentIndex]);
+								PWAHBitSet<2>* oldSuccessors = successors;
+								successors = PWAHBitSet<2>::constructByOr(successors, _componentSuccessors[adjacentComponentIndex]);
 								delete oldSuccessors;
 								oldSuccessors = NULL;
 
@@ -419,8 +419,8 @@ long WAHStackTC::countNumberOfEdgesInCondensedTC(bool ignoreSelfLoops, bool igno
 
 	for (unsigned int c = 0; c < _componentSizes.size(); c++){
 		if (_componentSuccessors[c] != NULL){
-			WAHBitSetIterator iter(_componentSuccessors[c]);
-			currSuccessorIndex = iter.next();
+			BitSetIterator* iter = _componentSuccessors[c]->iterator();
+			currSuccessorIndex = iter->next();
 			while (currSuccessorIndex != -1){
 
 				// The number of if-statements can be reduced, but is preserved like this for
@@ -442,8 +442,9 @@ long WAHStackTC::countNumberOfEdgesInCondensedTC(bool ignoreSelfLoops, bool igno
 					count++;
 				}
 
-				currSuccessorIndex = iter.next();
+				currSuccessorIndex = iter->next();
 			}
+			delete iter;
 		}
 
 		if (!ignoreSelfLoops){
@@ -492,14 +493,14 @@ long WAHStackTC::countNumberOfEdgesInTC(){
 	for (unsigned int c = 0; c < _componentSizes.size(); c++){
 		count = 0;
 
-		WAHBitSet* successors = _componentSuccessors[c];
-		if (successors != NULL){
-			WAHBitSetIterator iter(successors);
-			currSuccessorIndex = iter.next();
+		if (_componentSuccessors[c] != NULL){
+			BitSetIterator* iter = _componentSuccessors[c]->iterator();
+			currSuccessorIndex = iter->next();
 			while (currSuccessorIndex != -1){
 				count += _componentSizes[currSuccessorIndex];
-				currSuccessorIndex = iter.next();
+				currSuccessorIndex = iter->next();
 			}
+			delete iter;
 		}
 
 		if (_reflexitive || _storeComponentVertices){
@@ -512,7 +513,7 @@ long WAHStackTC::countNumberOfEdgesInTC(){
 	}
 
 	count = 0;
-	for (int v = 0; v < _graph->getNumberOfVertices(); v++){
+	for (unsigned int v = 0; v < _graph->getNumberOfVertices(); v++){
 		count += componentVertexSuccessorCount[_vertexComponents[v]];
 	}
 

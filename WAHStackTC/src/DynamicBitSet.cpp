@@ -130,3 +130,7 @@ void DynamicBitSet::constructFailingExample(){
 	_vec.push_back(0);
 	_vec.push_back(109966619291156480);
 }
+
+BitSetIterator* DynamicBitSet::iterator(){
+	throw string("DynamicBitSet::iterator() not implemented");
+}

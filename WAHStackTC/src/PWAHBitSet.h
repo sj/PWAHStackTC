@@ -25,8 +25,12 @@ public:
 	bool get(int bitIndex);
 	unsigned int size();
 	static void multiOr(PWAHBitSet** bitSets, unsigned int numBitSets, PWAHBitSet* result);
+	static PWAHBitSet* constructByOr(const PWAHBitSet* first, const PWAHBitSet* second);
 	static string toBitString(int value);
 	inline static long fill_length(long bits, unsigned short partitionIndex);
+	long memoryUsage();
+
+	BitSetIterator* iterator();
 
 
 private:
@@ -46,6 +50,7 @@ private:
 	inline static bool is_onefill(long bits, unsigned short partitionIndex);
 	inline static bool is_zerofill(long bits, unsigned short partitionIndex);
 	inline static bool is_literal(long bits, unsigned short partitionIndex);
+	inline static long extract_partition(long bits, unsigned short partitionIndex);
 
 
 	void compressPlainBlock();
@@ -53,6 +58,7 @@ private:
 	void addZeroFill(int numBlocks);
 	void addLiteral(long value);
 	void addPartition(bool isFill, long value);
+	void decompressLastBlock();
 };
 
 

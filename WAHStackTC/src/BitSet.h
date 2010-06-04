@@ -8,6 +8,7 @@
 #ifndef BITSET_H_
 #define BITSET_H_
 #include <string>
+#include "BitSetIterator.h"
 using namespace std;
 
 class BitSet {
@@ -22,6 +23,8 @@ public:
 	virtual void set(int bitIndex, bool value) = 0;
 	virtual void set(int bitIndex);
 	virtual bool get(int bitIndex) = 0;
+
+	virtual BitSetIterator* iterator() = 0;
 };
 
 #endif /* BITSET_H_ */

@@ -11,6 +11,7 @@
 #include <string>
 #include "BitSet.h"
 #include "DynamicBitSet.h"
+#include "WAHBitSetIterator.h"
 using namespace std;
 
 class WAHBitSet : public BitSet {
@@ -73,6 +74,8 @@ public:
 	static void multiOr(WAHBitSet** bitSets, unsigned int numBitSets, WAHBitSet* result);
 
 	void clear();
+
+	BitSetIterator* iterator();
 
 	static WAHBitSet constructFailingExample1();
 	static WAHBitSet constructFailingExample2();

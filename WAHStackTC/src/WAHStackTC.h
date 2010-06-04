@@ -15,12 +15,13 @@
 #include "PerformanceTimer.h"
 #include "StaticBitSet.h"
 #include "DynamicStack.h"
+#include "PWAHBitSet.h"
 using namespace std;
 
 class WAHStackTC {
 private:
 	Graph* _graph;
-	vector<WAHBitSet*> _componentSuccessors; // stores the successor list (transitive closure) for each component
+	vector<PWAHBitSet<2>*> _componentSuccessors; // stores the successor list (transitive closure) for each component
 	//vector<DynamicBitSet*> _componentSuccessors; // stores the successor list (transitive closure) for each component
 	int* _vertexComponents; // stores the component index of each vertex
 	bool _storeComponentVertices; // determines whether or not to store a list of vertices in each component

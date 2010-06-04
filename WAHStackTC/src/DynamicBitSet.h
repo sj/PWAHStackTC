@@ -10,7 +10,7 @@
 #include <vector>
 #include <string>
 #include "BitSet.h"
-//#include "WAHBitSet.h"
+#include "BitSetIterator.h"
 using namespace std;
 
 class DynamicBitSet : public BitSet {
@@ -33,6 +33,7 @@ public:
 	string toBitString(long value);
 	unsigned int size();
 
+	BitSetIterator* iterator();
 
 	void constructFailingExample();
 	static DynamicBitSet* constructByOr(const DynamicBitSet* bs1, const DynamicBitSet* bs2);

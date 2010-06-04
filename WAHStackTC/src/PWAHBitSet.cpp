@@ -12,6 +12,7 @@
 #include <assert.h>
 #include <math.h>
 #include <climits>
+#include <sstream>
 using namespace std;
 
 /**
@@ -98,6 +99,8 @@ template<unsigned int P> bool PWAHBitSet<P>::get(int bitIndex){
 
 		}
 	}
+
+	throw string("unexpected state");
 }
 
 template<unsigned int P> unsigned int PWAHBitSet<P>::size(){
@@ -191,11 +194,11 @@ template<unsigned int P> void PWAHBitSet<P>::addLiteral(long value){
  *
  *
  *  The 'value' parameter of this method is a long, formatted as follows (X and Y denote real values,
- *  underscore indicates bits that will be ignored):
- *    - PWAHBitSet<1>: 63 bits: 0b_YXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
- *    - PWAHBitSet<2>: 31 bits: 0b_________________________________YXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
- *    - PWAHBitSet<4>: 15 bits: 0b_________________________________________________YXXXXXXXXXXXXXX
- *    - PWAHBitSet<8>: 7 bits:  0b_________________________________________________________YXXXXXX
+ *  0-bits indicate bits that will be ignored):
+ *    - PWAHBitSet<1>: 63 bits: 0b0YXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+ *    - PWAHBitSet<2>: 31 bits: 0b000000000000000000000000000000000YXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+ *    - PWAHBitSet<4>: 15 bits: 0b0000000000000000000000000000000000000000000000000YXXXXXXXXXXXXXX
+ *    - PWAHBitSet<8>: 7 bits:  0b000000000000000000000000000000000000000000000000000000000YXXXXXX
  *
  *  These n bits are the exact value of the partition. For a fill partition, the first bit (denoted using
  *  an 'Y' in the example above) should indicate the fill type (0-fill or 1-fill). For a literal
@@ -273,11 +276,12 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet** bitSets, unsig
 	unsigned int* sPartitionOffset = new unsigned int[numBitSets];	// offset within partition
 
 	// Some bookkeeping
-	int largestOneFill, largestOneFillSize;
+	int largestOneFill, shortestZeroFill;
+	unsigned int largestOneFillSize, shortestZeroFillSize;
 	int postponedOneFillSize = 0;
 	int postponedZeroFillSize = 0;
-	int shortestZeroFillSize;
-	int currMergedLiteral, currFillLengthRemaining;
+	int currMergedLiteral;
+	unsigned int currFillLengthRemaining;
 	long currWord;
 
 	// Initialize values in int arrays to 0.
@@ -289,8 +293,10 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet** bitSets, unsig
 	while(true){
 		if (debug) cout << "Composing result block with index " << rBlockIndex << "..." << endl;
 		currMergedLiteral = 0;
-		shortestZeroFillSize = -1;
-		largestOneFillSize = -1;
+		largestOneFill = -1;
+		shortestZeroFill = -1;
+		shortestZeroFillSize = 0;
+		largestOneFillSize = 0;
 
 		// Align BitSets, find largest 1-fill and merge literals in the process
 		for (unsigned int i = 0; i < numBitSets; i++){
@@ -305,8 +311,8 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet** bitSets, unsig
 				// This BitSet is totally out of bounds
 				continue;
 			} else if (sBlockIndex[i] > rBlockIndex){
-				// This BitSet was skipped to far as a result of a 0-fill.
-				if (sBlockIndex[i] - rBlockIndex < shortestZeroFillSize || shortestZeroFillSize == -1){
+				// This BitSet skipped past the current result blockindex as a result of a 0-fill.
+				if (sBlockIndex[i] - rBlockIndex < shortestZeroFillSize || shortestZeroFill == -1){
 					shortestZeroFillSize = sBlockIndex[i] - rBlockIndex;
 				}
 				continue;
@@ -315,13 +321,9 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet** bitSets, unsig
 			currWord = bitSets[i]->_compressedWords[sWordIndex[i]];
 			while (rBlockIndex > sBlockIndex[i]){
 				// Skip!
+
 				if (is_onefill(currWord, sPartitionIndex[i])){
 					currFillLengthRemaining = fill_length(currWord, sPartitionIndex[i]) - sPartitionOffset[i];
-
-					if (currFillLengthRemaining > largestOneFillSize){
-						largestOneFillSize = currFillLengthRemaining;
-						largestOneFill = i;
-					}
 
 					// Lets see whether the complete remaining length can be skipped
 					if (currFillLengthRemaining > rBlockIndex - sBlockIndex[i]){
@@ -340,10 +342,6 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet** bitSets, unsig
 				} else if (is_zerofill(currWord, sPartitionIndex[i])){
 					currFillLengthRemaining = fill_length(currWord, sPartitionIndex[i]) - sPartitionOffset[i];
 
-					if (currFillLengthRemaining < shortestZeroFillSize || shortestZeroFillSize == -1){
-						shortestZeroFillSize = currFillLengthRemaining;
-					}
-
 					// 0-fills are boring: skip complete length
 					// TODO: the fill might span over multiple partitions. If so, multiple partitions
 					// should be skipped!
@@ -354,8 +352,6 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet** bitSets, unsig
 					// Partition contains literal. Can be skipped without additional checks
 					sBlockIndex[i]++;
 					sPartitionIndex[i]++;
-
-					currMergedLiteral |= CANT DO THIS currWord;
 				}
 
 				// Some additional bookkeeping regarding partitions in words
@@ -364,64 +360,158 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet** bitSets, unsig
 					sPartitionIndex[i] = 0;
 					sWordIndex[i]++;
 
-					if (sWordIndex[i] == bitSets[i]->_compressedWords.size()){
+					if (sWordIndex[i] < bitSets[i]->_compressedWords.size()){
+						// Within bounds of compressed words
+						currWord = bitSets[i]->_compressedWords[sWordIndex[i]];
+					} else if (sWordIndex[i] == bitSets[i]->_compressedWords.size()){
 						// Out of bounds by one: consider plain block
 						currWord = bitSets[i]->_plainBlock;
 					} else {
-						currWord = bitSets[i]->_compressedWords[sWordIndex[i]];
+						// Totally out of bounds, this BitSet is no longer relevant
+						break;
 					}
 				}
-			} // end while: aligning words
+			} // end while: done aligning this BitSet
 
-			// Now decide on the most efficient operation to perform on the result
-			if (largestOneFillSize != -1){
-				// Do something w.r.t. 1-fill
-
-				// First check whether there is a postponed 0-fill floating around
-				if (postponedZeroFillSize != 0){
-					result->addZeroFill(postponedZeroFillSize);
-					postponedZeroFillSize = 0;
-				}
-
-
-			} else if (currMergedLiteral != 0){
-				// No 1-fill available, store merged literal
-
-				// First, check whether there is a postponed 0-fill or 1-fill floating around
-				if (postponedOneFillSize != 0){
-					result->addOneFill(postponedOneFillSize);
-					postponedOneFillSize = 0;
-				} else if (postponedZeroFillSize != 0){
-					result->addZeroFill(postponedZeroFillSize);
-					postponedZeroFillSize = 0;
-				}
-
-				// Add literal to the result
-				result->addLiteral(currMergedLiteral);
-			} else if (shortestZeroFillSize) {
-				// No 1-fill or literals seen, but a 0-fill is available
-
-				// First, check whether there is a postponed 1-fill floating around
-
-			} else {
-				// Nothing more to do!
-				break;
+			// Might this BitSet be out of bounds?
+			if (sWordIndex[i] > bitSets[i]->_compressedWords.size()){
+				// Totally out of bounds, ignore.
+				continue;
 			}
+
+			// Now, see what this BitSet is offering us...
+			if (is_onefill(currWord, sPartitionIndex[i])){
+				currFillLengthRemaining = fill_length(currWord, sPartitionIndex[i]) - sPartitionOffset[i];
+
+				if (currFillLengthRemaining > largestOneFillSize || largestOneFill == -1){
+					largestOneFillSize = currFillLengthRemaining;
+					largestOneFill = i;
+				} else {
+					// The remaining length of the 1-fill from this BitSet is shorter than the largest 1-fill
+					// encountered so far. It is safe to skip the entire 1-fill from this BitSet,
+					// since a skip of at least the size of the larger 1-fill will occur in this pass
+					if (_VERIFY) assert(currFillLengthRemaining > 0);
+
+					sBlockIndex[i] += currFillLengthRemaining;
+					sPartitionIndex[i]++;
+					sPartitionOffset[i] = 0;
+					if (sPartitionIndex[i] == P){
+						sPartitionIndex[i] = 0;
+						sWordIndex[i]++;
+					}
+				}
+			} else if (is_zerofill(currWord, sPartitionIndex[i])){
+				currFillLengthRemaining = fill_length(currWord, sPartitionIndex[i]) - sPartitionOffset[i];
+
+				if (currFillLengthRemaining < shortestZeroFillSize || shortestZeroFill == -1){
+					shortestZeroFillSize = currFillLengthRemaining;
+				}
+			} else {
+				// At literal
+				currMergedLiteral |= extract_partition(currWord, sPartitionIndex[i]);
+			}
+		} // end for: done aligning all bitsets
+
+		// Now decide on the most efficient operation to perform on the result
+		if (largestOneFill != -1){
+			// Do something w.r.t. 1-fill
+
+			// First check whether there is a postponed 0-fill floating around
+			if (postponedZeroFillSize != 0){
+				result->addZeroFill(postponedZeroFillSize);
+				postponedZeroFillSize = 0;
+			}
+
+			// Postpone addition of 1-fill. It's more efficient to add large 1-fills
+			// at once, in stead of in parts.
+			postponedOneFillSize += largestOneFillSize;
+
+			sBlockIndex[largestOneFill] += largestOneFillSize;
+			sPartitionIndex[largestOneFill]++;
+			rBlockIndex += largestOneFillSize;
+
+			if (sPartitionIndex[largestOneFill] == P){
+				sPartitionIndex[largestOneFill] = 0;
+				sWordIndex[largestOneFill]++;
+			}
+		} else if (currMergedLiteral != 0){
+			// No 1-fill available, store merged literal
+
+			// First, check whether there is a postponed 0-fill or 1-fill floating around
+			if (postponedOneFillSize != 0){
+				result->addOneFill(postponedOneFillSize);
+				postponedOneFillSize = 0;
+			} else if (postponedZeroFillSize != 0){
+				result->addZeroFill(postponedZeroFillSize);
+				postponedZeroFillSize = 0;
+			}
+
+			// Add literal to the result
+			result->addLiteral(currMergedLiteral);
+		} else if (shortestZeroFill != -1) {
+			// No 1-fill or literals seen, but a 0-fill is available
+
+			// First, check whether there is a postponed 1-fill floating around
+			if (postponedOneFillSize != 0){
+				result->addOneFill(postponedOneFillSize);
+				postponedOneFillSize = 0;
+			}
+
+			postponedZeroFillSize += shortestZeroFillSize;
+
+			rBlockIndex += shortestZeroFillSize;
+		} else {
+			// Nothing more to do!
+
+			// Before stopping, check whether there is a postponed 0-fill or 1-fill floating around
+			if (postponedOneFillSize != 0){
+				result->addOneFill(postponedOneFillSize);
+				postponedOneFillSize = 0;
+			} else if (postponedZeroFillSize != 0){
+				result->addZeroFill(postponedZeroFillSize);
+				postponedZeroFillSize = 0;
+			}
+
+			break;
 		}
 	} // end while
 
 	if (debug) cout << "Cleaning up..." << endl;
 	delete[] sWordIndex;
-	delete[] sWordOffset;
+	delete[] sPartitionOffset;
+	delete[] sPartitionIndex;
 	delete[] sBlockIndex;
 
-	// Decompress last word of resulting BitSet to plain word
+	// Decompress last block of resulting BitSet to plain block
 	// TODO
-	//if (result->_compressedWords.size() > 0) result->decompressLastWord();
+	//if (result->_compressedWords.size() > 0) result->decompressLastBlock();
 
 	if (debug) cout << "done multiway!" << endl;
 }
 
+template<unsigned int P> void PWAHBitSet<P>::decompressLastBlock(){
+	if (_VERIFY) assert(_plainBlock == 0);
+	if (_compressedWords.size() == 0) return;
+	_plainBlock = extract_partition(_compressedWords.back(), _lastUsedPartition);
+	if (_lastUsedPartition == 0){
+		_compressedWords.pop_back();
+		_lastUsedPartition = P - 1;
+	} else {
+		_lastUsedPartition--;
+	}
+}
+
+template<unsigned int P> PWAHBitSet<P>* PWAHBitSet<P>::constructByOr(const PWAHBitSet<P>* first, const PWAHBitSet<P>* second){
+	throw string("PWAHBitSet::constructByOr not implemented");
+}
+
+template<unsigned int P> long PWAHBitSet<P>::memoryUsage(){
+	throw string("PWAHBitSet::memoryUsage not implemented");
+}
+
+template<unsigned int P> BitSetIterator* PWAHBitSet<P>::iterator(){
+	throw string("PWAHBitSet::iterator not implemented");
+}
 
 
 // ================================== BEGIN STATIC OPERATIONS ON BITS ===================================
@@ -509,10 +599,20 @@ template<> inline bool PWAHBitSet<8>::is_onefill(long bits, unsigned short parti
 /**
  * \brief Extract a partition from a word.
  *
- * Will not return the type of the partition (fill / literal), only its contents
+ * Will not return the type of the partition (fill / literal), only its contents. Note that
+ * the contents will always reside in the least significant bits of the word
+ *
+ * PWAHBitSet<8>: 7 bits,  0b000000000000000000000000000000000000000000000000000000000XXXXXXX;
+ * PWAHBitSet<4>: 15 bits, 0b0000000000000000000000000000000000000000000000000XXXXXXXXXXXXXXX;
+ * PWAHBitSet<2>: 31 bits, 0b000000000000000000000000000000000XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX;
+ * PWAHBitSet<1>: 63 bits, 0b0XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX;
  */
-template<> inline bool PWAHBitSet<1>::extract_partition(long word, unsigned short partitionIndex){
-
+template<> inline long PWAHBitSet<1>::extract_partition(long word, unsigned short partitionIndex){
+	return (word & 0b0111111111111111111111111111111111111111111111111111111111111111);
+}
+template<unsigned int P> inline long PWAHBitSet<P>::extract_partition(long word, unsigned short partitionIndex){
+	word >>= (_blockSize * partitionIndex);
+	return (word & 0b0000000000000000000000000000000001111111111111111111111111111111);
 }
 
 /**
