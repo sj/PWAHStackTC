@@ -387,6 +387,7 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet** bitSets, unsig
 
 			// Now, see what this BitSet is offering us...
 			if (is_onefill(currWord, sPartitionIndex[i])){
+				if (debug) cout << "Encountered 1-fill in BitSet " << i << endl;
 				currFillLengthRemaining = fill_length(currWord, sPartitionIndex[i]) - sPartitionOffset[i];
 
 				if (currFillLengthRemaining > largestOneFillSize || largestOneFill == -1){
@@ -407,6 +408,7 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet** bitSets, unsig
 					}
 				}
 			} else if (is_zerofill(currWord, sPartitionIndex[i])){
+				if (debug) cout << "Encountered 0-fill in BitSet " << i << endl;
 				currFillLengthRemaining = fill_length(currWord, sPartitionIndex[i]) - sPartitionOffset[i];
 
 				if (currFillLengthRemaining < shortestZeroFillSize || shortestZeroFill == -1){
@@ -414,6 +416,7 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet** bitSets, unsig
 				}
 			} else {
 				// At literal
+				if (debug) cout << "Encountered literal in BitSet " << i << endl;
 				currMergedLiteral |= extract_partition(currWord, sPartitionIndex[i]);
 			}
 		} // end for: done aligning all bitsets
@@ -729,11 +732,26 @@ template<> inline long PWAHBitSet<2>::fill_length(long bits, unsigned short part
 
 template<unsigned int P> string PWAHBitSet<P>::toBitString(int value){
 	stringstream res;
-	for (int bit = 0; bit < 32; bit++){
+	for (int bit = 0; bit < 64; bit++){
 		if (L_GET_BIT(value, bit)) res << "1";
 		else res << "0";
 	}
 	res << " (= " << value << ")";
+	return res.str();
+}
+
+template<unsigned int P> string PWAHBitSet<P>::toString(){
+	stringstream res;
+
+	for (unsigned int i = 0; i < _compressedWords.size(); i++){
+		res << toBitString(_compressedWords[i]) << endl;
+	}
+
+	if (_plainBlock != 0){
+		res << endl << "Plain block (blockindex=" << _plainBlockIndex << "):" << endl;
+		res << toBitString(_plainBlock) << endl;
+	}
+
 	return res.str();
 }
 

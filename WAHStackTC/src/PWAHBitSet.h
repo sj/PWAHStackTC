@@ -31,7 +31,7 @@ public:
 	long memoryUsage();
 
 	BitSetIterator* iterator();
-
+	string toString();
 
 private:
 	static const long _maxBlocksPerFill;
