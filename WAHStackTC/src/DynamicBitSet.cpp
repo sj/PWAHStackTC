@@ -14,25 +14,11 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include "LongBitMacros.cpp"
 using namespace std;
 
-/**
- * Macro to check the bit at position pos of variable var
- */
-#define I_GET_BIT(var, pos) ((var) & (1L << (pos)))
-
-/**
- * Macro to set the bit at position pos of variable var
- */
-#define I_SET_BIT(var, pos) ((var) |= 1L << (pos))
-
-/**
- * Macro to clear the bit at position pos of variable vat
- */
-#define CLEAR_BIT(var, pos) ((var) &= ~(1L << (pos)))
-
 DynamicBitSet::DynamicBitSet() {
-	init();
+	init(0);
 }
 
 DynamicBitSet::DynamicBitSet(int initialCapacity) {
@@ -57,29 +43,29 @@ void DynamicBitSet::set(int bitIndex){
 }
 
 void DynamicBitSet::set(int bitIndex, bool value){
-	const bool debug = false;
+	const bool debug = true;
 	if (bitIndex > _lastBitIndex) _lastBitIndex = bitIndex;
 	unsigned int vecElemIndex = bitIndex / 64;
-	if (debug) cout << "DynamicBitSet: setting bit " << bitIndex << ", at vec element index " << vecElemIndex << ", bit " << (bitIndex % 64) << endl;
+	if (debug) cout << "DynamicBitSet::set -- setting bit " << bitIndex << ", at vec element index " << vecElemIndex << ", bit " << (bitIndex % 64) << endl;
 
-	while(_vec.capacity() <= vecElemIndex){
+	while(_vec.size() <= vecElemIndex){
 		cout << "expanding..." << endl;
 		_vec.push_back(0);
 	}
 
 	if (value){
 		if (debug) cout << "setting bit " << (bitIndex % 64) << " in " << toBitString(_vec[vecElemIndex]) << endl;
-		I_SET_BIT(_vec[vecElemIndex], bitIndex % 64);
-		if (debug) cout << "Total resulting DynamicBitSet:" << endl << this->toString() <<endl;
+		L_SET_BIT(_vec[vecElemIndex], bitIndex % 64);
+		//if (debug) cout << "Total resulting DynamicBitSet:" << endl << this->toString() <<endl;
 	} else {
-		CLEAR_BIT(_vec[vecElemIndex], bitIndex % 64);
+		L_CLEAR_BIT(_vec[vecElemIndex], bitIndex % 64);
 	}
 
 }
 
 bool DynamicBitSet::get(int bitIndex){
 	if (bitIndex > _lastBitIndex) return false;
-	return I_GET_BIT(_vec[bitIndex / 64], bitIndex % 64);
+	return L_GET_BIT(_vec[bitIndex / 64], bitIndex % 64);
 }
 
 string DynamicBitSet::toString(){
@@ -92,8 +78,9 @@ string DynamicBitSet::toString(){
 
 string DynamicBitSet::toBitString(long value){
 	stringstream res;
-	for (int bit = 0; bit < 64; bit++){
-		if (I_GET_BIT(value, bit)) res << "1";
+	res << "0b";
+	for (int bit = 63; bit >= 0; bit--){
+		if (L_GET_BIT(value, bit)) res << "1";
 		else res << "0";
 	}
 	res << " (= " << value << ")";
@@ -129,6 +116,10 @@ void DynamicBitSet::clear(){
 void DynamicBitSet::constructFailingExample(){
 	_vec.push_back(0);
 	_vec.push_back(109966619291156480);
+}
+
+int DynamicBitSet::blocksize(){
+	return 64;
 }
 
 BitSetIterator* DynamicBitSet::iterator(){

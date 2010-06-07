@@ -37,6 +37,8 @@ public:
 
 	void constructFailingExample();
 	static DynamicBitSet* constructByOr(const DynamicBitSet* bs1, const DynamicBitSet* bs2);
+
+	int blocksize();
 };
 
 #endif /* DYNAMICBITSET_H_ */

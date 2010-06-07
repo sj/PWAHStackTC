@@ -32,6 +32,8 @@ public:
 	unsigned int capacity();
 	unsigned int size();
 
+	int blocksize();
+
 	BitSetIterator* iterator();
 };
 

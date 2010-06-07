@@ -105,6 +105,10 @@ void StaticBitSet::clear(){
 	_lastBitSet = -1;
 }
 
+int StaticBitSet::blocksize(){
+	return 64;
+}
+
 BitSetIterator* StaticBitSet::iterator(){
 	throw string("StaticBitSet::iterator() not implemented");
 }

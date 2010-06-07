@@ -25,6 +25,8 @@ public:
 	virtual bool get(int bitIndex) = 0;
 
 	virtual BitSetIterator* iterator() = 0;
+
+	virtual int blocksize() = 0;
 };
 
 #endif /* BITSET_H_ */

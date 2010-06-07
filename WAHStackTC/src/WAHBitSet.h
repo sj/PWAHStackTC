@@ -74,7 +74,7 @@ public:
 	static void multiOr(WAHBitSet** bitSets, unsigned int numBitSets, WAHBitSet* result);
 
 	void clear();
-
+	int blocksize();
 	BitSetIterator* iterator();
 
 	static WAHBitSet constructFailingExample1();

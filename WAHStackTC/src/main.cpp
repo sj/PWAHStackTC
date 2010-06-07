@@ -21,6 +21,7 @@
 #include "Validator.h"
 #include "PWAHBitSet.h"
 #include "LongBitMacros.cpp"
+#include "BitSetTester.h"
 using namespace std;
 
 void runValidatorWhenRequested(int argc, char* argv[]){
@@ -37,6 +38,7 @@ int main(int argc, char* argv[]) {
 	cout.setf(ios::fixed,ios::floatfield);
 	cout.precision(4);
 	runValidatorWhenRequested(argc, argv);
+
 
 	try {
 		long test = 0b1000000000000000000000000000000000000000000000000000000000000000;
@@ -56,10 +58,20 @@ int main(int argc, char* argv[]) {
 		//cout << pwbs.toString() << endl;
 
 		cout << "fill length: " << PWAHBitSet<2>::fill_length(0b1110000000000000000000000000000111000000000000000000000000000010,0) << endl;
-	} catch (int e){
+
+		PWAHBitSet<2>* bs1 = new PWAHBitSet<2>();
+		DynamicBitSet* bs2 = new DynamicBitSet();
+		//WAHBitSet* bs2 = new WAHBitSet();
+
+		BitSetTester tester = BitSetTester(bs1, bs2);
+		tester.testSetGet();
+
+		delete bs1;
+		delete bs2;
+	} catch (string e){
 		cerr << "Exception: " << e << endl;;
 	}
-	//exit(1);
+	exit(1);
 
 	string defFilename;
 	//defFilename = "../../Datasets/nuutila32.graph";
@@ -154,7 +166,6 @@ int main(int argc, char* argv[]) {
 		cout << graph.computeMinOutDegree() << ", " << graph.computeMaxOutDegree() << ", " << graph.computeAvgOutDegree() << endl;
 		cout << "Min, max, average in degree: ";
 		cout << graph.computeMinInDegree() << ", " << graph.computeMaxInDegree() << ", " << graph.computeAvgInDegree() << endl;
-
 
 
 		double tmp;

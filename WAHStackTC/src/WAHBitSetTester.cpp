@@ -16,6 +16,7 @@
 #include <sstream>
 #include "PerformanceTimer.h"
 #include "WAHBitSetIterator.h"
+#include "BitSetTester.h"
 #include <string>
 using namespace std;
 
@@ -30,7 +31,7 @@ void WAHBitSetTester::testIterator(){
 	while (true){
 		WAHBitSet* wbs;
 		int maxBits = 5000;
-		randomise(wbs, maxBits);
+		BitSetTester::randomise(wbs, maxBits);
 
 		cout << wbs->toString() << endl;
 		WAHBitSetIterator iter(wbs);
@@ -71,7 +72,7 @@ void WAHBitSetTester::testMultiOr(){
 
 		for (int i = 0; i < numSourceBitSets; i++){
 			bitsets[i] = new WAHBitSet();
-			randomise(bitsets[i], numBits);
+			BitSetTester::randomise(bitsets[i], numBits);
 			cout << "BitSet " << i << endl;
 			cout << bitsets[i]->toString() << endl << endl;
 		}
@@ -156,8 +157,8 @@ void WAHBitSetTester::testOr(){
 		cout.flush();
 		DynamicBitSet* dbs1 = new DynamicBitSet(); //(wahbs1);
 		DynamicBitSet* dbs2 = new DynamicBitSet(); //(wahbs2);
-		randomise(dbs1, 100000);
-		randomise(dbs2, 100000);
+		BitSetTester::randomise(dbs1, NULL, 100000);
+		BitSetTester::randomise(dbs2, NULL, 100000);
 		cout << "done, that took " << timer.reset() << " msecs" << endl;
 		//wahbs1 = WAHBitSet::constructFailingExample1();
 		//wahbs2 = WAHBitSet::constructFailingExample2();
@@ -209,39 +210,6 @@ void WAHBitSetTester::testOr(){
 		//cout << wahres.toString() << endl;
 	}
 }
-
-void WAHBitSetTester::randomise(BitSet* bitset, int maxBits){
-	bitset->clear();
-
-	// Probability of constructing a fill-bit
-	float fillProb = RAND_FLOAT();
-
-	// Probability a fill bit is a 1-fill
-	float oneFillProb = RAND_FLOAT();
-
-	// Fill the bit set with a random number of bits, somewhere between 0 and a big number
-	//int numBlocks = (rand() % 10000000) / 31;
-	int numBits = rand() % maxBits;
-	int numBlocks = numBits / 31 + 1;
-	int offset;
-
-	for (int block = 0; block < numBlocks; block++){
-		offset = block * 31;
-
-		if (RAND_FLOAT() <= fillProb){
-			// Construct a block in such a way that a fill will occur
-			if (RAND_FLOAT() <= oneFillProb){
-				// 1-fill
-				for (int bit = offset; bit < offset + 31; bit++) bitset->set(bit);
-			} // else: 0-fill, do nothing
-		} else {
-			// Construct a block with random bits
-			if (DEBUGGING) cout << "Constructing block " << block << ": will be stored as literal word" << endl;
-			for (int bit = offset; bit < offset + 31; bit++) if (RAND_FLOAT() < 0.5) bitset->set(bit);
-		}
-	}
-}
-
 
 
 void WAHBitSetTester::test(int runs){

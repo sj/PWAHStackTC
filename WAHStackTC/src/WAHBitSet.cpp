@@ -198,7 +198,6 @@ void WAHBitSet::addOneFill(int numBlocks){
 	}
 
 	_plainWordBlockSeq += numBlocks;
-	_lastBitIndex += numBlocks * BLOCKSIZE;
 }
 
 void WAHBitSet::addZeroFill(int numBlocks){
@@ -220,7 +219,6 @@ void WAHBitSet::addZeroFill(int numBlocks){
 	}
 
 	_plainWordBlockSeq += numBlocks;
-	_lastBitIndex += numBlocks * BLOCKSIZE;
 }
 
 void WAHBitSet::addLiteral(int value){
@@ -232,7 +230,6 @@ void WAHBitSet::addLiteral(int value){
 	else {
 		_compressedBits.push_back(value);
 		_plainWordBlockSeq++;
-		_lastBitIndex += BLOCKSIZE;
 	}
 }
 
@@ -770,6 +767,10 @@ long WAHBitSet::memoryUsage(){
 	long res = _compressedBits.size() * 32;
 	res += 32; // plain word
 	return res;
+}
+
+int WAHBitSet::blocksize(){
+	return 31;
 }
 
 BitSetIterator* WAHBitSet::iterator(){
