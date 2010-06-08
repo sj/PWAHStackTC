@@ -288,12 +288,6 @@ template<class B> void WAHStackTC<B>::dfsVisit(unsigned int vertexIndex){
 				// (remember the +1 in the size specification of this array!)
 				adjacentComponentsSuccessors[numUniqueNonNullAdjacentComponents] = adjacentComponentBits;
 
-				if (true){
-					for (unsigned int i = 0; i < numUniqueNonNullAdjacentComponents + 1; i++){
-						cout << "BitSet " << i << ":" << endl;
-						cout << adjacentComponentsSuccessors[i]->toString() << endl << endl;
-					}
-				}
 				// Note the numAdjacentComponents + 1. The +1 indicates the extra WAHBitSet sneaked
 				// into the list
 				B::multiOr(adjacentComponentsSuccessors, numUniqueNonNullAdjacentComponents + 1, successors);

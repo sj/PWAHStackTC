@@ -561,6 +561,7 @@ void WAHBitSet::multiOr(WAHBitSet** bitSets, unsigned int numBitSets, WAHBitSet*
 	int largestOneFill, largestOneFillSize;
 	int shortestZeroFillSize;
 	int currMergedLiteral, currWord, currFillLengthRemaining;
+	unsigned int lastBitIndex = 0;
 
 	// Initialize values in int arrays to 0.
 	memset(sWordIndex, 0, numBitSets * sizeof(int));
@@ -577,6 +578,7 @@ void WAHBitSet::multiOr(WAHBitSet** bitSets, unsigned int numBitSets, WAHBitSet*
 		for (unsigned int i = 0; i < numBitSets; i++){
 			if (debug) cout << "Considering BitSet with index " << i << " (total number of bitsets = " << numBitSets << ")" << endl;
 			if (debug) cout << "BitSet " << i << " contains " << bitSets[i]->_compressedBits.size() << " compressed words, is now at blockindex " << sBlockIndex[i] << " which is in wordindex " << sWordIndex[i] << endl;
+			if (bitSets[i]->_lastBitIndex > lastBitIndex) lastBitIndex = bitSets[i]->_lastBitIndex;
 
 			// Before skipping, check whether it actually makes sense to skip.
 			if (sBlockIndex[i] > rBlockIndex){
@@ -721,13 +723,14 @@ void WAHBitSet::multiOr(WAHBitSet** bitSets, unsigned int numBitSets, WAHBitSet*
 	delete[] sBlockIndex;
 
 	// Decompress last word of resulting BitSet to plain word
+	result->_lastBitIndex = lastBitIndex;
 	if (result->_compressedBits.size() > 0) result->decompressLastWord();
 
 	if (debug) cout << "done multiway!" << endl;
 }
 
 void WAHBitSet::decompressLastWord(){
-	if (this->size() == 0) throw string ("Can't decompress last word, BitSet has no compressed words!");
+	if (this->_compressedBits.size() == 0) throw string ("Can't decompress last word, BitSet has no compressed words!");
 	if (this->_plainWord != 0) throw string ("Can't decompress last word, plain word != 0");
 
 	if (IS_FILL(this->_compressedBits.back())){
