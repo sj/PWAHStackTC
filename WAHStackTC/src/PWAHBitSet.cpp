@@ -60,9 +60,9 @@ template<unsigned int P> void PWAHBitSet<P>::clear(){
 }
 
 template<unsigned int P> bool PWAHBitSet<P>::get(int bitIndex){
-	const bool DEBUGGING = true;
-	if (DEBUGGING) cout << "PWAHBitSet::get(" << bitIndex << ")" << endl;
+	const bool DEBUGGING = false;
 	const int blockIndex = bitIndex / _blockSize;
+	if (DEBUGGING) cout << "PWAHBitSet::get(" << bitIndex << ") -- bit in block " << blockIndex << endl;
 
 	if (blockIndex > _plainBlockIndex){
 		return false;
@@ -82,26 +82,41 @@ template<unsigned int P> bool PWAHBitSet<P>::get(int bitIndex){
 				if (is_onefill(currWord, p)){
 					// Partition represents a 1-fill
 					currBlockIndex += fill_length(currWord, p);
-					if (currBlockIndex >= blockIndex) return true;
+					if (DEBUGGING) cout << "PWAHBitSet::get[" << bitIndex << "] -- encountered 1-fill extending to block " << currBlockIndex << endl;
+					if (currBlockIndex >= blockIndex){
+						if (DEBUGGING) cout << "PWAHBitSet::get[" << bitIndex << "] -- bit is set" << endl;
+						return true;
+					}
 				} else if (is_zerofill(currWord, p)){
 					// Partition represents a 0-fill
 					currBlockIndex += fill_length(currWord, p);
-					if (currBlockIndex >= blockIndex) return false;
+					if (DEBUGGING) cout << "PWAHBitSet::get[" << bitIndex << "] -- encountered 0-fill extending to block " << currBlockIndex << endl;
+					if (currBlockIndex >= blockIndex){
+						if (DEBUGGING) cout << "PWAHBitSet::get[" << bitIndex << "] -- bit is not set" << endl;
+						return false;
+					}
 				} else {
 					// Partition contains a literal word, it's safe to skip one block
 					currBlockIndex++;
+					if (DEBUGGING) cout << "PWAHBitSet::get[" << bitIndex << "] -- encountered literal at block " << currBlockIndex << endl;
 
 					if (currBlockIndex == blockIndex){
 						long partition = extract_partition(currWord, p);
+						if (DEBUGGING){
+							cout << "PWAHBitSet::get[" << bitIndex << "] -- bit resides within partition " << p << ": " << toBitString(partition) << " at position " << (bitIndex % _blockSize) << endl;
+							cout << "PWAHBitSet::get[" << bitIndex << "] -- bit is " << (L_GET_BIT(partition, bitIndex % _blockSize) ? "" : "not ") << "set" << endl;
+						}
 						return L_GET_BIT(partition, bitIndex % _blockSize);
 					}
 				}
 
 				if (currBlockIndex > blockIndex){
+					if (DEBUGGING) cout << "PWAHBitSet::get[" << bitIndex << "] -- bit is not set" << endl;
 					return false;
 				}
 			}
 
+			if (DEBUGGING) cout << "PWAHBitSet::get[" << bitIndex << "] -- haven't found bit yet, considering next word..." << endl;
 		}
 	}
 
@@ -122,7 +137,7 @@ template<unsigned int P> void PWAHBitSet<P>::set(int bitIndex){
 }
 
 template<unsigned int P> void PWAHBitSet<P>::set(int bitIndex, bool value){
-	const bool DEBUGGING = true;
+	const bool DEBUGGING = false;
 
 	if (DEBUGGING) cout << "PWAHBitSet<P>::set -- " << (value ? "Setting" : "Unsetting") << " bit " << bitIndex << " (P=" << P << ", blockSize=" << _blockSize << ")" << endl;
 
@@ -166,7 +181,7 @@ template<unsigned int P> void PWAHBitSet<P>::set(int bitIndex, bool value){
  * reset the value of _plainBlock, though.
  */
 template<unsigned int P> void PWAHBitSet<P>::compressPlainBlock(){
-	const bool DEBUGGING = true;
+	const bool DEBUGGING = false;
 	if (_lastBitIndex / _blockSize < _plainBlockIndex) return;
 
 	if (_plainBlock == 0){
@@ -177,15 +192,15 @@ template<unsigned int P> void PWAHBitSet<P>::compressPlainBlock(){
 		// 1-fill
 		if (DEBUGGING) cout << "PWAHBitSet::compressPlainBlock -- adding fill: " << toBitString(_plainBlock) << endl;
 		addOneFill(1);
-	} else if (P == 2 && _plainBlock == 0b0000000000000000000000000000000000111111111111111111111111111111){
+	} else if (P == 2 && _plainBlock == 0b0000000000000000000000000000000001111111111111111111111111111111){
 		// 1-fill
 		if (DEBUGGING) cout << "PWAHBitSet::compressPlainBlock -- adding fill: " << toBitString(_plainBlock) << endl;
 		addOneFill(1);
-	} else if (P == 4 && _plainBlock == 0b0000000000000000000000000000000000000000000000000011111111111111){
+	} else if (P == 4 && _plainBlock == 0b0000000000000000000000000000000000000000000000000111111111111111){
 		// 1-fill
 		if (DEBUGGING) cout << "PWAHBitSet::compressPlainBlock -- adding fill: " << toBitString(_plainBlock) << endl;
 		addOneFill(1);
-	} else if (P == 8 && _plainBlock == 0b0000000000000000000000000000000000000000000000000000000000111111){
+	} else if (P == 8 && _plainBlock == 0b0000000000000000000000000000000000000000000000000000000001111111){
 		// 1-fill
 		if (DEBUGGING) cout << "PWAHBitSet::compressPlainBlock -- adding fill: " << toBitString(_plainBlock) << endl;
 		addOneFill(1);
@@ -199,18 +214,27 @@ template<unsigned int P> void PWAHBitSet<P>::compressPlainBlock(){
 }
 
 template<unsigned int P> void PWAHBitSet<P>::addOneFill(int numBlocks){
-	const bool DEBUGGING = true;
-	if (DEBUGGING) cout << "PWAHBitSet::addZeroFill(" << numBlocks << ")" << endl;
+	const bool DEBUGGING = false;
+	if (DEBUGGING) cout << "PWAHBitSet::addOneFill(" << numBlocks << ")" << endl;
 
 	// Check last compressed word
 	if (_compressedWords.size() > 0 && is_onefill(_compressedWords.back(), _lastUsedPartition)){
 		// TODO: check for extended 1-fill! In PWAHBitSet<8> case, at total of 8 partitions
 		// should be checked...
 		numBlocks = fill_length(_compressedWords.back(), _lastUsedPartition) + numBlocks;
-		_compressedWords.pop_back();
+		if (DEBUGGING) cout << "PWAHBitSet::addOneFill -- Encountered 1-fill of size " << fill_length(_compressedWords.back(), _lastUsedPartition) << " blocks at partition " << _lastUsedPartition << ", extending to " << numBlocks << "..." << endl;
 
 		// Decrease _lastUsedPartition, call to 'addPartition' below will increase _lastUsedPartition
-		_lastUsedPartition--;
+		if (_lastUsedPartition == 0){
+			_compressedWords.pop_back();
+			_lastUsedPartition = P -1;
+		} else {
+			// Clear the last used partition, containing the 1-fill that is about to be extended
+			_compressedWords[_compressedWords.size() - 1] = clear_partition(_compressedWords.back(), _lastUsedPartition);
+
+			// Decrease counter, that (cleared) partition will be overwritten
+			_lastUsedPartition--;
+		}
 	}
 
 	if (numBlocks > _maxBlocksPerFill){
@@ -225,7 +249,7 @@ template<unsigned int P> void PWAHBitSet<P>::addOneFill(int numBlocks){
 }
 
 template<unsigned int P> void PWAHBitSet<P>::addZeroFill(int numBlocks){
-	const bool DEBUGGING = true;
+	const bool DEBUGGING = false;
 	if (_VERIFY) assert(numBlocks > 0);
 	if (DEBUGGING) cout << "PWAHBitSet::addZeroFill(" << numBlocks << ")" << endl;
 
@@ -234,10 +258,20 @@ template<unsigned int P> void PWAHBitSet<P>::addZeroFill(int numBlocks){
 		// TODO: check for extended 0-fill! In PWAHBitSet<8> case, at total of 8 partitions
 		// should be checked...
 		numBlocks = fill_length(_compressedWords.back(), _lastUsedPartition) + numBlocks;
-		_compressedWords.pop_back();
+		if (DEBUGGING) cout << "PWAHBitSet::addZeroFill -- Encountered 0-fill of size " << fill_length(_compressedWords.back(), _lastUsedPartition) << " blocks at partition " << _lastUsedPartition << ", extending to size " << numBlocks << "..." << endl;
 
 		// Decrease _lastUsedPartition, call to 'addPartition' below will increase _lastUsedPartition
-		_lastUsedPartition--;
+		if (_lastUsedPartition == 0){
+			_compressedWords.pop_back();
+			_lastUsedPartition = P -1;
+		} else {
+			// Clear the last used partition, containing the 0-fill that is about to be extended
+			_compressedWords[_compressedWords.size() - 1] = clear_partition(_compressedWords.back(), _lastUsedPartition);
+
+			// Decrease counter, that (cleared) partition will be overwritten
+			_lastUsedPartition--;
+		}
+
 	}
 
 	if (numBlocks > _maxBlocksPerFill){
@@ -288,7 +322,7 @@ template<unsigned int P> void PWAHBitSet<P>::addLiteral(long value){
  *	Note that all bits denoted with an underscore are ignored!
  */
 template<unsigned int P> void PWAHBitSet<P>::addPartition(bool isFill, long value){
-	const bool DEBUGGING = true;
+	const bool DEBUGGING = false;
 	if (DEBUGGING) cout << "PWAHBitSet::addPartition(" << (isFill ? "fill" : "literal") << ", " << toBitString(value) << endl;
 
 	if (_lastUsedPartition == P - 1 || _compressedWords.size() == 0){
@@ -335,6 +369,8 @@ template<unsigned int P> void PWAHBitSet<P>::addPartition(bool isFill, long valu
 	}
 
 	_compressedWords[_compressedWords.size() - 1] |= value;
+
+	if (DEBUGGING) cout << "PWAHBitSet::addPartition -- resulting word after adding new partition at index " << _lastUsedPartition << ": " << toBitString(_compressedWords.back()) << endl;
 }
 
 
@@ -657,39 +693,39 @@ template<> inline bool PWAHBitSet<1>::is_onefill(long bits, unsigned short parti
 }
 template<> inline bool PWAHBitSet<2>::is_onefill(long bits, unsigned short partitionIndex){
 	const long mask = (
-		partitionIndex == 0 ? 0b0110000000000000000000000000000000000000000000000000000000000000 : // index 63, 61
-		partitionIndex == 1 ? 0b1000000000000000000000000000000001000000000000000000000000000000 : // index 62, 30
+		partitionIndex == 0 ? 0b0100000000000000000000000000000001000000000000000000000000000000 : // index 63, 61
+		partitionIndex == 1 ? 0b1010000000000000000000000000000000000000000000000000000000000000 : // index 62, 30
 		throw string("invalid partitionIndex")
 	);
 	return (bits & mask) == mask;
 }
 template<> inline bool PWAHBitSet<4>::is_onefill(long bits, unsigned short partitionIndex){
 	const long mask = (
-		partitionIndex == 0 ? 0b0001100000000000000000000000000000000000000000000000000000000000 : // index 63, 59
-		partitionIndex == 1 ? 0b0010000000000000000100000000000000000000000000000000000000000000 : // index 62, 44
-		partitionIndex == 2 ? 0b0100000000000000000000000000000000100000000000000000000000000000 : // index 61, 29
-		partitionIndex == 3 ? 0b1000000000000000000000000000000000000000000000000100000000000000 : // index 60, 14
+		partitionIndex == 0 ? 0b0001000000000000000000000000000000000000000000000100000000000000 : // index 63, 59
+		partitionIndex == 1 ? 0b0010000000000000000000000000000000100000000000000000000000000000 : // index 62, 44
+		partitionIndex == 2 ? 0b0100000000000000000100000000000000000000000000000000000000000000 : // index 61, 29
+		partitionIndex == 3 ? 0b1000100000000000000000000000000000000000000000000000000000000000 : // index 60, 14
 		throw string("invalid partitionIndex")
 	);
 	return (bits & mask) == mask;
 }
 template<> inline bool PWAHBitSet<8>::is_onefill(long bits, unsigned short partitionIndex){
 	const long mask = (
-		partitionIndex == 0 ? 0b0000000110000000000000000000000000000000000000000000000000000000 : // index 63, 55
-		partitionIndex == 1 ? 0b0000001000000001000000000000000000000000000000000000000000000000 : // index 62, 48
-		partitionIndex == 2 ? 0b0000010000000000000000100000000000000000000000000000000000000000 : // index 61, 41
-		partitionIndex == 3 ? 0b0000100000000000000000000000010000000000000000000000000000000000 : // index 60, 34
-		partitionIndex == 4 ? 0b0001000000000000000000000000000000001000000000000000000000000000 : // index 59, 27
-		partitionIndex == 5 ? 0b0010000000000000000000000000000000000000000100000000000000000000 : // index 58, 20
-		partitionIndex == 6 ? 0b0100000000000000000000000000000000000000000000000010000000000000 : // index 59, 13
-		partitionIndex == 7 ? 0b1000000000000000000000000000000000000000000000000000000001000000 : // index 58, 6
+		partitionIndex == 0 ? 0b0000000100000000000000000000000000000000000000000000000001000000 : // index 63, 55
+		partitionIndex == 1 ? 0b0000001000000000000000000000000000000000000000000010000000000000 : // index 62, 48
+		partitionIndex == 2 ? 0b0000010000000000000000000000000000000000000100000000000000000000 : // index 61, 41
+		partitionIndex == 3 ? 0b0000100000000000000000000000000000001000000000000000000000000000 : // index 60, 34
+		partitionIndex == 4 ? 0b0001000000000000000000000000010000000000000000000000000000000000 : // index 59, 27
+		partitionIndex == 5 ? 0b0010000000000000000000100000000000000000000000000000000000000000 : // index 58, 20
+		partitionIndex == 6 ? 0b0100000000000001000000000000000000000000000000000000000000000000 : // index 59, 13
+		partitionIndex == 7 ? 0b1000000010000000000000000000000000000000000000000000000000000000 : // index 58, 6
 		throw string("invalid partitionIndex")
 	);
 	return (bits & mask) == mask;
 }
 
 /**
- * \brief Extract a partition from a word.
+ * \brief Returns a partition from a word.
  *
  * Will not return the type of the partition (fill / literal), only its contents. Note that
  * the contents will always reside in the least significant bits of the word
@@ -708,7 +744,44 @@ template<> inline long PWAHBitSet<2>::extract_partition(long word, unsigned shor
 }
 
 /**
+ * \brief Clears a partition of a word and returns the result
+ *
+ * Will not clear the type of the partition (fill / literal) in the header. Ergo, only the
+ * bits indicated with 'X' are cleared:
+ *
+ * PWAHBitSet<8>: 7 bits,  0b000000000000000000000000000000000000000000000000000000000XXXXXXX;
+ * PWAHBitSet<4>: 15 bits, 0b0000000000000000000000000000000000000000000000000XXXXXXXXXXXXXXX;
+ * PWAHBitSet<2>: 31 bits, 0b000000000000000000000000000000000XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX;
+ * PWAHBitSet<1>: 63 bits, 0b0XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX;
+ */
+template<> inline long PWAHBitSet<1>::clear_partition(long word, unsigned short partitionIndex){
+	return (word & 0b1000000000000000000000000000000000000000000000000000000000000000);
+}
+template<> inline long PWAHBitSet<2>::clear_partition(long word, unsigned short partitionIndex){
+	if (partitionIndex == 0) return (word & 0b1111111111111111111111111111111110000000000000000000000000000000);
+	return (word & 0b1100000000000000000000000000000001111111111111111111111111111111);
+}
+template<> inline long PWAHBitSet<4>::clear_partition(long word, unsigned short partitionIndex){
+	if (partitionIndex == 0) return (word & 0b1111111111111111111111111111111111111111111111111000000000000000);
+	if (partitionIndex == 1) return (word & 0b1111111111111111111111111111111111000000000000000111111111111111);
+	if (partitionIndex == 1) return (word & 0b1111111111111111111000000000000000111111111111111111111111111111);
+	return (word & 0b1111000000000000000111111111111111111111111111111111111111111111);
+}
+template<> inline long PWAHBitSet<8>::clear_partition(long word, unsigned short partitionIndex){
+	if (partitionIndex == 0) return (word & 0b1111111111111111111111111111111111111111111111111111111110000000);
+	if (partitionIndex == 1) return (word & 0b1111111111111111111111111111111111111111111111111100000001111111);
+	if (partitionIndex == 2) return (word & 0b1111111111111111111111111111111111111111111000000011111111111111);
+	if (partitionIndex == 3) return (word & 0b1111111111111111111111111111111111110000000111111111111111111111);
+	if (partitionIndex == 4) return (word & 0b1111111111111111111111111111100000001111111111111111111111111111);
+	if (partitionIndex == 5) return (word & 0b1111111111111111111111000000011111111111111111111111111111111111);
+	if (partitionIndex == 6) return (word & 0b1111111111111110000000111111111111111111111111111111111111111111);
+	return (word & 0b1111111100000001111111111111111111111111111111111111111111111111);
+}
+
+
+/**
  * \brief Checks whether the partition with index 'partitionIndex' within 'bits' consists of a 0-fill
+ * TODO: check can be performed using a single instruction...
  */
 template<unsigned int P> inline bool PWAHBitSet<P>::is_zerofill(long bits, unsigned short partitionIndex){
 	return is_fill(bits, partitionIndex) && !is_onefill(bits, partitionIndex);
@@ -759,7 +832,7 @@ template<> inline long PWAHBitSet<2>::fill_length(long bits, unsigned short part
 	// 61 for partition 1, bit index 30 for partition 0) denote the type of the fill.
 	// In case of an extended fill (see extensive description above), both partitions need to
 	// be glued together.
-	const bool DEBUGGING = true;
+	const bool DEBUGGING = false;
 	if (DEBUGGING) cout << "PWAHBitSet::fill_length -- partition " << partitionIndex << " of " << toBitString(bits) << endl;
 
 	if (partitionIndex == 1){
@@ -789,12 +862,10 @@ template<> inline long PWAHBitSet<2>::fill_length(long bits, unsigned short part
 		return ((bits & 0b0001111111111111111111111111111110000000000000000000000000000000) >> 31);
 	} else if (partitionIndex == 0){
 		// Check whether the fill spans both partitions 0 and 1
-		const long andRes = (bits & 0b1110000000000000000000000000000001000000000000000000000000000000);
-		const long extOneFill = andRes;
-
-		// TODO WARNING WARNING -- NOT CORRECT!
-		---this line will generate a compile error---
+		const long extOneFill = 0b1110000000000000000000000000000001000000000000000000000000000000;
 		const long extZeroFill = 0b1100000000000000000000000000000000000000000000000000000000000000;
+		const long andRes = (bits & extOneFill);
+
 		if (andRes == extZeroFill || andRes == extOneFill){
 			// Extended fill! Take bits 60-31 and 29-0, concatenate => length of the fill emerges
 			if (DEBUGGING) cout << "PWAHBitSet::fill_length -- encountered an extended 1-fill!" << endl;

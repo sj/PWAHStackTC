@@ -13,6 +13,7 @@
 using namespace std;
 
 BitSetTester::BitSetTester(BitSet* bs1, BitSet* bs2) {
+	srand ( time(NULL) );
 	_bs1 = bs1;
 	_bs2 = bs2;
 }
@@ -32,12 +33,16 @@ float BitSetTester::rand_float(){
 }
 
 void BitSetTester::testSetGet(){
-	randomise(_bs1, _bs2, 256);
-	compare(_bs1, _bs2);
+	for (int i = 1; i < 100; i++){
+		randomise(_bs1, _bs2, 102400);
+		cout << "Done randomising pass " << i << endl;
 
-	cout << "Done testing get/set!" << endl;
+		compare(_bs1, _bs2);
+		cout << "Done testing get/set pass " << i << endl;
+	}
+	//cout << printBitSets(_bs1, _bs2);
 
-	cout << printBitSets(_bs1, _bs2);
+	cout << "Done!" << endl;
 }
 
 void BitSetTester::compare(BitSet* bitset1, BitSet* bitset2){
@@ -66,7 +71,7 @@ void BitSetTester::compare(BitSet* bitset1, BitSet* bitset2){
 			throw str.str();
 		}
 
-		cout << "Bit " << i << ": " << (val1 ? "set" : "not set") << endl;
+		//cout << "Bit " << i << ": " << (val1 ? "set" : "not set") << endl;
 	}
 
 	cout << "Done comparing!" << endl;
@@ -78,8 +83,8 @@ void BitSetTester::compare(BitSet* bitset1, BitSet* bitset2){
  * The first BitSet is used as 'base' for defining block sizes. The second BitSet can be NULL
  */
 void BitSetTester::randomise(BitSet* bitset1, BitSet* bitset2, int maxBits){
-	const bool DEBUGGING = true;
-	srand ( time(NULL) );
+	const bool DEBUGGING = false;
+
 	bitset1->clear();
 	if (bitset2 != NULL) bitset2->clear();
 

@@ -43,18 +43,18 @@ void DynamicBitSet::set(int bitIndex){
 }
 
 void DynamicBitSet::set(int bitIndex, bool value){
-	const bool debug = true;
+	const bool debug = false;
 	if (bitIndex > _lastBitIndex) _lastBitIndex = bitIndex;
 	unsigned int vecElemIndex = bitIndex / 64;
-	if (debug) cout << "DynamicBitSet::set -- setting bit " << bitIndex << ", at vec element index " << vecElemIndex << ", bit " << (bitIndex % 64) << endl;
+	if (debug) cout << "DynamicBitSet::set -- " << (value ? "setting" : "unsetting") << " bit " << bitIndex << ", at vec element index " << vecElemIndex << ", bit " << (bitIndex % 64) << endl;
 
 	while(_vec.size() <= vecElemIndex){
-		cout << "expanding..." << endl;
+		if (debug) cout << "expanding..." << endl;
 		_vec.push_back(0);
 	}
 
 	if (value){
-		if (debug) cout << "setting bit " << (bitIndex % 64) << " in " << toBitString(_vec[vecElemIndex]) << endl;
+		if (debug) cout << "DynamicBitSet::set -- " << (value ? "setting" : "unsetting") << " bit " << (bitIndex % 64) << " in " << toBitString(_vec[vecElemIndex]) << endl;
 		L_SET_BIT(_vec[vecElemIndex], bitIndex % 64);
 		//if (debug) cout << "Total resulting DynamicBitSet:" << endl << this->toString() <<endl;
 	} else {
