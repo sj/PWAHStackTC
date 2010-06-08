@@ -6,6 +6,7 @@
 CPP_SRCS += \
 ../src/BitSet.cpp \
 ../src/BitSetIterator.cpp \
+../src/BitSetTester.cpp \
 ../src/DynamicBitSet.cpp \
 ../src/DynamicStack.cpp \
 ../src/Graph.cpp \
@@ -24,6 +25,7 @@ CPP_SRCS += \
 OBJS += \
 ./src/BitSet.o \
 ./src/BitSetIterator.o \
+./src/BitSetTester.o \
 ./src/DynamicBitSet.o \
 ./src/DynamicStack.o \
 ./src/Graph.o \
@@ -42,6 +44,7 @@ OBJS += \
 CPP_DEPS += \
 ./src/BitSet.d \
 ./src/BitSetIterator.d \
+./src/BitSetTester.d \
 ./src/DynamicBitSet.d \
 ./src/DynamicStack.d \
 ./src/Graph.d \
