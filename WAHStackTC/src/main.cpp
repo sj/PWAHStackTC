@@ -64,7 +64,8 @@ int main(int argc, char* argv[]) {
 		//WAHBitSet* bs2 = new WAHBitSet();
 
 		BitSetTester tester = BitSetTester(bs1, bs2);
-		tester.testSetGet();
+		//tester.testSetGet();
+		BitSetTester::testOr();
 
 		delete bs1;
 		delete bs2;

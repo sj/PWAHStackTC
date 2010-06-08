@@ -381,9 +381,9 @@ template<unsigned int P> void PWAHBitSet<P>::addPartition(bool isFill, long valu
  * \param numBitSets the number of source WAHBitSet objects
  * \param result pointer to a WAHBitSet to store the result of the logical OR
  */
-template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet** bitSets, unsigned int numBitSets, PWAHBitSet* result){
-	const bool debug = true;
-	if (debug) cout << "Performing multi-way OR on " << numBitSets << " BitSets" << endl;
+template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet<P>** bitSets, unsigned int numBitSets, PWAHBitSet<P>* result){
+	const bool DEBUGGING = true;
+	if (DEBUGGING) cout << "Performing multi-way OR on " << numBitSets << " BitSets" << endl;
 	if (numBitSets == 0) return;
 
 	// TODO: in case of just 1 BitSet: make a copy
@@ -396,6 +396,7 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet** bitSets, unsig
 	unsigned int* sWordIndex = new unsigned int[numBitSets];		// word index
 	unsigned int* sPartitionIndex = new unsigned int[numBitSets];	// partition within word
 	unsigned int* sPartitionOffset = new unsigned int[numBitSets];	// offset within partition
+	unsigned int lastBitIndex = 0;
 
 	// Some bookkeeping
 	int largestOneFill, shortestZeroFill;
@@ -413,7 +414,7 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet** bitSets, unsig
 	memset(sBlockIndex, 0, numBitSets * sizeof(int));
 
 	while(true){
-		if (debug) cout << "Composing result block with index " << rBlockIndex << "..." << endl;
+		if (DEBUGGING) cout << "Composing result block with index " << rBlockIndex << "..." << endl;
 		currMergedLiteral = 0;
 		largestOneFill = -1;
 		shortestZeroFill = -1;
@@ -422,14 +423,12 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet** bitSets, unsig
 
 		// Align BitSets, find largest 1-fill and merge literals in the process
 		for (unsigned int i = 0; i < numBitSets; i++){
-			if (debug) cout << "Considering BitSet with index " << i << " (total number of bitsets = " << numBitSets << ")" << endl;
-			if (debug) cout << "BitSet " << i << " contains " << bitSets[i]->_compressedWords.size() << " compressed words, is now at blockindex " << sBlockIndex[i] << " which is in wordindex " << sWordIndex[i] << endl;
+			if (DEBUGGING) cout << "Considering BitSet with index " << i << " (total number of bitsets = " << numBitSets << ")" << endl;
+			if (DEBUGGING) cout << "BitSet " << i << " contains " << bitSets[i]->_compressedWords.size() << " compressed words, is now at blockindex " << sBlockIndex[i] << " which is in wordindex " << sWordIndex[i] << endl;
+			if (bitSets[i]->_lastBitIndex > lastBitIndex) lastBitIndex = bitSets[i]->_lastBitIndex;
 
 			// Some very simple checks
-			if (sBlockIndex[i] == rBlockIndex){
-				// This BitSet is aligned correctly
-				continue;
-			} else if (sWordIndex[i] > bitSets[i]->_compressedWords.size()){
+			if (sWordIndex[i] > bitSets[i]->_compressedWords.size()){
 				// This BitSet is totally out of bounds
 				continue;
 			} else if (sBlockIndex[i] > rBlockIndex){
@@ -443,6 +442,7 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet** bitSets, unsig
 			currWord = bitSets[i]->_compressedWords[sWordIndex[i]];
 			while (rBlockIndex > sBlockIndex[i]){
 				// Skip!
+				if (DEBUGGING) cout << "Aligning BitSet " << i << ": BitSet is currently at blockindex " << sBlockIndex[i] << endl;
 
 				if (is_onefill(currWord, sPartitionIndex[i])){
 					currFillLengthRemaining = fill_length(currWord, sPartitionIndex[i]) - sPartitionOffset[i];
@@ -482,15 +482,19 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet** bitSets, unsig
 					sPartitionIndex[i] = 0;
 					sWordIndex[i]++;
 
-					if (sWordIndex[i] < bitSets[i]->_compressedWords.size()){
-						// Within bounds of compressed words
+					if (sWordIndex[i] < bitSets[i]->_compressedWords.size() - 1){
+						// Within bounds of compressed words: not even at the last compressed word
 						currWord = bitSets[i]->_compressedWords[sWordIndex[i]];
-					} else if (sWordIndex[i] == bitSets[i]->_compressedWords.size()){
-						// Out of bounds by one: consider plain block
-						currWord = bitSets[i]->_plainBlock;
-					} else {
+					} else if (sWordIndex[i] == bitSets[i]->_compressedWords.size() - 1 && sPartitionIndex[i] <= bitSets[i]->_lastUsedPartition){
+						// At last compressed word, but within the available partitions of that
+						// last word
+						currWord = bitSets[i]->_compressedWords[sWordIndex[i]];
+					} else if (sWordIndex[i] > bitSets[i]->_compressedWords.size()){
 						// Totally out of bounds, this BitSet is no longer relevant
 						break;
+					} else {
+						// Out of bounds by one: consider plain block
+						currWord = bitSets[i]->_plainBlock;
 					}
 				}
 			} // end while: done aligning this BitSet
@@ -498,51 +502,73 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet** bitSets, unsig
 			// Might this BitSet be out of bounds?
 			if (sWordIndex[i] > bitSets[i]->_compressedWords.size()){
 				// Totally out of bounds, ignore.
+				if (DEBUGGING) cout << "BitSet " << i << " totally out of bounds, ignore..." << endl;
 				continue;
 			}
+			if (DEBUGGING) cout << "BitSet " << i << " is correctly aligned" << endl;
 
 			// Now, see what this BitSet is offering us...
 			if (is_onefill(currWord, sPartitionIndex[i])){
-				if (debug) cout << "Encountered 1-fill in BitSet " << i << endl;
 				currFillLengthRemaining = fill_length(currWord, sPartitionIndex[i]) - sPartitionOffset[i];
+				if (DEBUGGING) cout << "Encountered 1-fill in BitSet" << i << "; " << currFillLengthRemaining << " blocks remaining" << endl;
 
 				if (currFillLengthRemaining > largestOneFillSize || largestOneFill == -1){
 					largestOneFillSize = currFillLengthRemaining;
 					largestOneFill = i;
-				} else {
-					// The remaining length of the 1-fill from this BitSet is shorter than the largest 1-fill
-					// encountered so far. It is safe to skip the entire 1-fill from this BitSet,
-					// since a skip of at least the size of the larger 1-fill will occur in this pass
-					if (_VERIFY) assert(currFillLengthRemaining > 0);
+				} // Else: larger one fill encountered
 
-					sBlockIndex[i] += currFillLengthRemaining;
-					sPartitionIndex[i]++;
-					sPartitionOffset[i] = 0;
-					if (sPartitionIndex[i] == P){
-						sPartitionIndex[i] = 0;
-						sWordIndex[i]++;
-					}
+				// It is safe to skip the entire 1-fill from this BitSet,
+				// since a skip of at least the size of this 1-fill will occur in this pass
+				if (_VERIFY) assert(currFillLengthRemaining > 0);
+
+				// TODO it might be necessary to skip multiple partitions if an extended fill
+				// was encountered!
+				sBlockIndex[i] += currFillLengthRemaining;
+				sPartitionIndex[i]++;
+				sPartitionOffset[i] = 0;
+				if (sPartitionIndex[i] == P){
+					sPartitionIndex[i] = 0;
+					sWordIndex[i]++;
 				}
 			} else if (is_zerofill(currWord, sPartitionIndex[i])){
-				if (debug) cout << "Encountered 0-fill in BitSet " << i << endl;
 				currFillLengthRemaining = fill_length(currWord, sPartitionIndex[i]) - sPartitionOffset[i];
+				if (DEBUGGING) cout << "Encountered 0-fill in BitSet" << i << "; " << currFillLengthRemaining << " blocks remaining" << endl;
 
 				if (currFillLengthRemaining < shortestZeroFillSize || shortestZeroFill == -1){
 					shortestZeroFillSize = currFillLengthRemaining;
 				}
+
+				// It is safe to skip this 0-fill. 0-fills are boring anyway
+				// TODO it might be necessary to skip multiple partitions if an extended fill
+				// was encountered!
+				sBlockIndex[i] += currFillLengthRemaining;
+				sPartitionIndex[i]++;
+				sPartitionOffset[i] = 0;
 			} else {
 				// At literal
-				if (debug) cout << "Encountered literal in BitSet " << i << endl;
+				if (DEBUGGING) cout << "Encountered literal in BitSet " << i << endl;
 				currMergedLiteral |= extract_partition(currWord, sPartitionIndex[i]);
-			}
-		} // end for: done aligning all bitsets
 
-		// Now decide on the most efficient operation to perform on the result
+				// Safe to skip one block
+				sBlockIndex[i]++;
+				sPartitionIndex[i]++;
+				sPartitionOffset[i] = 0;
+			}
+
+			if (sPartitionIndex[i] == P){
+				sPartitionIndex[i] = 0;
+				sWordIndex[i]++;
+			}
+		} // end for: done aligning and investigating all bitsets
+
+		// Now decide on the most efficient operation to perform on the result in this pass
 		if (largestOneFill != -1){
 			// Do something w.r.t. 1-fill
+			if (DEBUGGING) cout << "Adding 1-fill of length " << largestOneFill << " to result (postponed) "<< endl;
 
 			// First check whether there is a postponed 0-fill floating around
 			if (postponedZeroFillSize != 0){
+				if (DEBUGGING) cout << "Before adding 1-fill: processing postponed 0-fill of length " << postponedZeroFillSize << endl;
 				result->addZeroFill(postponedZeroFillSize);
 				postponedZeroFillSize = 0;
 			}
@@ -550,49 +576,52 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet** bitSets, unsig
 			// Postpone addition of 1-fill. It's more efficient to add large 1-fills
 			// at once, in stead of in parts.
 			postponedOneFillSize += largestOneFillSize;
-
-			sBlockIndex[largestOneFill] += largestOneFillSize;
-			sPartitionIndex[largestOneFill]++;
 			rBlockIndex += largestOneFillSize;
 
-			if (sPartitionIndex[largestOneFill] == P){
-				sPartitionIndex[largestOneFill] = 0;
-				sWordIndex[largestOneFill]++;
-			}
+			if (DEBUGGING) cout << "Total length of postponed 1-fill: " << postponedOneFillSize << endl;
 		} else if (currMergedLiteral != 0){
 			// No 1-fill available, store merged literal
+			if (DEBUGGING) cout << "Adding literal to result"<< endl;
 
 			// First, check whether there is a postponed 0-fill or 1-fill floating around
 			if (postponedOneFillSize != 0){
+				if (DEBUGGING) cout << "Before adding literal: processing postponed 1-fill of length " << postponedOneFillSize << endl;
 				result->addOneFill(postponedOneFillSize);
 				postponedOneFillSize = 0;
 			} else if (postponedZeroFillSize != 0){
+				if (DEBUGGING) cout << "Before adding literal: processing postponed 0-fill of length " << postponedZeroFillSize << endl;
 				result->addZeroFill(postponedZeroFillSize);
 				postponedZeroFillSize = 0;
 			}
 
 			// Add literal to the result
 			result->addLiteral(currMergedLiteral);
+			rBlockIndex++;
 		} else if (shortestZeroFill != -1) {
 			// No 1-fill or literals seen, but a 0-fill is available
+			if (DEBUGGING) cout << "Adding 0-fill of length " << largestOneFill << " to result (postponed) "<< endl;
 
 			// First, check whether there is a postponed 1-fill floating around
 			if (postponedOneFillSize != 0){
+				if (DEBUGGING) cout << "Before adding 0-fill: processing postponed 1-fill of length " << postponedOneFillSize << endl;
 				result->addOneFill(postponedOneFillSize);
 				postponedOneFillSize = 0;
 			}
 
 			postponedZeroFillSize += shortestZeroFillSize;
-
 			rBlockIndex += shortestZeroFillSize;
+
+			if (DEBUGGING) cout << "Total length of postponed 0-fill: " << postponedZeroFillSize << endl;
 		} else {
 			// Nothing more to do!
-
+			if (DEBUGGING) cout << "Done processing source BitSets!" << endl;
 			// Before stopping, check whether there is a postponed 0-fill or 1-fill floating around
 			if (postponedOneFillSize != 0){
+				if (DEBUGGING) cout << "Processing postponed 1-fill of length " << postponedOneFillSize << endl;
 				result->addOneFill(postponedOneFillSize);
 				postponedOneFillSize = 0;
 			} else if (postponedZeroFillSize != 0){
+				if (DEBUGGING) cout << "Processing postponed 0-fill of length " << postponedZeroFillSize << endl;
 				result->addZeroFill(postponedZeroFillSize);
 				postponedZeroFillSize = 0;
 			}
@@ -601,17 +630,17 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet** bitSets, unsig
 		}
 	} // end while
 
-	if (debug) cout << "Cleaning up..." << endl;
+	if (DEBUGGING) cout << "Cleaning up..." << endl;
 	delete[] sWordIndex;
 	delete[] sPartitionOffset;
 	delete[] sPartitionIndex;
 	delete[] sBlockIndex;
 
 	// Decompress last block of resulting BitSet to plain block
-	// TODO
-	//if (result->_compressedWords.size() > 0) result->decompressLastBlock();
+	if (result->_compressedWords.size() > 0) result->decompressLastBlock();
+	result->_lastBitIndex = lastBitIndex;
 
-	if (debug) cout << "done multiway!" << endl;
+	if (DEBUGGING) cout << "done multiway!" << endl;
 }
 
 template<unsigned int P> void PWAHBitSet<P>::decompressLastBlock(){
