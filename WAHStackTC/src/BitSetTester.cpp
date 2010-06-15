@@ -43,8 +43,8 @@ void BitSetTester::testOr(){
 	dbs1 = new DynamicBitSet();
 	dbs2 = new DynamicBitSet();
 
-	randomise(pwbs1, dbs1, 256);
-	randomise(pwbs2, dbs2, 256);
+	randomise(pwbs1, dbs1, 10000);
+	randomise(pwbs2, dbs2, 10000);
 
 	PWAHBitSet<2>** pw_bitsets = new PWAHBitSet<2>*[2];
 	pw_bitsets[0] = pwbs1;

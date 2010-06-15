@@ -50,11 +50,14 @@ private:
 	inline static bool is_onefill(long bits, unsigned short partitionIndex);
 	inline static bool is_zerofill(long bits, unsigned short partitionIndex);
 	inline static bool is_literal(long bits, unsigned short partitionIndex);
+	inline static bool is_literal_onefill(long bits, unsigned short partitionIndex);
+	inline static bool is_literal_zerofill(long bits, unsigned short partitionIndex);
 	inline static long extract_partition(long bits, unsigned short partitionIndex);
 	inline static long clear_partition(long bits, unsigned short partitionIndex);
 
 
 	void compressPlainBlock();
+	void popLastPartition();
 	void addOneFill(int numBlocks);
 	void addZeroFill(int numBlocks);
 	void addLiteral(long value);

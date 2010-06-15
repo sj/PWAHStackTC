@@ -63,9 +63,11 @@ int main(int argc, char* argv[]) {
 		DynamicBitSet* bs2 = new DynamicBitSet();
 		//WAHBitSet* bs2 = new WAHBitSet();
 
-		BitSetTester tester = BitSetTester(bs1, bs2);
+		//BitSetTester tester = BitSetTester(bs1, bs2);
 		//tester.testSetGet();
-		BitSetTester::testOr();
+		for (int i = 0; i < 10000; i++){
+			BitSetTester::testOr();
+		}
 
 		delete bs1;
 		delete bs2;
