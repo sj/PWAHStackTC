@@ -19,7 +19,7 @@ WAHBitSetIterator::WAHBitSetIterator(WAHBitSet* wahBitSet) {
 WAHBitSetIterator::~WAHBitSetIterator() {}
 
 bool WAHBitSetIterator::hasNext(){
-	return (next() == -1);
+	throw string("not implemented");
 }
 
 void WAHBitSetIterator::reset(){

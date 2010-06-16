@@ -65,30 +65,30 @@ int main(int argc, char* argv[]) {
 
 		//BitSetTester tester = BitSetTester(bs1, bs2);
 		//tester.testSetGet();
-		for (int i = 0; i < 10000; i++){
+		/*for (int i = 0; i < 10000; i++){
 			BitSetTester::testOr();
-		}
+		}*/
 
 		delete bs1;
 		delete bs2;
 	} catch (string e){
 		cerr << "Exception: " << e << endl;;
 	}
-	exit(1);
+	//exit(1);
 
 	string defFilename;
 	//defFilename = "../../Datasets/nuutila32.graph";
 	//defFilename = "../../Datasets/Semmle graphs/java/depends.graph";
 	defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/depends.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/depends.graph";
-	defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/successor.graph";
+	defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/depends.graph";
+	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/successor.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/callgraph.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/successors.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/child.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/polycalls.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Pajek/patents.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/categorypagelinks.graph";
-	defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/pagelinks.graph";
+	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/pagelinks.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/child.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/samba/setflow.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/agrocyc.graph";

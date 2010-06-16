@@ -37,29 +37,35 @@ float BitSetTester::rand_float(){
 void BitSetTester::testOr(){
 	PWAHBitSet<2>* pwbs1 = new PWAHBitSet<2>();
 	PWAHBitSet<2>* pwbs2 = new PWAHBitSet<2>();
+	PWAHBitSet<2>* pwbs3 = new PWAHBitSet<2>();
 	PWAHBitSet<2>* pwbs_res = new PWAHBitSet<2>();
-	DynamicBitSet *dbs1, *dbs2, *dbs_res;
+	DynamicBitSet *dbs1, *dbs2, *dbs3, *dbs_tempres, *dbs_res;
 
 	dbs1 = new DynamicBitSet();
 	dbs2 = new DynamicBitSet();
+	dbs3 = new DynamicBitSet();
 
-	randomise(pwbs1, dbs1, 10000);
-	randomise(pwbs2, dbs2, 10000);
+	randomise(pwbs1, dbs1, 256);
+	randomise(pwbs2, dbs2, 256);
+	randomise(pwbs3, dbs3, 256);
 
-	PWAHBitSet<2>** pw_bitsets = new PWAHBitSet<2>*[2];
+	PWAHBitSet<2>** pw_bitsets = new PWAHBitSet<2>*[3];
 	pw_bitsets[0] = pwbs1;
 	pw_bitsets[1] = pwbs2;
+	pw_bitsets[2] = pwbs3;
 
 	cout << "Input to MultiOR:" << endl;
-	cout << printBitSets(pwbs1, pwbs2);
+	cout << printBitSets(pwbs1, pwbs2, pwbs3);
 	cout.flush();
-	PWAHBitSet<2>::multiOr(pw_bitsets, 2, pwbs_res);
-	dbs_res = DynamicBitSet::constructByOr(dbs1, dbs2);
 
-	compare(pwbs_res, dbs_res);
+	PWAHBitSet<2>::multiOr(pw_bitsets, 3, pwbs_res);
+	dbs_tempres = DynamicBitSet::constructByOr(dbs1, dbs2);
+	dbs_res = DynamicBitSet::constructByOr(dbs_tempres, dbs3);
 
 	cout << "Results of OR operation:" << endl;
 	cout << printBitSets(pwbs_res, dbs_res);
+
+	compare(pwbs_res, dbs_res);
 }
 
 void BitSetTester::testSetGet(){
@@ -162,11 +168,19 @@ void BitSetTester::randomise(BitSet* bitset1, BitSet* bitset2, int maxBits){
 }
 
 string BitSetTester::printBitSets(BitSet* bitset1, BitSet* bitset2){
+	return printBitSets(bitset1, bitset2, NULL);
+}
+
+string BitSetTester::printBitSets(BitSet* bitset1, BitSet* bitset2, BitSet* bitset3){
 	stringstream res;
 	res << "BitSet 1:" << endl;
 	res << bitset1->toString() << endl << endl;
 	res << "BitSet 2:" << endl;
 	res << bitset2->toString() << endl;
+	if (bitset3 != NULL){
+		res << "BitSet 3:" << endl;
+		res << bitset3->toString() << endl;
+	}
 	return res.str();
 }
 

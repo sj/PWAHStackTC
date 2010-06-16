@@ -25,6 +25,7 @@ public:
 	void testSetGet();
 
 	static string printBitSets(BitSet* bs1, BitSet* bs2);
+	static string printBitSets(BitSet* bs1, BitSet* bs2, BitSet* bs3);
 private:
 	BitSet* _bs1;
 	BitSet* _bs2;

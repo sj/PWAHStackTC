@@ -13,6 +13,7 @@ CPP_SRCS += \
 ../src/IntBitMacros.cpp \
 ../src/LongBitMacros.cpp \
 ../src/PWAHBitSet.cpp \
+../src/PWAHBitSetIterator.cpp \
 ../src/PerformanceTimer.cpp \
 ../src/StaticBitSet.cpp \
 ../src/Validator.cpp \
@@ -32,6 +33,7 @@ OBJS += \
 ./src/IntBitMacros.o \
 ./src/LongBitMacros.o \
 ./src/PWAHBitSet.o \
+./src/PWAHBitSetIterator.o \
 ./src/PerformanceTimer.o \
 ./src/StaticBitSet.o \
 ./src/Validator.o \
@@ -51,6 +53,7 @@ CPP_DEPS += \
 ./src/IntBitMacros.d \
 ./src/LongBitMacros.d \
 ./src/PWAHBitSet.d \
+./src/PWAHBitSetIterator.d \
 ./src/PerformanceTimer.d \
 ./src/StaticBitSet.d \
 ./src/Validator.d \

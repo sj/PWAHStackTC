@@ -13,6 +13,8 @@
 #include "BitSet.h"
 using namespace std;
 
+template<unsigned int P> class PWAHBitSetIterator;
+
 template<unsigned int P>
 class PWAHBitSet : public BitSet {
 public:
@@ -33,6 +35,8 @@ public:
 	BitSetIterator* iterator();
 	string toString();
 	int blocksize();
+
+	friend class PWAHBitSetIterator<P>;
 
 private:
 	static const long _maxBlocksPerFill;
@@ -64,6 +68,8 @@ private:
 	void addPartition(bool isFill, long value);
 	void decompressLastBlock();
 };
+
+
 
 
 

@@ -9,6 +9,7 @@
 #include <iostream>
 #include <cstring>
 #include "LongBitMacros.cpp"
+#include "PWAHBitSetIterator.h"
 #include <assert.h>
 #include <math.h>
 #include <climits>
@@ -45,7 +46,7 @@ template<> const long PWAHBitSet<8>::_maxBlocksPerFill = pow(2,7) - 1;  // 2^7 -
  */
 template<unsigned int P> PWAHBitSet<P>::PWAHBitSet():
 			// Initialise variables
-			_plainBlockIndex(0), _plainBlock(0), _lastBitIndex(-1), _compressedWords(vector<long>()){
+			_plainBlockIndex(0), _plainBlock(0), _lastBitIndex(-1), _lastUsedPartition(-1), _compressedWords(vector<long>()){
 
 	// Assert to check whether the long primitive type consists of 64 bits. Might the data type
 	// consist of any other number of bits, weird things will happen...
@@ -54,13 +55,14 @@ template<unsigned int P> PWAHBitSet<P>::PWAHBitSet():
 
 template<unsigned int P> void PWAHBitSet<P>::clear(){
 	_plainBlockIndex = 0;
+	_lastUsedPartition = -1;
 	_plainBlock = 0;
 	_lastBitIndex = -1;
 	_compressedWords.clear();
 }
 
 template<unsigned int P> bool PWAHBitSet<P>::get(int bitIndex){
-	const bool DEBUGGING = true;
+	const bool DEBUGGING = false;
 	const int blockIndex = bitIndex / _blockSize;
 	if (DEBUGGING) cout << "PWAHBitSet::get[" << bitIndex << "] -- bit in block " << blockIndex << endl;
 
@@ -457,6 +459,7 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet<P>** bitSets, un
 				// Use plain block of this bitset
 				if (DEBUGGING) cout << "BitSet " << i << " slightly out of bounds: using plain block (index " << bitSets[i]->_plainBlockIndex << ")" << endl;
 				currWord = bitSets[i]->_plainBlock;
+				sBlockIndex[i] = bitSets[i]->_plainBlockIndex;
 				sWordIndex[i] = bitSets[i]->_compressedWords.size();
 				sPartitionIndex[i] = 0;
 				sPartitionOffset[i] = 0;
@@ -473,14 +476,17 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet<P>** bitSets, un
 				// Skip!
 				if (DEBUGGING) cout << "Aligning BitSet " << i << ": BitSet is currently at blockindex " << sBlockIndex[i] << endl;
 
-				if (is_onefill(currWord, sPartitionIndex[i])){
+				if (is_fill(currWord, sPartitionIndex[i])){
 					currFillLengthRemaining = fill_length(currWord, sPartitionIndex[i]) - sPartitionOffset[i];
+					if (DEBUGGING) cout << "Encountered fill with " << currFillLengthRemaining << " blocks remaining, while skipping BitSet " << i << endl;
 
 					// Lets see whether the complete remaining length can be skipped
 					if (currFillLengthRemaining > rBlockIndex - sBlockIndex[i]){
 						// Can't skip complete length
-						sBlockIndex[i] = rBlockIndex;
 						sPartitionOffset[i] += rBlockIndex - sBlockIndex[i];
+						sBlockIndex[i] = rBlockIndex;
+
+						if (DEBUGGING) cout << "BitSet " << i << ": skipping part of the fill to blockindex " << sBlockIndex[i] << ", new partitionOffset=" << sPartitionOffset[i] << endl;
 					} else {
 						// Skip complete length.
 
@@ -489,16 +495,8 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet<P>** bitSets, un
 						sBlockIndex[i] += currFillLengthRemaining;
 						sPartitionOffset[i] = 0;
 						sPartitionIndex[i]++;
+						if (DEBUGGING) cout << "BitSet " << i << ": skipping entire fill to blockindex " << sBlockIndex[i] << endl;
 					}
-				} else if (is_zerofill(currWord, sPartitionIndex[i])){
-					currFillLengthRemaining = fill_length(currWord, sPartitionIndex[i]) - sPartitionOffset[i];
-
-					// 0-fills are boring: skip complete length
-					// TODO: the fill might span over multiple partitions. If so, multiple partitions
-					// should be skipped!
-					sBlockIndex[i] += currFillLengthRemaining;
-					sPartitionIndex[i]++;
-					sPartitionOffset[i] = 0;
 				} else {
 					// Partition contains literal. Can be skipped without additional checks
 					sBlockIndex[i]++;
@@ -512,31 +510,8 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet<P>** bitSets, un
 					sWordIndex[i]++;
 				}
 
-				if (sBlockIndex[i] > rBlockIndex){
-					// This BitSet skipped past the current result blockindex as a result of a 0-fill.
-
-					// If needed, store the length of this zero fill
-					if (sBlockIndex[i] - rBlockIndex < shortestZeroFillSize || shortestZeroFill == -1){
-						shortestZeroFillSize = sBlockIndex[i] - rBlockIndex;
-					}
-
-					// Done skipping
-					break;
-				} else if (rBlockIndex == bitSets[i]->_plainBlockIndex){
-					// Use plain block of this bitset
-					if (DEBUGGING) cout << "BitSet " << i << " slightly out of bounds: using plain block (index " << bitSets[i]->_plainBlockIndex << ")" << endl;
-					currWord = bitSets[i]->_plainBlock;
-					sWordIndex[i] = bitSets[i]->_compressedWords.size();
-					sPartitionIndex[i] = 0;
-					sPartitionOffset[i] = 0;
-				} else if (rBlockIndex > bitSets[i]->_plainBlockIndex){
-					// Out of bounds!
-					if (DEBUGGING) cout << "BitSet " << i << " totally out of bounds: plain block has index " << bitSets[i]->_plainBlockIndex << ", composing result block " << rBlockIndex << endl;
-					continue;
-				} else {
-					// Use word from vector of compressed words
-					currWord = bitSets[i]->_compressedWords[sWordIndex[i]];
-				}
+				// Select next word from vector of compressed words
+				currWord = bitSets[i]->_compressedWords[sWordIndex[i]];
 			} // end while: done aligning this BitSet
 
 			// Might this BitSet be out of bounds?
@@ -565,10 +540,6 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet<P>** bitSets, un
 				// was encountered!
 				sBlockIndex[i] += currFillLengthRemaining;
 				sPartitionOffset[i] = 0;
-				if (sPartitionIndex[i] == P){
-					sPartitionIndex[i] = 0;
-					sWordIndex[i]++;
-				}
 			} else if (is_zerofill(currWord, sPartitionIndex[i])){
 				currFillLengthRemaining = fill_length(currWord, sPartitionIndex[i]) - sPartitionOffset[i];
 				if (DEBUGGING) cout << "Encountered 0-fill in BitSet " << i << "; " << currFillLengthRemaining << " blocks remaining" << endl;
@@ -677,7 +648,12 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet<P>** bitSets, un
 
 	// Decompress last block of resulting BitSet to plain block
 	if (result->_compressedWords.size() > 0) result->decompressLastBlock();
-	result->_plainBlockIndex = rBlockIndex - 1;
+
+	// Can't do 'rBlockIndex - 1', since that would result in weird numbers when
+	// rBlockIndex == 1 because rBlockIndex is unsigned.
+	result->_plainBlockIndex = rBlockIndex;
+	result->_plainBlockIndex--;
+
 	result->_lastBitIndex = lastBitIndex;
 
 	if (DEBUGGING) cout << "done multiway!" << endl;
@@ -756,7 +732,7 @@ template<unsigned int P> long PWAHBitSet<P>::memoryUsage(){
 }
 
 template<unsigned int P> BitSetIterator* PWAHBitSet<P>::iterator(){
-	throw string("PWAHBitSet::iterator not implemented");
+	return new PWAHBitSetIterator<P>(this);
 }
 
 template<unsigned int P> int PWAHBitSet<P>::blocksize(){
