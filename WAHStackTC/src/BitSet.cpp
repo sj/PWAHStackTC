@@ -12,7 +12,7 @@ using namespace std;
 BitSet::BitSet(){}
 BitSet::~BitSet(){}
 
-bool BitSet::equals(BitSet* otherBitSet){
+const bool BitSet::equals(BitSet* otherBitSet){
 
 	if (otherBitSet->size() != this->size()){
 		cerr << "size mismatch: other=" << otherBitSet->size() << " vs. this=" << this->size() << endl;
@@ -41,7 +41,7 @@ void BitSet::set(int bitIndex){
 	set(bitIndex, true);
 }
 
-string BitSet::toString(){
+const string BitSet::toString(){
 	stringstream stream;
 	for (unsigned int i = 0; i < this->size(); i++){
 		if (this->get(i)) stream << 1;

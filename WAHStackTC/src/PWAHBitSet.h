@@ -24,17 +24,17 @@ public:
 	void set(int bitIndex);
 	void set(int bitIndex, bool value);
 	void clear();
-	bool get(int bitIndex);
-	unsigned int size();
+	const bool get(int bitIndex);
+	const unsigned int size();
 	static void multiOr(PWAHBitSet** bitSets, unsigned int numBitSets, PWAHBitSet* result);
 	static PWAHBitSet* constructByOr(const PWAHBitSet* first, const PWAHBitSet* second);
 	static string toBitString(long value);
-	inline static long fill_length(long bits, unsigned short partitionIndex);
-	long memoryUsage();
+	static long fill_length(long bits, unsigned short partitionIndex);
+	const long memoryUsage();
 
 	BitSetIterator* iterator();
-	string toString();
-	int blocksize();
+	const string toString();
+	const int blocksize();
 
 	friend class PWAHBitSetIterator<P>;
 
@@ -51,12 +51,12 @@ private:
 	vector<long> _compressedWords;
 
 	inline static bool is_fill(long bits, unsigned short partitionIndex);
-	inline static bool is_onefill(long bits, unsigned short partitionIndex);
-	inline static bool is_zerofill(long bits, unsigned short partitionIndex);
+	static bool is_onefill(long bits, unsigned short partitionIndex);
+	static bool is_zerofill(long bits, unsigned short partitionIndex);
 	inline static bool is_literal(long bits, unsigned short partitionIndex);
 	inline static bool is_literal_onefill(long bits, unsigned short partitionIndex);
 	inline static bool is_literal_zerofill(long bits, unsigned short partitionIndex);
-	inline static long extract_partition(long bits, unsigned short partitionIndex);
+	static long extract_partition(long bits, unsigned short partitionIndex);
 	inline static long clear_partition(long bits, unsigned short partitionIndex);
 
 

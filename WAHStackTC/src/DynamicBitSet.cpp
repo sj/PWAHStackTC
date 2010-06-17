@@ -63,12 +63,12 @@ void DynamicBitSet::set(int bitIndex, bool value){
 
 }
 
-bool DynamicBitSet::get(int bitIndex){
+const bool DynamicBitSet::get(int bitIndex){
 	if (bitIndex > _lastBitIndex) return false;
 	return L_GET_BIT(_vec[bitIndex / 64], bitIndex % 64);
 }
 
-string DynamicBitSet::toString(){
+const string DynamicBitSet::toString(){
 	stringstream res;
 	for (unsigned int i = 0; i < _vec.size(); i++){
 		res << toBitString(_vec[i]) << endl;
@@ -105,7 +105,7 @@ DynamicBitSet* DynamicBitSet::constructByOr(const DynamicBitSet* bs1, const Dyna
 	return res;
 }
 
-unsigned int DynamicBitSet::size(){
+const unsigned int DynamicBitSet::size(){
 	return _lastBitIndex + 1;
 }
 
@@ -118,7 +118,7 @@ void DynamicBitSet::constructFailingExample(){
 	_vec.push_back(109966619291156480);
 }
 
-int DynamicBitSet::blocksize(){
+const int DynamicBitSet::blocksize(){
 	return 64;
 }
 

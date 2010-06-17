@@ -26,13 +26,13 @@ public:
 	void clear();
 	void set(int bitIndex);
 	void set(int bitIndex, bool value);
-	bool get(int bitIndex);
-	string toString();
+	const bool get(int bitIndex);
+	const string toString();
 	string toBitString(long value);
-	unsigned int capacity();
-	unsigned int size();
+	const unsigned int capacity();
+	const unsigned int size();
 
-	int blocksize();
+	const int blocksize();
 
 	BitSetIterator* iterator();
 };

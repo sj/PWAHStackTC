@@ -64,12 +64,12 @@ void StaticBitSet::set(int bitIndex, bool value){
 
 }
 
-bool StaticBitSet::get(int bitIndex){
+const bool StaticBitSet::get(int bitIndex){
 	if (bitIndex >= _capacity) throw string ("Index out of bounds");
 	return L_GET_BIT(_bits[bitIndex / sizeof(long)], bitIndex % sizeof(long));
 }
 
-string StaticBitSet::toString(){
+const string StaticBitSet::toString(){
 	stringstream res;
 	for (unsigned int i = 0; i < _numLongs; i++){
 		res << toBitString(_bits[i]) << endl;
@@ -87,11 +87,11 @@ string StaticBitSet::toBitString(long value){
 	return res.str();
 }
 
-unsigned int StaticBitSet::size(){
+const unsigned int StaticBitSet::size(){
 	return _capacity;
 }
 
-unsigned int StaticBitSet::capacity(){
+const unsigned int StaticBitSet::capacity(){
 	return _capacity;
 }
 
@@ -105,7 +105,7 @@ void StaticBitSet::clear(){
 	_lastBitSet = -1;
 }
 
-int StaticBitSet::blocksize(){
+const int StaticBitSet::blocksize(){
 	return 64;
 }
 

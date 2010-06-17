@@ -41,33 +41,19 @@ int main(int argc, char* argv[]) {
 
 
 	try {
-		long test = 0b1000000000000000000000000000000000000000000000000000000000000000;
-		if (L_GET_BIT(test, 0)){
-			cout << "0 = set" << endl;
-		} else {
-			cout << "0 = not set" << endl;
-		}
-		if (L_GET_BIT(test, 63)){
-			cout << "63 = set" << endl;
-		} else {
-			cout << "63 = not set" << endl;
-		}
-		cout << test << endl;
-		PWAHBitSet<8> pwbs = PWAHBitSet<8>();
-		pwbs.set(7);
-		//cout << pwbs.toString() << endl;
-
-		cout << "fill length: " << PWAHBitSet<2>::fill_length(0b1110000000000000000000000000000111000000000000000000000000000010,0) << endl;
-
 		PWAHBitSet<2>* bs1 = new PWAHBitSet<2>();
 		DynamicBitSet* bs2 = new DynamicBitSet();
 		//WAHBitSet* bs2 = new WAHBitSet();
 
 		//BitSetTester tester = BitSetTester(bs1, bs2);
 		//tester.testSetGet();
-		/*for (int i = 0; i < 10000; i++){
+		/*while(true){
 			BitSetTester::testOr();
 		}*/
+
+		/**while (true){
+			BitSetTester::testIterator(bs1);
+		}**/
 
 		delete bs1;
 		delete bs2;
@@ -80,7 +66,7 @@ int main(int argc, char* argv[]) {
 	//defFilename = "../../Datasets/nuutila32.graph";
 	//defFilename = "../../Datasets/Semmle graphs/java/depends.graph";
 	defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/depends.graph";
-	defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/depends.graph";
+	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/depends.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/successor.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/callgraph.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/successors.graph";
@@ -93,6 +79,7 @@ int main(int argc, char* argv[]) {
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/samba/setflow.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/agrocyc.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/kegg.graph";
+	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/human.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Pajek/patents.graph";
 
 	typedef map<string,string> mapType;
@@ -177,6 +164,7 @@ int main(int argc, char* argv[]) {
 			timer.reset();
 
 			WAHStackTC<PWAHBitSet<2> >* wstc = new WAHStackTC<PWAHBitSet<2> >(graph);
+			//WAHStackTC<WAHBitSet>* wstc = new WAHStackTC<WAHBitSet>(graph);
 
 			if (!reflexitive){
 				cout << "Computing transitive closure ";

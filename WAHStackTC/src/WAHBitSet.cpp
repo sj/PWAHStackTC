@@ -103,7 +103,7 @@ void WAHBitSet::set(int bitIndex, bool value){
 	if (DEBUGGING) cout << "WAHBitSet::set done setting bit with index " << bitIndex <<  "!" << endl;
 }
 
-bool WAHBitSet::get(int bitIndex){
+const bool WAHBitSet::get(int bitIndex){
 	const bool debug = false;
 	if (_empty) return false;
 	if (bitIndex > _lastBitIndex) return false;
@@ -160,7 +160,7 @@ string WAHBitSet::toBitString(int value){
 	return res.str();
 }
 
-string WAHBitSet::toString(){
+const string WAHBitSet::toString(){
 	stringstream res;
 
 	for (unsigned int i = 0; i < _compressedBits.size(); i++){
@@ -250,10 +250,10 @@ int WAHBitSet::generateRandomLiteralBlock(){
 WAHBitSet* WAHBitSet::constructByOr(const WAHBitSet* bs1, const WAHBitSet* bs2){
 	const bool debug = false;
 
-	if (bs1->_empty){
+	if (bs1->_lastBitIndex == -1){
 		// Use copy constructor to create a copy of second BitSet
 		return new WAHBitSet(*bs2);
-	} else if (bs2->_empty){
+	} else if (bs2->_lastBitIndex == -1){
 		// Use copy constructor to create a copy of first BitSet
 		return new WAHBitSet(*bs1);
 	}
@@ -758,7 +758,7 @@ bool WAHBitSet::isEmpty(){
 	return _empty;
 }
 
-unsigned int WAHBitSet::size(){
+const unsigned int WAHBitSet::size(){
 	return _lastBitIndex + 1;
 }
 
@@ -772,7 +772,7 @@ long WAHBitSet::memoryUsage(){
 	return res;
 }
 
-int WAHBitSet::blocksize(){
+const int WAHBitSet::blocksize(){
 	return 31;
 }
 

@@ -16,17 +16,17 @@ public:
 	BitSet();
 	virtual ~BitSet();
 
-	virtual string toString();
-	virtual bool equals(BitSet* otherBitSet);
-	virtual unsigned int size() = 0;
+	virtual const string toString();
+	virtual const bool equals(BitSet* otherBitSet);
+	virtual const unsigned int size() = 0;
 	virtual void clear() = 0;
 	virtual void set(int bitIndex, bool value) = 0;
 	virtual void set(int bitIndex);
-	virtual bool get(int bitIndex) = 0;
+	virtual const bool get(int bitIndex) = 0;
 
 	virtual BitSetIterator* iterator() = 0;
 
-	virtual int blocksize() = 0;
+	virtual const int blocksize() = 0;
 };
 
 #endif /* BITSET_H_ */

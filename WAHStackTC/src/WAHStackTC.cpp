@@ -18,6 +18,7 @@
 #include "DynamicStack.h"
 #include "PWAHBitSet.h"
 #include <stdexcept>
+#include "BitSetTester.h"
 using namespace std;
 
 template<class B> WAHStackTC<B>::WAHStackTC(Graph& graph) {
@@ -421,6 +422,7 @@ template<class B> long WAHStackTC<B>::countNumberOfEdgesInCondensedTC(bool ignor
 	for (unsigned int c = 0; c < _componentSizes.size(); c++){
 		if (_componentSuccessors[c] != NULL){
 			BitSetIterator* iter = _componentSuccessors[c]->iterator();
+
 			currSuccessorIndex = iter->next();
 			while (currSuccessorIndex != -1){
 
@@ -487,6 +489,22 @@ template<class B> bool WAHStackTC<B>::componentHasSelfLoop(int componentIndex){
 }
 
 template<class B> long WAHStackTC<B>::countNumberOfEdgesInTC(){
+	/**int compA, compB;
+	long counter = 0;
+	for (int i = 0; i < _graph->getNumberOfVertices(); i++){
+		compA = _vertexComponents[i];
+		for (int j = 0; j < _graph->getNumberOfVertices(); j++){
+			compB = _vertexComponents[j];
+
+			if (_componentSuccessors[compA] != NULL && _componentSuccessors[compA]->get(compB)) counter++;
+		}
+	}
+
+	return counter;**/
+	for (int i = 0; i < _componentSizes.size(); i++){
+		if (_componentSuccessors[i] != NULL) BitSetTester::testIterator(_componentSuccessors[i], false);
+	}
+
 	int* componentVertexSuccessorCount = new int[_componentSizes.size()];
 	int currSuccessorIndex;
 	long count;

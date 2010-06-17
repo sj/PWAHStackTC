@@ -11,6 +11,7 @@
 #include <iostream>
 #include <sstream>
 #include "PWAHBitSet.h"
+#include "WAHBitSet.h"
 #include "DynamicBitSet.h"
 using namespace std;
 
@@ -39,33 +40,51 @@ void BitSetTester::testOr(){
 	PWAHBitSet<2>* pwbs2 = new PWAHBitSet<2>();
 	PWAHBitSet<2>* pwbs3 = new PWAHBitSet<2>();
 	PWAHBitSet<2>* pwbs_res = new PWAHBitSet<2>();
-	DynamicBitSet *dbs1, *dbs2, *dbs3, *dbs_tempres, *dbs_res;
+	WAHBitSet *dbs1, *dbs2, *dbs3, *dbs_tempres, *dbs_res;
 
-	dbs1 = new DynamicBitSet();
-	dbs2 = new DynamicBitSet();
-	dbs3 = new DynamicBitSet();
+	dbs1 = new WAHBitSet();
+	dbs2 = new WAHBitSet();
+	dbs3 = new WAHBitSet();
+	dbs_res = new WAHBitSet();
 
-	randomise(pwbs1, dbs1, 256);
-	randomise(pwbs2, dbs2, 256);
-	randomise(pwbs3, dbs3, 256);
+	randomise(pwbs1, dbs1, 50000);
+	randomise(pwbs2, dbs2, 60000);
+	randomise(pwbs3, dbs3, 70000);
 
 	PWAHBitSet<2>** pw_bitsets = new PWAHBitSet<2>*[3];
 	pw_bitsets[0] = pwbs1;
 	pw_bitsets[1] = pwbs2;
 	pw_bitsets[2] = pwbs3;
 
-	cout << "Input to MultiOR:" << endl;
-	cout << printBitSets(pwbs1, pwbs2, pwbs3);
-	cout.flush();
+	WAHBitSet** w_bitsets = new WAHBitSet*[3];
+	w_bitsets[0] = dbs1;
+	w_bitsets[1] = dbs2;
+	w_bitsets[2] = dbs3;
+
+	//cout << "Input to MultiOR:" << endl;
+	//cout << printBitSets(pwbs1, pwbs2, pwbs3);
+	//cout.flush();
 
 	PWAHBitSet<2>::multiOr(pw_bitsets, 3, pwbs_res);
-	dbs_tempres = DynamicBitSet::constructByOr(dbs1, dbs2);
-	dbs_res = DynamicBitSet::constructByOr(dbs_tempres, dbs3);
+	WAHBitSet::multiOr(w_bitsets, 3, dbs_res);
+	//dbs_tempres = WAHBitSet::constructByOr(dbs1, dbs2);
+	//dbs_res = WAHBitSet::constructByOr(dbs_tempres, dbs3);
 
-	cout << "Results of OR operation:" << endl;
-	cout << printBitSets(pwbs_res, dbs_res);
+	//cout << "Results of OR operation:" << endl;
+	//cout << printBitSets(pwbs_res, dbs_res);
 
 	compare(pwbs_res, dbs_res);
+
+	delete pwbs1;
+	delete pwbs2;
+	delete pwbs3;
+	delete pwbs_res;
+
+	delete dbs1;
+	delete dbs2;
+	delete dbs3;
+	delete dbs_res;
+
 }
 
 void BitSetTester::testSetGet(){
@@ -79,6 +98,38 @@ void BitSetTester::testSetGet(){
 	//cout << printBitSets(_bs1, _bs2);
 
 	cout << "Done!" << endl;
+}
+
+void BitSetTester::testIterator(BitSet* bitset, bool randomiseBitset){
+	cout << "BitSetTester::testIterator() -- starting..." << endl;
+	if (randomiseBitset) randomise(bitset, 15000);
+
+	BitSetIterator* it = bitset->iterator();
+	bool value;
+	for (unsigned int i = 0; i < bitset->size(); i++){
+		value = bitset->get(i);
+		if (value){
+			//cout << "BitSetTester::testIterator() -- bit " << i << " should be set..." << endl;
+			if (it->next() != i){
+				cout.flush();
+				cerr << "BitSet causing problems:" << endl;
+				cerr << bitset->toString() << endl;
+				cerr << "Bit with index " << i << " " << (value ? "should be set, but is not according to iterator" : "should be 0, but is 1 according to iterator") << endl;
+				cerr.flush();
+				throw string("iterator does not agree with bitset?!");
+			}
+		}
+	}
+
+	int nextVal = it->next();
+	if (nextVal != -1){
+		cerr << "Iterator returns bonus bit " << nextVal << endl;
+		cerr.flush();
+		throw string("iterator has more elements?!");
+	}
+
+	delete it;
+	cout << "BitSetTester::testIterator() -- done" << endl;
 }
 
 void BitSetTester::compare(BitSet* bitset1, BitSet* bitset2){
@@ -153,13 +204,9 @@ void BitSetTester::randomise(BitSet* bitset1, BitSet* bitset2, int maxBits){
 			// Construct a block with random bits
 			if (DEBUGGING) cout << "BitSetTester::randomise -- Constructing block " << block << ": will be stored as literal word" << endl;
 			for (int bit = offset; bit < offset + bitset1->blocksize(); bit++){
-				if (rand_float() < 0.5){
-					bitset1->set(bit);
-					if (bitset2 != NULL) bitset2->set(bit);
-				} else {
-					bitset1->set(bit, false);
-					if (bitset2 != NULL) bitset2->set(bit, false);
-				}
+				bool value = rand_float() < 0.5;
+				bitset1->set(bit, value);
+				if (bitset2 != NULL) bitset2->set(bit, value);
 			}
 		}
 	}

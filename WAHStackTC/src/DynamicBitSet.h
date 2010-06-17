@@ -28,17 +28,17 @@ public:
 	void clear();
 	void set(int bitIndex);
 	void set(int bitIndex, bool value);
-	bool get(int bitIndex);
-	string toString();
+	const bool get(int bitIndex);
+	const string toString();
 	string toBitString(long value);
-	unsigned int size();
+	const unsigned int size();
 
 	BitSetIterator* iterator();
 
 	void constructFailingExample();
 	static DynamicBitSet* constructByOr(const DynamicBitSet* bs1, const DynamicBitSet* bs2);
 
-	int blocksize();
+	const int blocksize();
 };
 
 #endif /* DYNAMICBITSET_H_ */

@@ -21,6 +21,7 @@ public:
 	inline static float rand_float();
 
 	static void compare(BitSet* bs1, BitSet* bs2);
+	static void testIterator(BitSet* bitset, bool randomise);
 	static void testOr();
 	void testSetGet();
 

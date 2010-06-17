@@ -63,9 +63,9 @@ public:
 	void setBits(int blockSeq, int value);
 	void set(int bitIndex);
 	void set(int bitIndex, bool value);
-	bool get(int bitIndex);
-	string toString();
-	unsigned int size();
+	const bool get(int bitIndex);
+	const string toString();
+	const unsigned int size();
 	bool isEmpty();
 
 	static int generateRandomLiteralBlock();
@@ -74,7 +74,7 @@ public:
 	static void multiOr(WAHBitSet** bitSets, unsigned int numBitSets, WAHBitSet* result);
 
 	void clear();
-	int blocksize();
+	const int blocksize();
 	BitSetIterator* iterator();
 
 	static WAHBitSet constructFailingExample1();
@@ -84,6 +84,7 @@ public:
 
 	friend class WAHBitSetIterator;
 	friend class WAHBitSetTester;
+	friend class BitSetTester;
 };
 
 #endif /* WAHBITSET_H_ */
