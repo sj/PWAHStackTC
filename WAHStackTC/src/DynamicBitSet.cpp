@@ -113,11 +113,6 @@ void DynamicBitSet::clear(){
 	init();
 }
 
-void DynamicBitSet::constructFailingExample(){
-	_vec.push_back(0);
-	_vec.push_back(109966619291156480);
-}
-
 const int DynamicBitSet::blocksize(){
 	return 64;
 }

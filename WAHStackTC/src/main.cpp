@@ -1,18 +1,3 @@
-//============================================================================
-// Name        : WAHStackTC.cpp
-// Author      : Sebastiaan J. van Schaik
-// Version     :
-// Copyright   : 
-// Description : Hello World in C++, Ansi-style
-//============================================================================
-
-#include <iostream>
-#include "Graph.h"
-#include "WAHBitSet.h"
-#include "WAHStackTC.h"
-#include "DynamicBitSet.h"
-#include "WAHBitSetTester.h"
-#include "PerformanceTimer.h"
 #include <string>
 #include <stdlib.h>
 #include <sstream>
@@ -22,6 +7,12 @@
 #include "PWAHBitSet.h"
 #include "LongBitMacros.cpp"
 #include "BitSetTester.h"
+#include "Graph.h"
+#include "WAHBitSet.h"
+#include "WAHStackTC.h"
+#include "DynamicBitSet.h"
+#include "WAHBitSetTester.h"
+#include "PerformanceTimer.h"
 using namespace std;
 
 void runValidatorWhenRequested(int argc, char* argv[]){
