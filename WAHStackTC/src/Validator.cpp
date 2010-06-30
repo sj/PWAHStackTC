@@ -12,16 +12,18 @@
 #include "Graph.h"
 #include "WAHStackTC.h"
 #include <stdlib.h>
+#include "PWAHBitSet.h"
 using namespace std;
 
 Validator::Validator() {}
 Validator::~Validator() {}
 
 void Validator::validate(){
-	const int numTests = 10;
+	const int numTests = 11;
 	const string baseDir = "/home/bas/afstuderen/Datasets";
 
 	string filenames[numTests] = {
+		"Semmle graphs/java/depends.graph",
 		"Semmle graphs/java/polycalls.graph",
 		"Semmle graphs/wiki/pagelinks.graph",
 		"Semmle graphs/c++/successor.graph",
@@ -35,6 +37,7 @@ void Validator::validate(){
 	};
 
 	long expectedNumEdges[numTests] = {
+		7756079, // java/depends.graph
 		438508149, // polycalls.graph
 		12479685213, // pagelinks.graph
 		2309714078, // c++/successor.graph
@@ -48,6 +51,7 @@ void Validator::validate(){
 	};
 
 	long expectedReflexitiveNumEdges[numTests] = {
+		7758212, // java/depends.graph
 		438552734, // polycalls.graph (NOT VERIFIED!)
 		12479732188, // wiki/pagelinks.graph (NOT VERIFIED!)
 		2310250306, // c++/successor.graph (NOT VERIFIED!)
@@ -66,7 +70,8 @@ void Validator::validate(){
 		double time1, time2;
 		long numEdges;
 		PerformanceTimer timer;
-		WAHStackTC<WAHBitSet>* wstc;
+		WAHStackTC<PWAHBitSet<2> >* wstc;
+		//WAHStackTC<WAHBitSet>* wstc;
 
 		for (int i = 0; i < numTests; i++){
 			string filename = baseDir + "/" + filenames[i];
@@ -75,11 +80,14 @@ void Validator::validate(){
 			cout << "Expecting " << expectedNumEdges[i] << " edges in TC, " << expectedReflexitiveNumEdges[i] << " edges in reflexitive TC..." << endl;
 			Graph graph = Graph::parseChacoFile(filename);
 
-			wstc = new WAHStackTC<WAHBitSet>(graph);
+			//wstc = new WAHStackTC<WAHBitSet>(graph);
+			wstc = new WAHStackTC<PWAHBitSet<2> >(graph);
 			timer.reset();
-			wstc->computeTransitiveClosure(false, false, 5);
+			wstc->computeTransitiveClosure(false, false, 0);
 			time1 = timer.reset();
-			cout << "Computation of TC took " << time1 << " msecs. Number of edges in TC: ";
+			cout << "Computation of TC took " << time1 << " msecs." << endl;
+			cout << "Validating number of edges in TC: ";
+			cout.flush();
 			numEdges = wstc->countNumberOfEdgesInTC();
 			cout << numEdges << ". ";
 			if (numEdges != expectedNumEdges[i]){
@@ -91,11 +99,14 @@ void Validator::validate(){
 			}
 			delete wstc;
 
-			wstc = new WAHStackTC<WAHBitSet>(graph);
+			//wstc = new WAHStackTC<WAHBitSet>(graph);
+			wstc = new WAHStackTC<PWAHBitSet<2> >(graph);
 			timer.reset();
-			wstc->computeTransitiveClosure(true, false, 5);
+			wstc->computeTransitiveClosure(true, false, 0);
 			time2 = timer.reset();
-			cout << "Computation of reflexitive TC took " << time2 << " msecs. Number of edges in reflexitive TC: ";
+			cout << "Computation of reflexitive TC took " << time2 << " msecs." << endl;
+			cout << "Validating number of edges in TC: ";
+			cout.flush();
 			numEdges = wstc->countNumberOfEdgesInTC();
 			cout << numEdges << ". ";
 			if (numEdges != expectedReflexitiveNumEdges[i]){

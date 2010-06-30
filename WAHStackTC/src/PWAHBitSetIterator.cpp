@@ -32,7 +32,7 @@ template<unsigned int P> void PWAHBitSetIterator<P>::reset(){
 }
 
 template<unsigned int P> int PWAHBitSetIterator<P>::next(){
-	const bool DEBUGGING = true;
+	const bool DEBUGGING = false;
 
 	if (_atEnd){
 		return -1;
@@ -47,6 +47,7 @@ template<unsigned int P> int PWAHBitSetIterator<P>::next(){
 			// Check whether _lastWordIndex and _lastBlockIndex are consistent with _plainBlockIndex
 			if (_lastBlockIndex > _bitSet->_plainBlockIndex + 1){
 				cerr << "lastBlockIndex = " << _lastBlockIndex << ", while BitSet plainBlockIndex=" << _bitSet->_plainBlockIndex << endl;
+				cerr << _bitSet->toString() << endl;
 				cerr.flush();
 				throw string("Unexpected state");
 			}

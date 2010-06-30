@@ -155,7 +155,8 @@ template<unsigned int P> void PWAHBitSet<P>::set(int bitIndex, bool value){
 	}
 
 	if (blockIndex > _plainBlockIndex){
-		// Compress plain block first...
+		// Compress plain block first... Note that compressing the plain block
+		// will not change _plainBlockIndex
 		compressPlainBlock();
 
 		if (blockIndex > _plainBlockIndex + 1){
@@ -399,7 +400,7 @@ template<unsigned int P> void PWAHBitSet<P>::addPartition(bool isFill, long valu
  */
 template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet<P>** bitSets, unsigned int numBitSets, PWAHBitSet<P>* result){
 	const bool DEBUGGING = false;
-	if (DEBUGGING) cout << "Performing multi-way OR on " << numBitSets << " BitSets" << endl;
+	if (DEBUGGING) cout << endl << endl << "Performing multi-way OR on " << numBitSets << " BitSets" << endl;
 	if (numBitSets == 0) return;
 
 	// TODO: in case of just 1 BitSet: make a copy
@@ -431,6 +432,8 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet<P>** bitSets, un
 
 	while(true){
 		if (DEBUGGING) cout << "Composing result block with index " << rBlockIndex << "..." << endl;
+		if (DEBUGGING) cout << "Current state of affairs: " << endl << result->toString() << endl;
+
 		currMergedLiteral = 0;
 		largestOneFill = -1;
 		shortestZeroFill = -1;
@@ -440,7 +443,7 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet<P>** bitSets, un
 		// Align BitSets, find largest 1-fill and merge literals in the process
 		for (unsigned int i = 0; i < numBitSets; i++){
 			if (DEBUGGING) cout << "Considering BitSet with index " << i << " (total number of bitsets = " << numBitSets << ")" << endl;
-			if (DEBUGGING) cout << "BitSet " << i << " contains " << bitSets[i]->_compressedWords.size() << " compressed words, is now at blockindex " << sBlockIndex[i] << " which is in partitionindex " << sPartitionIndex[i] << ", wordindex " << sWordIndex[i] << ". Plain block index is " << bitSets[i]->_plainBlockIndex << endl;
+			if (DEBUGGING) cout << "BitSet " << i << " contains " << bitSets[i]->_compressedWords.size() << " compressed words, is now at blockindex " << sBlockIndex[i] << " which is in partitionindex " << sPartitionIndex[i] << ", wordindex " << sWordIndex[i] << ". Plain block has index " << bitSets[i]->_plainBlockIndex << endl;
 			if (bitSets[i]->_lastBitIndex > lastBitIndex) lastBitIndex = bitSets[i]->_lastBitIndex;
 
 			// Some very simple checks
@@ -647,7 +650,9 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet<P>** bitSets, un
 	delete[] sBlockIndex;
 
 	// Decompress last block of resulting BitSet to plain block
-	if (result->_compressedWords.size() > 0) result->decompressLastBlock();
+	if (result->_compressedWords.size() > 0){
+		result->decompressLastBlock();
+	}
 
 	// Can't do 'rBlockIndex - 1', since that would result in weird numbers when
 	// rBlockIndex == 1 because rBlockIndex is unsigned.
@@ -656,7 +661,62 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet<P>** bitSets, un
 
 	result->_lastBitIndex = lastBitIndex;
 
+	if (_VERIFY){
+		// Recount number of blocks in this BitSet. Value of _plainBlockIndex should be
+		// _plainBlockIndex = blockcount - 1
+		cout.flush();
+
+		int count = result->countNumberOfBlocks();
+		if (result->_plainBlockIndex != count - 1){
+			cerr << "The resulting PWAHBitSet contains " << count << " blocks, but _plainBlockIndex=" << result->_plainBlockIndex << "?!" << endl;
+			cerr << result->toString() << endl;
+			throw string("Unexpected state");
+		}
+
+		// _lastBitIndex should be within the plain block
+		if (result->_lastBitIndex / result->_blockSize != result->_plainBlockIndex){
+			cerr << "Last bit in resulting PWAHBitSet has index " << result->_lastBitIndex << " and therefore belongs to block " << (result->_lastBitIndex / result->_blockSize) << ", but _plainBlockIndex=" << result->_plainBlockIndex << "?!" << endl;
+			cerr << result->toString() << endl;
+			throw string("Unexpected state");
+		}
+	}
+
 	if (DEBUGGING) cout << "done multiway!" << endl;
+}
+
+/**
+ * \brief Performs a count of the number of blocks in this PWAHBitSet
+ *
+ * Only intended for verification purposes!
+ */
+template<unsigned int P> int PWAHBitSet<P>::countNumberOfBlocks(){
+	cout << "Warning: call to countNumberOfBlocks!" << endl;
+	unsigned int count = 0;
+	unsigned int maxP;
+	long currWord;
+	for(unsigned int i = 0; i < _compressedWords.size(); i++){
+		currWord = _compressedWords[i];
+
+		if (i == _compressedWords.size() - 1){
+			maxP = _lastUsedPartition;
+		} else {
+			maxP = P-1;
+		}
+
+		for (unsigned int p = 0; p <= maxP; p++){
+			if (is_fill(currWord, p)){
+				count += fill_length(currWord, p);
+			} else {
+				// literal
+				count++;
+			}
+		}
+	}
+
+	// Count extra block for plain block
+	count++;
+
+	return count;
 }
 
 /**
@@ -673,6 +733,9 @@ template<unsigned int P> void PWAHBitSet<P>::popLastPartition(){
 		_compressedWords.pop_back();
 		_lastUsedPartition = P - 1;
 	} else {
+		if (DEBUGGING) cout << "PWAHBitSet::popLastPartition -- clearing partition " << _lastUsedPartition << endl;
+		_compressedWords[_compressedWords.size() - 1] = clear_partition(_compressedWords.back(), _lastUsedPartition);
+
 		if (DEBUGGING) cout << "PWAHBitSet::popLastPartition -- decreasing _lastUsedPartition" << endl;
 		_lastUsedPartition--;
 	}

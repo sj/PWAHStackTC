@@ -489,7 +489,9 @@ template<class B> bool WAHStackTC<B>::componentHasSelfLoop(int componentIndex){
 }
 
 template<class B> long WAHStackTC<B>::countNumberOfEdgesInTC(){
-	/**int compA, compB;
+	/**
+	// Brute force without using iterators:
+	int compA, compB;
 	long counter = 0;
 	for (int i = 0; i < _graph->getNumberOfVertices(); i++){
 		compA = _vertexComponents[i];
@@ -501,9 +503,11 @@ template<class B> long WAHStackTC<B>::countNumberOfEdgesInTC(){
 	}
 
 	return counter;**/
-	for (int i = 0; i < _componentSizes.size(); i++){
+
+	// Use iterators:
+	/**for (int i = 0; i < _componentSizes.size(); i++){
 		if (_componentSuccessors[i] != NULL) BitSetTester::testIterator(_componentSuccessors[i], false);
-	}
+	}**/
 
 	int* componentVertexSuccessorCount = new int[_componentSizes.size()];
 	int currSuccessorIndex;
