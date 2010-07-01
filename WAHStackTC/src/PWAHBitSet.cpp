@@ -142,7 +142,7 @@ template<unsigned int P> void PWAHBitSet<P>::set(int bitIndex){
 }
 
 template<unsigned int P> void PWAHBitSet<P>::set(int bitIndex, bool value){
-	const bool DEBUGGING = true;
+	const bool DEBUGGING = false;
 
 	if (DEBUGGING) cout << "PWAHBitSet<P>::set -- " << (value ? "Setting" : "Unsetting") << " bit " << bitIndex << " (P=" << P << ", blockSize=" << _blockSize << ", plainBlockIndex=" << _plainBlockIndex << ")" << endl;
 
@@ -163,7 +163,7 @@ template<unsigned int P> void PWAHBitSet<P>::set(int bitIndex, bool value){
 		if (blockIndex > _plainBlockIndex + 1){
 			// Add one or more 0-fills to the vector with compressed blocks
 			const int numZeroFills = blockIndex - _plainBlockIndex - 1;
-			addZeroFill(numZeroFills);
+			addFill(false, numZeroFills);
 		}
 
 		if (DEBUGGING) cout << "PWAHBitSet<P>::set -- Increasing index of plain block to " << blockIndex << endl;
@@ -198,23 +198,23 @@ template<unsigned int P> void PWAHBitSet<P>::compressPlainBlock(){
 	if (_plainBlock == 0){
 		// 0-fill
 		if (DEBUGGING) cout << "PWAHBitSet::compressPlainBlock -- adding 0-fill from plain block: " << toBitString(_plainBlock) << endl;
-		addZeroFill(1);
+		addFill(false, 1);
 	} else if (P == 1 && _plainBlock == 0b0111111111111111111111111111111111111111111111111111111111111111){
 		// 1-fill
 		if (DEBUGGING) cout << "PWAHBitSet::compressPlainBlock -- adding 1-fill from plain block: " << toBitString(_plainBlock) << endl;
-		addOneFill(1);
+		addFill(true, 1);
 	} else if (P == 2 && _plainBlock == 0b0000000000000000000000000000000001111111111111111111111111111111){
 		// 1-fill
 		if (DEBUGGING) cout << "PWAHBitSet::compressPlainBlock -- adding 1-fill from plain block: " << toBitString(_plainBlock) << endl;
-		addOneFill(1);
+		addFill(true, 1);
 	} else if (P == 4 && _plainBlock == 0b0000000000000000000000000000000000000000000000000111111111111111){
 		// 1-fill
 		if (DEBUGGING) cout << "PWAHBitSet::compressPlainBlock -- adding 1-fill from plain block: " << toBitString(_plainBlock) << endl;
-		addOneFill(1);
+		addFill(true, 1);
 	} else if (P == 8 && _plainBlock == 0b0000000000000000000000000000000000000000000000000000000001111111){
 		// 1-fill
 		if (DEBUGGING) cout << "PWAHBitSet::compressPlainBlock -- adding 1-fill from plain block: " << toBitString(_plainBlock) << endl;
-		addOneFill(1);
+		addFill(true, 1);
 	} else {
 		// literal
 		if (DEBUGGING) cout << "PWAHBitSet::compressPlainBlock -- adding literal from plain block: " << toBitString(_plainBlock) << endl;
@@ -224,83 +224,79 @@ template<unsigned int P> void PWAHBitSet<P>::compressPlainBlock(){
 	_plainBlock = 0;
 }
 
-//template<unsigned int P> void PWAHBitSet<P>::addOneFill(int numBlocks){
-
-template<unsigned int P> void PWAHBitSet<P>::addOneFill(int numBlocks){
-	const bool DEBUGGING = false;
-	if (DEBUGGING) cout << "PWAHBitSet::addOneFill(" << numBlocks << ")" << endl;
-
-	// Check last compressed word
-	if (_compressedWords.size() > 0 && is_onefill(_compressedWords.back(), _lastUsedPartition)){
-		// TODO: check for extended 1-fill! In PWAHBitSet<8> case, at total of 8 partitions
-		// should be checked...
-		numBlocks = fill_length(_compressedWords.back(), _lastUsedPartition) + numBlocks;
-		if (DEBUGGING) cout << "PWAHBitSet::addOneFill -- Encountered 1-fill of size " << fill_length(_compressedWords.back(), _lastUsedPartition) << " blocks at partition " << _lastUsedPartition << ", extending to " << numBlocks << "..." << endl;
-
-		// Decrease _lastUsedPartition, call to 'addPartition' below will increase _lastUsedPartition
-		if (_lastUsedPartition == 0){
-			_compressedWords.pop_back();
-			_lastUsedPartition = P -1;
-		} else {
-			// Clear the last used partition, containing the 1-fill that is about to be extended
-			_compressedWords[_compressedWords.size() - 1] = clear_partition(_compressedWords.back(), _lastUsedPartition);
-
-			// Decrease counter, that (cleared) partition will be overwritten
-			_lastUsedPartition--;
-		}
-	}
-
-	if (numBlocks > _maxBlocksPerFill){
-		// TODO
-		throw string("not implemented: number of blocks in fill exceeds _maxBlocksPerFill");
-	}
-
-	P == 1 ? addPartition(true, (numBlocks | 0b0100000000000000000000000000000000000000000000000000000000000000)) :
-	P == 2 ? addPartition(true, (numBlocks | 0b0000000000000000000000000000000001000000000000000000000000000000)) :
-	P == 4 ? addPartition(true, (numBlocks | 0b0000000000000000000000000000000000000000000000000100000000000000)) :
-			 addPartition(true, (numBlocks | 0b0000000000000000000000000000000000000000000000000000000001000000));
-}
-
-template<unsigned int P> void PWAHBitSet<P>::addZeroFill(int numBlocks){
+template<unsigned int P> void PWAHBitSet<P>::addFill(bool oneFill, int numBlocks){
 	const bool DEBUGGING = false;
 	if (_VERIFY) assert(numBlocks > 0);
-	if (DEBUGGING) cout << "PWAHBitSet::addZeroFill(" << numBlocks << ")" << endl;
+	if (DEBUGGING) cout << "PWAHBitSet::addFill(" << (oneFill ? "1" : "0") << ", " << numBlocks << " blocks)" << endl;
 
 	// Check last compressed word
-	if (_compressedWords.size() > 0 && is_zerofill(_compressedWords.back(), _lastUsedPartition)){
-		// TODO: check for extended 0-fill! In PWAHBitSet<8> case, at total of 8 partitions
-		// should be checked...
-		numBlocks = fill_length(_compressedWords.back(), _lastUsedPartition) + numBlocks;
-		if (DEBUGGING) cout << "PWAHBitSet::addZeroFill -- Encountered 0-fill of size " << fill_length(_compressedWords.back(), _lastUsedPartition) << " blocks at partition " << _lastUsedPartition << ", extending to size " << numBlocks << "..." << endl;
+	if (_compressedWords.size() > 0){
+		if ((oneFill && is_onefill(_compressedWords.back(), _lastUsedPartition)) || (!oneFill && is_zerofill(_compressedWords.back(), _lastUsedPartition))){
+			// TODO: check for extended fill! In PWAHBitSet<8> case, it might be necessary to check
+			// up to 7 partitions...
+			numBlocks = fill_length(_compressedWords.back(), _lastUsedPartition) + numBlocks;
+			if (DEBUGGING) cout << "PWAHBitSet::addFill(" << (oneFill ? "1" : "0") << ")" << "-- Encountered fill of size " << fill_length(_compressedWords.back(), _lastUsedPartition) << " blocks at partition " << _lastUsedPartition << ", extending to size " << numBlocks << "..." << endl;
 
-		// Decrease _lastUsedPartition, call to 'addPartition' below will increase _lastUsedPartition
-		if (_lastUsedPartition == 0){
-			_compressedWords.pop_back();
-			_lastUsedPartition = P -1;
+			// Decrease _lastUsedPartition, call to 'addPartition' below will increase _lastUsedPartition
+			if (_lastUsedPartition == 0){
+				_compressedWords.pop_back();
+				_lastUsedPartition = P -1;
+			} else {
+				// Clear the last used partition, containing the 0-fill that is about to be extended
+				_compressedWords[_compressedWords.size() - 1] = clear_partition(_compressedWords.back(), _lastUsedPartition);
+
+				// Decrease counter, that (cleared) partition will be overwritten
+				_lastUsedPartition--;
+			}
+		} // else: last partition is not a fill or not of same fill type
+	} // else: no compressed words available
+
+	if (numBlocks > _maxBlocksPerFill && _lastUsedPartition == P - 1){
+		// Need to store an extended fill, but can't do that as it would span multiple words.
+		// Store the first part of the fill in the last partition of this word, the second part
+		// of the fill should go into the next word. When necessary, the second part can be stored
+		// as an extended fill (see below).
+
+		// Store _maxBlocksPerFill of numBlocks in the last partition of this word
+		if (oneFill){
+			// Add 1-fill of max length
+			P == 1 ? addPartition(true, (_maxBlocksPerFill | 0b0100000000000000000000000000000000000000000000000000000000000000)) :
+			P == 2 ? addPartition(true, (_maxBlocksPerFill | 0b0000000000000000000000000000000001000000000000000000000000000000)) :
+			P == 4 ? addPartition(true, (_maxBlocksPerFill | 0b0000000000000000000000000000000000000000000000000100000000000000)) :
+					 addPartition(true, (_maxBlocksPerFill | 0b0000000000000000000000000000000000000000000000000000000001000000));
 		} else {
-			// Clear the last used partition, containing the 0-fill that is about to be extended
-			_compressedWords[_compressedWords.size() - 1] = clear_partition(_compressedWords.back(), _lastUsedPartition);
-
-			// Decrease counter, that (cleared) partition will be overwritten
-			_lastUsedPartition--;
+			// Add 0-fill of max length
+			addPartition(true, _maxBlocksPerFill);
 		}
 
+		numBlocks -= _maxBlocksPerFill;
 	}
 
 	if (numBlocks > _maxBlocksPerFill){
+		// Add extended fill.
+
 		// TODO
 		throw string("not implemented: number of blocks in fill exceeds _maxBlocksPerFill");
+	} else {
+		// Simply add new fill
+		if (oneFill){
+			// Add 1-fill
+			P == 1 ? addPartition(true, (numBlocks | 0b0100000000000000000000000000000000000000000000000000000000000000)) :
+			P == 2 ? addPartition(true, (numBlocks | 0b0000000000000000000000000000000001000000000000000000000000000000)) :
+			P == 4 ? addPartition(true, (numBlocks | 0b0000000000000000000000000000000000000000000000000100000000000000)) :
+					 addPartition(true, (numBlocks | 0b0000000000000000000000000000000000000000000000000000000001000000));
+		} else {
+			// Add 0-fill
+			addPartition(true, numBlocks);
+		}
 	}
-
-	// Simply add new fill
-	addPartition(true, numBlocks);
 }
 
 template<unsigned int P> void PWAHBitSet<P>::addLiteral(long value){
 	if (is_literal_onefill(value,0)){
-		addOneFill(1);
+		addFill(true, 1);
 	} else if (is_literal_zerofill(value, 0)) {
-		addZeroFill(1);
+		addFill(false, 1);
 	} else {
 		addPartition(false, value);
 	}
@@ -401,7 +397,7 @@ template<unsigned int P> void PWAHBitSet<P>::addPartition(bool isFill, long valu
  * \param result pointer to a WAHBitSet to store the result of the logical OR
  */
 template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet<P>** bitSets, unsigned int numBitSets, PWAHBitSet<P>* result){
-	const bool DEBUGGING = true;
+	const bool DEBUGGING = false;
 	if (DEBUGGING) cout << endl << endl << "Performing multi-way OR on " << numBitSets << " BitSets" << endl;
 	if (numBitSets == 0) return;
 
@@ -584,7 +580,7 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet<P>** bitSets, un
 			// First check whether there is a postponed 0-fill floating around
 			if (postponedZeroFillSize != 0){
 				if (DEBUGGING) cout << "Before adding 1-fill: processing postponed 0-fill of length " << postponedZeroFillSize << endl;
-				result->addZeroFill(postponedZeroFillSize);
+				result->addFill(false, postponedZeroFillSize);
 				postponedZeroFillSize = 0;
 			}
 
@@ -601,11 +597,11 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet<P>** bitSets, un
 			// First, check whether there is a postponed 0-fill or 1-fill floating around
 			if (postponedOneFillSize != 0){
 				if (DEBUGGING) cout << "Before adding literal: processing postponed 1-fill of length " << postponedOneFillSize << endl;
-				result->addOneFill(postponedOneFillSize);
+				result->addFill(true, postponedOneFillSize);
 				postponedOneFillSize = 0;
 			} else if (postponedZeroFillSize != 0){
 				if (DEBUGGING) cout << "Before adding literal: processing postponed 0-fill of length " << postponedZeroFillSize << endl;
-				result->addZeroFill(postponedZeroFillSize);
+				result->addFill(false, postponedZeroFillSize);
 				postponedZeroFillSize = 0;
 			}
 
@@ -619,7 +615,7 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet<P>** bitSets, un
 			// First, check whether there is a postponed 1-fill floating around
 			if (postponedOneFillSize != 0){
 				if (DEBUGGING) cout << "Before adding 0-fill: processing postponed 1-fill of length " << postponedOneFillSize << endl;
-				result->addOneFill(postponedOneFillSize);
+				result->addFill(true, postponedOneFillSize);
 				postponedOneFillSize = 0;
 			}
 
@@ -633,11 +629,11 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet<P>** bitSets, un
 			// Before stopping, check whether there is a postponed 0-fill or 1-fill floating around
 			if (postponedOneFillSize != 0){
 				if (DEBUGGING) cout << "Processing postponed 1-fill of length " << postponedOneFillSize << endl;
-				result->addOneFill(postponedOneFillSize);
+				result->addFill(true, postponedOneFillSize);
 				postponedOneFillSize = 0;
 			} else if (postponedZeroFillSize != 0){
 				if (DEBUGGING) cout << "Processing postponed 0-fill of length " << postponedZeroFillSize << endl;
-				result->addZeroFill(postponedZeroFillSize);
+				result->addFill(false, postponedZeroFillSize);
 				postponedZeroFillSize = 0;
 			}
 
@@ -767,7 +763,7 @@ template<unsigned int P> void PWAHBitSet<P>::decompressLastBlock(){
 			if (length > 1){
 				// Re-add 1-fill with size (length - 1)
 				if (DEBUGGING) cout << "PWAHBitSet::decompressLastBlock -- re-adding 1-fill of length " << (length - 1) << endl;
-				addOneFill(length - 1);
+				addFill(true, length - 1);
 			} // else: no need to add anything
 		} else {
 			if (_VERIFY) assert(is_zerofill(word, part));
@@ -777,7 +773,7 @@ template<unsigned int P> void PWAHBitSet<P>::decompressLastBlock(){
 			if (length > 1){
 				// Re-add 0-fill with size (length - 1)
 				if (DEBUGGING) cout << "PWAHBitSet::decompressLastBlock -- re-adding 0-fill of length " << (length - 1) << endl;
-				addZeroFill(length - 1);
+				addFill(false, length - 1);
 			} // else: no need to add anything
 		}
 	} else {

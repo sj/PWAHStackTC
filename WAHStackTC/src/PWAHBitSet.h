@@ -62,8 +62,7 @@ private:
 
 	void compressPlainBlock();
 	void popLastPartition();
-	void addOneFill(int numBlocks);
-	void addZeroFill(int numBlocks);
+	void addFill(bool oneFill, int numBlocks);
 	void addLiteral(long value);
 	void addPartition(bool isFill, long value);
 	void decompressLastBlock();
