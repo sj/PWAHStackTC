@@ -142,15 +142,16 @@ template<unsigned int P> void PWAHBitSet<P>::set(int bitIndex){
 }
 
 template<unsigned int P> void PWAHBitSet<P>::set(int bitIndex, bool value){
-	const bool DEBUGGING = false;
+	const bool DEBUGGING = true;
 
-	if (DEBUGGING) cout << "PWAHBitSet<P>::set -- " << (value ? "Setting" : "Unsetting") << " bit " << bitIndex << " (P=" << P << ", blockSize=" << _blockSize << ")" << endl;
+	if (DEBUGGING) cout << "PWAHBitSet<P>::set -- " << (value ? "Setting" : "Unsetting") << " bit " << bitIndex << " (P=" << P << ", blockSize=" << _blockSize << ", plainBlockIndex=" << _plainBlockIndex << ")" << endl;
 
 	const int blockIndex = bitIndex / _blockSize;
 	if (DEBUGGING) cout << "PWAHBitSet<P>::set -- Bit belongs to block " << blockIndex << endl;
 
 	if (blockIndex < _plainBlockIndex){
 		// Bit index is part of compressed block, can't do.
+		cerr << "Can't un(set) bit " << bitIndex << ". That bit belongs to block " << blockIndex << ", only bits belonging to blockindex " << _plainBlockIndex << " (and beyond) can be (un)set! Last bit set = " << _lastBitIndex << endl;
 		throw string("requested bit is part of compressed block, can't (un)set");
 	}
 
@@ -165,6 +166,7 @@ template<unsigned int P> void PWAHBitSet<P>::set(int bitIndex, bool value){
 			addZeroFill(numZeroFills);
 		}
 
+		if (DEBUGGING) cout << "PWAHBitSet<P>::set -- Increasing index of plain block to " << blockIndex << endl;
 		_plainBlockIndex = blockIndex;
 	}
 
@@ -399,7 +401,7 @@ template<unsigned int P> void PWAHBitSet<P>::addPartition(bool isFill, long valu
  * \param result pointer to a WAHBitSet to store the result of the logical OR
  */
 template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet<P>** bitSets, unsigned int numBitSets, PWAHBitSet<P>* result){
-	const bool DEBUGGING = false;
+	const bool DEBUGGING = true;
 	if (DEBUGGING) cout << endl << endl << "Performing multi-way OR on " << numBitSets << " BitSets" << endl;
 	if (numBitSets == 0) return;
 
@@ -1140,8 +1142,29 @@ template<> long PWAHBitSet<2>::fill_length(long bits, unsigned short partitionIn
 	throw string("Invalid partition index");
 }
 template<> long PWAHBitSet<4>::fill_length(long bits, unsigned short partitionIndex){
-	// TODO
-	throw string("not implemented");
+	/**
+	 * PWAHBitSet<4> case: 4 partitions of 15 bits and a header of 4 bits. An extended fill
+	 * can not cover multiple words. Therefore, only partitions 0, 1 and 2 can be the
+	 * first partition of an extended fill.
+	 */
+	const bool DEBUGGING = true;
+	if (DEBUGGING) cout << "PWAHBitSet::fill_length -- partition " << partitionIndex << " of " << toBitString(bits) << endl;
+
+	if (partitionIndex != 3) {
+		// Might be an extended fill. Check the fill type (0 or 1) of this partition and check
+		// whether the next partition contains a fill of the same type.
+		bool thisIsOneFill = is_onefill(bits, partitionIndex);
+		if (is_fill(bits, partitionIndex + 1) && is_onefill(bits, partitionIndex + 1) == thisIsOneFill){
+			// Extended fill
+			// TODO
+			throw string("Extended fill not supported yet");
+		}
+	}
+
+	// Regular fill, otherwise the 'return' above would have been called
+	long mask = 0b0000000000000000000000000000000000000000000000000011111111111111;
+	mask <<= (partitionIndex * _blockSize);
+	return (bits & mask);
 }
 template<> long PWAHBitSet<8>::fill_length(long bits, unsigned short partitionIndex){
 	// TODO
@@ -1149,10 +1172,12 @@ template<> long PWAHBitSet<8>::fill_length(long bits, unsigned short partitionIn
 }
 
 template<unsigned int P> string PWAHBitSet<P>::toBitString(long value){
+	int signedP = P;
+
 	stringstream res;
 	res << "0b";
 	for (int bit = 63; bit >= 0; bit--){
-		if ((63 - bit - P) % _blockSize == 0) res << "|";
+		if ((63 - bit - signedP) % _blockSize == 0) res << "|";
 		if (L_GET_BIT(value, bit)) res << "1";
 		else res << "0";
 	}

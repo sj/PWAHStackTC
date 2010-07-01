@@ -42,7 +42,7 @@ private:
 	static const long _maxBlocksPerFill;
 	static const int _blockSize;
 	static const int _partitionOffsets[P];
-	static const bool _VERIFY = false;
+	static const bool _VERIFY = true;
 
 	int _lastUsedPartition; // partition index of last used partition within the last compressed word
 	long _plainBlockIndex; // the block index of the plain block

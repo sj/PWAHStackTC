@@ -154,7 +154,7 @@ int main(int argc, char* argv[]) {
 		for (int i = 0; i < numRuns; i++){
 			timer.reset();
 
-			WAHStackTC<PWAHBitSet<2> >* wstc = new WAHStackTC<PWAHBitSet<2> >(graph);
+			WAHStackTC<PWAHBitSet<4> >* wstc = new WAHStackTC<PWAHBitSet<4> >(graph);
 			//WAHStackTC<WAHBitSet>* wstc = new WAHStackTC<WAHBitSet>(graph);
 
 			if (!reflexitive){

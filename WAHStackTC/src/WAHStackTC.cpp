@@ -110,7 +110,7 @@ template<class B> void WAHStackTC<B>::computeTransitiveClosure(bool reflexitive,
 }
 
 template<class B> void WAHStackTC<B>::dfsVisit(unsigned int vertexIndex){
-	const bool debug = false;
+	const bool debug = true;
 
 	if (debug) cout << "Visiting vertex " << vertexIndex << endl;
 	_visited.set(vertexIndex);
@@ -601,4 +601,7 @@ template<class B> int WAHStackTC<B>::getNumberOfComponents(){
  * Instruct the compiler which templates to instantiate
  */
 template class WAHStackTC<WAHBitSet>;
+template class WAHStackTC<PWAHBitSet<1> >;
 template class WAHStackTC<PWAHBitSet<2> >;
+template class WAHStackTC<PWAHBitSet<4> >;
+template class WAHStackTC<PWAHBitSet<8> >;
