@@ -110,7 +110,7 @@ template<class B> void WAHStackTC<B>::computeTransitiveClosure(bool reflexitive,
 }
 
 template<class B> void WAHStackTC<B>::dfsVisit(unsigned int vertexIndex){
-	const bool debug = true;
+	const bool debug = false;
 
 	if (debug) cout << "Visiting vertex " << vertexIndex << endl;
 	_visited.set(vertexIndex);

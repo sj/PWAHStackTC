@@ -32,15 +32,17 @@ int main(int argc, char* argv[]) {
 
 
 	try {
-		PWAHBitSet<2>* bs1 = new PWAHBitSet<2>();
+		PWAHBitSet<4>* bs1 = new PWAHBitSet<4>();
+		BitSetTester::testLongFill(bs1);
 		DynamicBitSet* bs2 = new DynamicBitSet();
+
 		//WAHBitSet* bs2 = new WAHBitSet();
 
 		//BitSetTester tester = BitSetTester(bs1, bs2);
 		//tester.testSetGet();
-		/*while(true){
+		while(true){
 			BitSetTester::testOr();
-		}*/
+		}
 
 		/**while (true){
 			BitSetTester::testIterator(bs1);
@@ -48,10 +50,10 @@ int main(int argc, char* argv[]) {
 
 		delete bs1;
 		delete bs2;
-	} catch (string e){
+	} catch (int e){
 		cerr << "Exception: " << e << endl;;
 	}
-	//exit(1);
+	exit(1);
 
 	string defFilename;
 	//defFilename = "../../Datasets/nuutila32.graph";

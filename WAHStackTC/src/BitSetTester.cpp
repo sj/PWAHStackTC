@@ -13,6 +13,7 @@
 #include "PWAHBitSet.h"
 #include "WAHBitSet.h"
 #include "DynamicBitSet.h"
+#include <math.h>
 using namespace std;
 
 BitSetTester::BitSetTester(BitSet* bs1, BitSet* bs2) {
@@ -36,10 +37,10 @@ float BitSetTester::rand_float(){
 }
 
 void BitSetTester::testOr(){
-	PWAHBitSet<2>* pwbs1 = new PWAHBitSet<2>();
-	PWAHBitSet<2>* pwbs2 = new PWAHBitSet<2>();
-	PWAHBitSet<2>* pwbs3 = new PWAHBitSet<2>();
-	PWAHBitSet<2>* pwbs_res = new PWAHBitSet<2>();
+	PWAHBitSet<4>* pwbs1 = new PWAHBitSet<4>();
+	PWAHBitSet<4>* pwbs2 = new PWAHBitSet<4>();
+	PWAHBitSet<4>* pwbs3 = new PWAHBitSet<4>();
+	PWAHBitSet<4>* pwbs_res = new PWAHBitSet<4>();
 	WAHBitSet *dbs1, *dbs2, *dbs3, *dbs_tempres, *dbs_res;
 
 	dbs1 = new WAHBitSet();
@@ -47,11 +48,11 @@ void BitSetTester::testOr(){
 	dbs3 = new WAHBitSet();
 	dbs_res = new WAHBitSet();
 
-	randomise(pwbs1, dbs1, 50000);
-	randomise(pwbs2, dbs2, 60000);
-	randomise(pwbs3, dbs3, 70000);
+	randomise(pwbs1, dbs1, 256);
+	randomise(pwbs2, dbs2, 128);
+	randomise(pwbs3, dbs3, 160);
 
-	PWAHBitSet<2>** pw_bitsets = new PWAHBitSet<2>*[3];
+	PWAHBitSet<4>** pw_bitsets = new PWAHBitSet<4>*[3];
 	pw_bitsets[0] = pwbs1;
 	pw_bitsets[1] = pwbs2;
 	pw_bitsets[2] = pwbs3;
@@ -61,11 +62,11 @@ void BitSetTester::testOr(){
 	w_bitsets[1] = dbs2;
 	w_bitsets[2] = dbs3;
 
-	//cout << "Input to MultiOR:" << endl;
-	//cout << printBitSets(pwbs1, pwbs2, pwbs3);
-	//cout.flush();
+	cout << "Input to MultiOR:" << endl;
+	cout << printBitSets(pwbs1, pwbs2, pwbs3);
+	cout.flush();
 
-	PWAHBitSet<2>::multiOr(pw_bitsets, 3, pwbs_res);
+	PWAHBitSet<4>::multiOr(pw_bitsets, 3, pwbs_res);
 	WAHBitSet::multiOr(w_bitsets, 3, dbs_res);
 	//dbs_tempres = WAHBitSet::constructByOr(dbs1, dbs2);
 	//dbs_res = WAHBitSet::constructByOr(dbs_tempres, dbs3);
@@ -162,6 +163,17 @@ void BitSetTester::compare(BitSet* bitset1, BitSet* bitset2){
 	}
 
 	cout << "Done comparing!" << endl;
+}
+
+void BitSetTester::testLongFill(BitSet* bitset){
+	bitset->clear();
+
+	bitset->set(268435456);
+	for (int i = 268435458; i < 40; i++){
+		bitset->set(i);
+	}
+
+	cout << bitset->toString() << endl;
 }
 
 /**

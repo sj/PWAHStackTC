@@ -59,11 +59,12 @@ private:
 	static long extract_partition(long bits, unsigned short partitionIndex);
 	inline static long clear_partition(long bits, unsigned short partitionIndex);
 
-
 	void compressPlainBlock();
 	void popLastPartition();
 	void addFill(bool oneFill, int numBlocks);
+	void addExtendedFill(bool oneFill, int numBlocks);
 	void addLiteral(long value);
+	void addFillPartition(bool oneFill, int numBlocks);
 	void addPartition(bool isFill, long value);
 	void decompressLastBlock();
 	int countNumberOfBlocks();
