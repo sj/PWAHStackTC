@@ -893,6 +893,9 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet<P>** bitSets, un
 	bool mergedLiteral;
 	unsigned int currFillLengthRemaining;
 	long currWord;
+	long prevLastBitIndex = -1;
+	bool increasingOrder = true;
+	int firstRelevantBitSet = 0;
 
 	// Initialize values in int arrays to 0.
 	memset(sWordIndex, 0, numBitSets * sizeof(int));
@@ -912,11 +915,19 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet<P>** bitSets, un
 		mergedLiteral = false;
 
 		// Align BitSets, find largest 1-fill and merge literals in the process
-		for (unsigned int i = 0; i < numBitSets; i++){
+		for (unsigned int i = firstRelevantBitSet; i < numBitSets; i++){
 			if (DEBUGGING) cout << "Considering BitSet with index " << i << " (total number of bitsets = " << numBitSets << ")" << endl;
-			if (DEBUGGING) cout << "BitSet " << i << " contains " << bitSets[i]->_compressedWords.size() << " compressed words, is now at blockindex " << sBlockIndex[i] << " which is in partitionindex " << sPartitionIndex[i] << ", wordindex " << sWordIndex[i] << ". Plain block has index " << bitSets[i]->_plainBlockIndex << endl;
-			if (bitSets[i]->_lastBitIndex > lastBitIndex) lastBitIndex = bitSets[i]->_lastBitIndex;
-			if (bitSets[i]->_plainBlockIndex > maxPlainBlockIndex) maxPlainBlockIndex = bitSets[i]->_plainBlockIndex;
+			if (DEBUGGING) cout << "BitSet " << i << " contains " << bitSets[i]->_compressedWords.size() << " compressed words, is now at blockindex " << sBlockIndex[i] << " which is in partitionindex " << sPartitionIndex[i] << ", wordindex " << sWordIndex[i] << ". Plain block has index " << bitSets[i]->_plainBlockIndex << ", lastbitindex=" << bitSets[i]->_lastBitIndex << endl;
+			if (rBlockIndex == 0){
+				// Checks to perform only during the first pass
+				if (bitSets[i]->_lastBitIndex > lastBitIndex) lastBitIndex = bitSets[i]->_lastBitIndex;
+				if (bitSets[i]->_plainBlockIndex > maxPlainBlockIndex) maxPlainBlockIndex = bitSets[i]->_plainBlockIndex;
+
+				// Determine whether the BitSets are provided in order of increasing size. In that
+				// case, an additional optimisation can be applied.
+				increasingOrder = (bitSets[i]->_lastBitIndex >= prevLastBitIndex) && increasingOrder;
+				prevLastBitIndex = bitSets[i]->_lastBitIndex;
+			}
 
 			// Some very simple checks
 			if (sBlockIndex[i] > rBlockIndex){
@@ -940,11 +951,17 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet<P>** bitSets, un
 				sPartitionOffset[i] = 0;
 			} else if (rBlockIndex > bitSets[i]->_plainBlockIndex){
 				// Out of bounds!
-				if (DEBUGGING) cout << "BitSet " << i << " totally out of bounds: plain block has index " << bitSets[i]->_plainBlockIndex << ", composing result block " << rBlockIndex << endl;
+				if (DEBUGGING) cout << "BitSet " << i << " totally out of bounds: plain block has index " << bitSets[i]->_plainBlockIndex << ", while composing result block " << rBlockIndex << " (lastBitIndex=" << bitSets[i]->_lastBitIndex << ")" << endl;
+				if (increasingOrder) firstRelevantBitSet = i + 1;
 				continue;
 			} else {
 				// Use word from vector of compressed words
 				currWord = bitSets[i]->_compressedWords[sWordIndex[i]];
+			}
+
+			if (i < firstRelevantBitSet){
+				cerr << "first relevant bitset: " << firstRelevantBitSet << ", but " << i << " is relevant?!" << endl;
+				throw string("whuh?!");
 			}
 
 			while (rBlockIndex > sBlockIndex[i]){

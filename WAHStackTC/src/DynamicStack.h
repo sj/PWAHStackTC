@@ -15,16 +15,16 @@ private:
 	int* _elements;
 	int _capacity;
 	int _lastIndexSet;
-	void reserve(unsigned int minCapacity);
+	void reserve(int minCapacity);
 
 public:
-	DynamicStack(unsigned int capacity);
+	DynamicStack(int capacity);
 	virtual ~DynamicStack();
 
 	void push(int value);
 	int peek();
 	int pop();
-	int* multiPop(unsigned int num);
+	int* multiPop(int num);
 	unsigned int size();
 };
 

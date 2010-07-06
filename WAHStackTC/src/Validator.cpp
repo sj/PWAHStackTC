@@ -81,46 +81,41 @@ void Validator::validate(){
 			Graph graph = Graph::parseChacoFile(filename);
 
 			for (int bstype = 0; bstype < 3; bstype++){
-				if (bstype == 0) tca = new WAHStackTC<PWAHBitSet<2> >(graph);
-				else if (bstype == 1) tca = new WAHStackTC<PWAHBitSet<4> >(graph);
-				else if (bstype == 2) tca = new WAHStackTC<WAHBitSet>(graph);
-				else throw string("???");
+				for (int reflexive = 0; reflexive <= 1; reflexive++){
+					if (bstype == 0) tca = new WAHStackTC<PWAHBitSet<2> >(graph);
+					else if (bstype == 1) tca = new WAHStackTC<PWAHBitSet<4> >(graph);
+					else if (bstype == 2) tca = new WAHStackTC<WAHBitSet>(graph);
+					else throw string("???");
 
-				cout << "Computing TC using " << tca->algorithmName() << "... ";
-				timer.reset();
-				tca->computeTransitiveClosure(false, false, 0);
-				time1 = timer.reset();
-				cout << "done, that took " << time1 << " msecs." << endl;
-				cout << "Validating number of edges in TC: ";
-				cout.flush();
-				numEdges = tca->countNumberOfEdgesInTC();
-				cout << numEdges << ". ";
-				if (numEdges != expectedNumEdges[i]){
-					cout << "MISMATCH!" << endl;
-					numFail++;
-				} else {
-					cout << "OK!" << endl;
-					numPass++;
+					cout << "Computing " << (reflexive == 1 ? "reflexive" : "") << "TC using " << tca->algorithmName() << "... ";
+					timer.reset();
+					tca->computeTransitiveClosure((reflexive == 1), false, 0);
+					time1 = timer.reset();
+					cout << "done, that took " << time1 << " msecs." << endl;
+					cout << "Validating number of edges in TC: ";
+					cout.flush();
+
+					numEdges = tca->countNumberOfEdgesInTC();
+					cout << numEdges << ". ";
+					if (reflexive == 1){
+						if (numEdges != expectedReflexiveNumEdges[i]){
+							cout << "MISMATCH!" << endl;
+							numFail++;
+						} else {
+							cout << "OK!" << endl;
+							numPass++;
+						}
+					} else {
+						if (numEdges != expectedNumEdges[i]){
+							cout << "MISMATCH!" << endl;
+							numFail++;
+						} else {
+							cout << "OK!" << endl;
+							numPass++;
+						}
+					}
+					delete tca;
 				}
-
-				cout << "Computing reflexive TC using " << tca->algorithmName() << "... ";
-				timer.reset();
-				tca->computeTransitiveClosure(true, false, 0);
-				time2 = timer.reset();
-				cout << "done, that took " << time2 << " msecs." << endl;
-				cout << "Validating number of edges in TC: ";
-				cout.flush();
-				numEdges = tca->countNumberOfEdgesInTC();
-				cout << numEdges << ". ";
-				if (numEdges != expectedReflexiveNumEdges[i]){
-					cout << "MISMATCH!" << endl;
-					numFail++;
-				} else {
-					cout << "OK!" << endl;
-					numPass++;
-				}
-
-				delete tca;
 			}
 
 			cout << endl << endl;
@@ -132,7 +127,7 @@ void Validator::validate(){
 			exit(1);
 		} else {
 			cout << "Total number of failed tests: " << numFail << endl;
-			exit(0);
+			//exit(0);
 		}
 	} catch (string e){
 		cerr << "Error: " << e;

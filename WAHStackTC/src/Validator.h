@@ -7,6 +7,8 @@
 
 #ifndef VALIDATOR_H_
 #define VALIDATOR_H_
+#include "TransitiveClosureAlgorithm.h"
+#include "Graph.h"
 
 class Validator {
 public:

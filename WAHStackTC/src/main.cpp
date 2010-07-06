@@ -35,7 +35,6 @@ int main(int argc, char* argv[]) {
 	cout.precision(4);
 	runValidatorWhenRequested(argc, argv);
 
-
 	try {
 		PWAHBitSet<4>* bs1 = new PWAHBitSet<4>();
 		//BitSetTester::testLongFill(bs1);

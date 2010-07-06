@@ -42,7 +42,7 @@ template<class B> void WAHStackTC<B>::computeTransitiveClosure(bool reflexitive,
 	_componentSuccessors.clear();
 	_componentVertices.clear();
 	_savedCStackSize = new unsigned int[numVertices];
-	if (_storeComponentVertices) _savedVStackSize = new unsigned int[numVertices];
+	if (storeComponentMembers) _savedVStackSize = new unsigned int[numVertices];
 	_vertexComponents = new int[numVertices];
 	_vertexCandidateComponentRoot = new unsigned int[numVertices];
 	_visited = DynamicBitSet(numVertices);
@@ -297,6 +297,8 @@ template<class B> void WAHStackTC<B>::dfsVisit(unsigned int vertexIndex){
 
 				if (explicitlyStoreSelfLoop){
 					successors->set(newComponentIndex);
+				} else {
+					successors->set(newComponentIndex, false);
 				}
 				_mergeTimer.pause();
 			} else {

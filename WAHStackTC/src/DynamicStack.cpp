@@ -11,24 +11,26 @@
 #include <vector>
 #include <iostream>
 #include <stdio.h>
+#include <assert.h>
 using namespace std;
 
-DynamicStack::DynamicStack(unsigned int initialCapacity) {
+DynamicStack::DynamicStack(int initialCapacity) {
+	assert(initialCapacity > 0);
 	_lastIndexSet = -1;
 	_capacity = initialCapacity;
 	_elements = new int[initialCapacity];
 }
 
 DynamicStack::~DynamicStack() {
-	delete _elements;
+	delete[] _elements;
 }
 
-void DynamicStack::reserve(unsigned int minCapacity){
+void DynamicStack::reserve(int minCapacity){
 	if (minCapacity < _capacity) throw string("Cannot reduce capacity!");
 
 	int* newElements = new int[minCapacity];
 	memcpy(newElements, _elements, _capacity * sizeof(int));
-	delete _elements;
+	delete[] _elements;
 	_elements = newElements;
 	_capacity = minCapacity;
 }
@@ -59,7 +61,7 @@ int DynamicStack::peek(){
  * added elements will overwrite the old values the pointer is pointing to.
  *
  */
-int* DynamicStack::multiPop(unsigned int num){
+int* DynamicStack::multiPop(int num){
 	if (num > _lastIndexSet + 1) throw string("Not enough elements on the stack to execute this multiPop");
 	int* firstElem = (&_elements[0]) + _lastIndexSet - num + 1;
 	_lastIndexSet -= num;
