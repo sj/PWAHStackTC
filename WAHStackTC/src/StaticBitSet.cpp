@@ -109,6 +109,10 @@ const int StaticBitSet::blocksize(){
 	return 64;
 }
 
+string StaticBitSet::bsImplementationName(){
+	return "StaticBitSet";
+}
+
 BitSetIterator* StaticBitSet::iterator(){
 	throw string("StaticBitSet::iterator() not implemented");
 }

@@ -17,10 +17,11 @@
 #include "DynamicStack.h"
 #include "PWAHBitSet.h"
 #include "BitSet.h"
+#include "TransitiveClosureAlgorithm.h"
 using namespace std;
 
 template <class B>
-class WAHStackTC {
+class WAHStackTC : public TransitiveClosureAlgorithm {
 private:
 	Graph* _graph;
 	vector<B*> _componentSuccessors; // stores the successor list (transitive closure) for each component
@@ -60,6 +61,7 @@ public:
 	bool reachable(int src, int dst);
 	long memoryUsedByBitSets();
 	void reportStatistics();
+	string algorithmName();
 };
 
 #endif /* WAHSTACKTC_H_ */

@@ -77,10 +77,8 @@ public:
 	const int blocksize();
 	BitSetIterator* iterator();
 
-	static WAHBitSet constructFailingExample1();
-	static WAHBitSet constructFailingExample2();
-
 	long memoryUsage();
+	string bsImplementationName();
 
 	friend class WAHBitSetIterator;
 	friend class WAHBitSetTester;

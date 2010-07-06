@@ -31,6 +31,7 @@ public:
 	static string toBitString(long value);
 	static long fill_length(long bits, unsigned short partitionIndex);
 	const long memoryUsage();
+	string bsImplementationName();
 
 	BitSetIterator* iterator();
 	const string toString();

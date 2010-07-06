@@ -117,6 +117,10 @@ const int DynamicBitSet::blocksize(){
 	return 64;
 }
 
+string DynamicBitSet::bsImplementationName(){
+	return "DynamicBitSet";
+}
+
 BitSetIterator* DynamicBitSet::iterator(){
 	throw string("DynamicBitSet::iterator() not implemented");
 }

@@ -586,6 +586,13 @@ template<class B> void WAHStackTC<B>::reportStatistics(){
 	cout << "Number of bits required to store all WAH bitsets: " << this->memoryUsedByBitSets() << endl;
 }
 
+template<class B> string WAHStackTC<B>::algorithmName(){
+	stringstream ss;
+	B inst;
+	ss << "WAHStackTC<" << inst.bsImplementationName() << ">";
+	return ss.str();
+}
+
 /**
  * Stores the transitive closure in a Chaco-formatted file. Can be huge!
  */

@@ -13,6 +13,7 @@
 #include "WAHStackTC.h"
 #include <stdlib.h>
 #include "PWAHBitSet.h"
+#include "TransitiveClosureAlgorithm.h"
 using namespace std;
 
 Validator::Validator() {}
@@ -50,7 +51,7 @@ void Validator::validate(){
 		2804552 // human.graph
 	};
 
-	long expectedReflexitiveNumEdges[numTests] = {
+	long expectedReflexiveNumEdges[numTests] = {
 		7758212, // java/depends.graph
 		438552734, // polycalls.graph (NOT VERIFIED!)
 		12479732188, // wiki/pagelinks.graph (NOT VERIFIED!)
@@ -70,53 +71,57 @@ void Validator::validate(){
 		double time1, time2;
 		long numEdges;
 		PerformanceTimer timer;
-		WAHStackTC<PWAHBitSet<4> >* wstc;
-		//WAHStackTC<WAHBitSet>* wstc;
+		TransitiveClosureAlgorithm* tca;
 
 		for (int i = 0; i < numTests; i++){
 			string filename = baseDir + "/" + filenames[i];
 
 			cout << "======= " << filename << " =======" << endl;
-			cout << "Expecting " << expectedNumEdges[i] << " edges in TC, " << expectedReflexitiveNumEdges[i] << " edges in reflexitive TC..." << endl;
+			cout << "Expecting " << expectedNumEdges[i] << " edges in TC, " << expectedReflexiveNumEdges[i] << " edges in reflexive TC..." << endl;
 			Graph graph = Graph::parseChacoFile(filename);
 
-			//wstc = new WAHStackTC<WAHBitSet>(graph);
-			wstc = new WAHStackTC<PWAHBitSet<4> >(graph);
-			timer.reset();
-			wstc->computeTransitiveClosure(false, false, 0);
-			time1 = timer.reset();
-			cout << "Computation of TC took " << time1 << " msecs." << endl;
-			cout << "Validating number of edges in TC: ";
-			cout.flush();
-			numEdges = wstc->countNumberOfEdgesInTC();
-			cout << numEdges << ". ";
-			if (numEdges != expectedNumEdges[i]){
-				cout << "MISMATCH!" << endl;
-				numFail++;
-			} else {
-				cout << "OK!" << endl;
-				numPass++;
-			}
-			delete wstc;
+			for (int bstype = 0; bstype < 3; bstype++){
+				if (bstype == 0) tca = new WAHStackTC<PWAHBitSet<2> >(graph);
+				else if (bstype == 1) tca = new WAHStackTC<PWAHBitSet<4> >(graph);
+				else if (bstype == 2) tca = new WAHStackTC<WAHBitSet>(graph);
+				else throw string("???");
 
-			//wstc = new WAHStackTC<WAHBitSet>(graph);
-			wstc = new WAHStackTC<PWAHBitSet<4> >(graph);
-			timer.reset();
-			wstc->computeTransitiveClosure(true, false, 0);
-			time2 = timer.reset();
-			cout << "Computation of reflexitive TC took " << time2 << " msecs." << endl;
-			cout << "Validating number of edges in TC: ";
-			cout.flush();
-			numEdges = wstc->countNumberOfEdgesInTC();
-			cout << numEdges << ". ";
-			if (numEdges != expectedReflexitiveNumEdges[i]){
-				cout << "MISMATCH!" << endl;
-				numFail++;
-			} else {
-				cout << "OK!" << endl;
-				numPass++;
+				cout << "Computing TC using " << tca->algorithmName() << "... ";
+				timer.reset();
+				tca->computeTransitiveClosure(false, false, 0);
+				time1 = timer.reset();
+				cout << "done, that took " << time1 << " msecs." << endl;
+				cout << "Validating number of edges in TC: ";
+				cout.flush();
+				numEdges = tca->countNumberOfEdgesInTC();
+				cout << numEdges << ". ";
+				if (numEdges != expectedNumEdges[i]){
+					cout << "MISMATCH!" << endl;
+					numFail++;
+				} else {
+					cout << "OK!" << endl;
+					numPass++;
+				}
+
+				cout << "Computing reflexive TC using " << tca->algorithmName() << "... ";
+				timer.reset();
+				tca->computeTransitiveClosure(true, false, 0);
+				time2 = timer.reset();
+				cout << "done, that took " << time2 << " msecs." << endl;
+				cout << "Validating number of edges in TC: ";
+				cout.flush();
+				numEdges = tca->countNumberOfEdgesInTC();
+				cout << numEdges << ". ";
+				if (numEdges != expectedReflexiveNumEdges[i]){
+					cout << "MISMATCH!" << endl;
+					numFail++;
+				} else {
+					cout << "OK!" << endl;
+					numPass++;
+				}
+
+				delete tca;
 			}
-			delete wstc;
 
 			cout << endl << endl;
 		}

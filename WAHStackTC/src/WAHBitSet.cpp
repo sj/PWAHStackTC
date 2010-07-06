@@ -776,6 +776,10 @@ const int WAHBitSet::blocksize(){
 	return 31;
 }
 
+string WAHBitSet::bsImplementationName(){
+	return "WAHBitSet";
+}
+
 BitSetIterator* WAHBitSet::iterator(){
 	return new WAHBitSetIterator(this);
 }

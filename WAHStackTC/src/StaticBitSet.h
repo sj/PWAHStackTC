@@ -31,6 +31,7 @@ public:
 	string toBitString(long value);
 	const unsigned int capacity();
 	const unsigned int size();
+	string bsImplementationName();
 
 	const int blocksize();
 

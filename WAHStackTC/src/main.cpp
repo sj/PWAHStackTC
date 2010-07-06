@@ -13,6 +13,7 @@
 #include "DynamicBitSet.h"
 #include "WAHBitSetTester.h"
 #include "PerformanceTimer.h"
+#include "TransitiveClosureAlgorithm.h"
 using namespace std;
 
 void runValidatorWhenRequested(int argc, char* argv[]){
@@ -23,6 +24,10 @@ void runValidatorWhenRequested(int argc, char* argv[]){
 			exit(0);
 		}
 	}
+}
+
+void bla(TransitiveClosureAlgorithm* tca){
+	cout << "BLA! " << tca->countNumberOfEdgesInTC() << endl;
 }
 
 int main(int argc, char* argv[]) {
@@ -61,7 +66,7 @@ int main(int argc, char* argv[]) {
 	string defFilename;
 	//defFilename = "../../Datasets/nuutila32.graph";
 	//defFilename = "../../Datasets/Semmle graphs/java/depends.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/depends.graph";
+	defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/depends.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/depends.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/successor.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/callgraph.graph";
@@ -72,7 +77,7 @@ int main(int argc, char* argv[]) {
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/categorypagelinks.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/pagelinks.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/child.graph";
-	defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/samba/setflow.graph";
+	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/samba/setflow.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/agrocyc.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/kegg.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/human.graph";
@@ -84,6 +89,7 @@ int main(int argc, char* argv[]) {
 	cmdLineArgs["filename"] = defFilename;
 	cmdLineArgs["reflexitive"] = "unset";
 	cmdLineArgs["run-validator"] = "unset";
+	cmdLineArgs["bitset-implementation"] = "pwah-4";
 
 	// By default: use multi-OR when a component has out-degree of at least 5
 	cmdLineArgs["min-multi-or"] = "0";
@@ -132,15 +138,6 @@ int main(int argc, char* argv[]) {
 	}
 
 	try {
-		//WAHBitSetTester::testMultiOr();
-		//exit(1);
-		/**WAHBitSetTester::testIterator();
-		cout << "done testing iterator" << endl;
-		exit(1);**/
-
-
-
-
 		PerformanceTimer timer = PerformanceTimer::start();
 		cout << "Parsing graph file: " << filename << "... ";
 		cout.flush();
@@ -159,13 +156,22 @@ int main(int argc, char* argv[]) {
 		for (int i = 0; i < numRuns; i++){
 			timer.reset();
 
-			WAHStackTC<PWAHBitSet<4> >* wstc = new WAHStackTC<PWAHBitSet<4> >(graph);
-			//WAHStackTC<WAHBitSet>* wstc = new WAHStackTC<WAHBitSet>(graph);
+			TransitiveClosureAlgorithm* tca;
+			if (cmdLineArgs["bitset-implementation"] == "pwah-2"){
+				tca = new WAHStackTC<PWAHBitSet<2> >(graph);
+			} else if (cmdLineArgs["bitset-implementation"] == "pwah-4"){
+				tca = new WAHStackTC<PWAHBitSet<4> >(graph);
+			} else if (cmdLineArgs["bitset-implementation"] == "wah"){
+				tca = new WAHStackTC<WAHBitSet>(graph);
+			} else {
+				cerr << "Invalid BitSet implementation specified on command line" << endl;
+				exit(1);
+			}
 
 			if (!reflexitive){
-				cout << "Computing transitive closure ";
+				cout << "Computing transitive closure using " << tca->algorithmName() << " ";
 			} else {
-				cout << "Computing REFLEXITIVE transitive closure ";
+				cout << "Computing REFLEXITIVE transitive closure using " << tca->algorithmName() << " ";
 			}
 			if (minMultiOR == -1){
 				cout << "(NOT using multi-OR)... ";
@@ -175,7 +181,7 @@ int main(int argc, char* argv[]) {
 				cout << "(using multi-OR when out-degree >= " << minMultiOR << ")... ";
 			}
 			cout.flush();
-			wstc->computeTransitiveClosure(reflexitive, false, minMultiOR);
+			tca->computeTransitiveClosure(reflexitive, false, minMultiOR);
 
 			tmp = timer.reset();
 			totalConstructionTime += tmp;
@@ -183,7 +189,7 @@ int main(int argc, char* argv[]) {
 			cout.flush();
 
 			//cout << wstc.tcToString();
-			cout << "Number of components (vertices in condensation graph): " << wstc->getNumberOfComponents() << endl;
+			cout << "Number of components (vertices in condensation graph): " << tca->getNumberOfComponents() << endl;
 
 			if (!reflexitive){
 				cout << "Counting number of edges in condensed transitive closure... ";
@@ -191,7 +197,7 @@ int main(int argc, char* argv[]) {
 				cout << "Counting number of edges in REFLEXITIVE condensed transitive closure... ";
 			}
 			cout.flush();
-			cout << wstc->countNumberOfEdgesInCondensedTC() << " edges" << endl;
+			cout << tca->countNumberOfEdgesInCondensedTC() << " edges" << endl;
 
 			if (!reflexitive){
 				cout << "Counting number of edges in transitive closure... ";
@@ -199,7 +205,7 @@ int main(int argc, char* argv[]) {
 				cout << "Counting number of edges in REFLEXITIVE transitive closure... ";
 			}
 			cout.flush();
-			cout << wstc->countNumberOfEdgesInTC() << " edges" << endl;
+			cout << tca->countNumberOfEdgesInTC() << " edges" << endl;
 
 			if (RAND_MAX < graph.getNumberOfVertices()){
 				cerr << "Warning! RAND_MAX=" << RAND_MAX << ", whilst number of vertices = " << graph.getNumberOfVertices() << ". Not every vertex can possibly be reached." << endl;
@@ -223,16 +229,16 @@ int main(int argc, char* argv[]) {
 			timer.reset();
 			long numReachable = 0;
 			for (int i = 0; i < numQueries; i++){
-				if (wstc->reachable(rndSrc[i], rndDst[i])) numReachable++;
+				if (tca->reachable(rndSrc[i], rndDst[i])) numReachable++;
 			}
 			tmp = timer.reset();
 			totalQueryTime += tmp;
 			cout << "done, that took " << tmp << " msecs" << endl;
 			cout << numReachable << " pairs turned out to be reachable." << endl;
-			cout << "Number of bits required to store WAH compressed bitsets: " << wstc->memoryUsedByBitSets() << endl;
+			cout << "Number of bits required to store WAH compressed bitsets: " << tca->memoryUsedByBitSets() << endl;
 			delete[] rndDst;
 			delete[] rndSrc;
-			delete wstc;
+			delete tca;
 		}
 
 		double avgConstructionTime = totalConstructionTime / ((double)numRuns);

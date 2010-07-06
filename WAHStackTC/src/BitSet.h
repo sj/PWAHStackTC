@@ -23,7 +23,7 @@ public:
 	virtual void set(int bitIndex, bool value) = 0;
 	virtual void set(int bitIndex);
 	virtual const bool get(int bitIndex) = 0;
-
+	virtual string bsImplementationName() = 0;
 	virtual BitSetIterator* iterator() = 0;
 
 	virtual const int blocksize() = 0;

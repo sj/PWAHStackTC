@@ -32,6 +32,7 @@ public:
 	const string toString();
 	string toBitString(long value);
 	const unsigned int size();
+	string bsImplementationName();
 
 	BitSetIterator* iterator();
 

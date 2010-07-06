@@ -1453,6 +1453,18 @@ template<> void PWAHBitSet<8>::addExtendedFill(bool oneFill, int numBlocks){
 	throw string("Extended fills are not yet supported in PWAHBitSet<8>");
 }
 
+template<> string PWAHBitSet<1>::bsImplementationName(){
+	return "PWAHBitSet<1>";
+}
+template<> string PWAHBitSet<2>::bsImplementationName(){
+	return "PWAHBitSet<2>";
+}
+template<> string PWAHBitSet<4>::bsImplementationName(){
+	return "PWAHBitSet<4>";
+}
+template<> string PWAHBitSet<8>::bsImplementationName(){
+	return "PWAHBitSet<8>";
+}
 
 /**
  * Tell the compiler which instantiations to generate
