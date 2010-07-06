@@ -49,6 +49,11 @@ void BitSetTester::testOr(){
 	dbs_res = new WAHBitSet();
 
 	randomise(pwbs1, dbs1, 256);
+	if (pwbs1->countNumberOfBlocks() != pwbs1->_plainBlockIndex + 1){
+		cerr << "BitSet 1 contains " << pwbs1->countNumberOfBlocks() << " blocks, but plainBlockIndex=" << pwbs1->_plainBlockIndex << endl;
+		cerr << pwbs1->toString() << endl;
+		throw string("inconsistency");
+	}
 	randomise(pwbs2, dbs2, 128);
 	randomise(pwbs3, dbs3, 160);
 

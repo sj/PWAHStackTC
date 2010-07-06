@@ -70,7 +70,7 @@ void Validator::validate(){
 		double time1, time2;
 		long numEdges;
 		PerformanceTimer timer;
-		WAHStackTC<PWAHBitSet<2> >* wstc;
+		WAHStackTC<PWAHBitSet<4> >* wstc;
 		//WAHStackTC<WAHBitSet>* wstc;
 
 		for (int i = 0; i < numTests; i++){
@@ -81,7 +81,7 @@ void Validator::validate(){
 			Graph graph = Graph::parseChacoFile(filename);
 
 			//wstc = new WAHStackTC<WAHBitSet>(graph);
-			wstc = new WAHStackTC<PWAHBitSet<2> >(graph);
+			wstc = new WAHStackTC<PWAHBitSet<4> >(graph);
 			timer.reset();
 			wstc->computeTransitiveClosure(false, false, 0);
 			time1 = timer.reset();
@@ -100,7 +100,7 @@ void Validator::validate(){
 			delete wstc;
 
 			//wstc = new WAHStackTC<WAHBitSet>(graph);
-			wstc = new WAHStackTC<PWAHBitSet<2> >(graph);
+			wstc = new WAHStackTC<PWAHBitSet<4> >(graph);
 			timer.reset();
 			wstc->computeTransitiveClosure(true, false, 0);
 			time2 = timer.reset();

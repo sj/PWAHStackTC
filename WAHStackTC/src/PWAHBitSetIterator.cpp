@@ -70,7 +70,7 @@ template<unsigned int P> int PWAHBitSetIterator<P>::next(){
 		if (PWAHBitSet<P>::is_onefill(currWord, _lastWordPartitionIndex)){
 			// Partition contains 1-fill
 			currFillLengthRemaining = PWAHBitSet<P>::fill_length(currWord, _lastWordPartitionIndex);
-			if (DEBUGGING) cout << "PWAHBitSetIterator::next() -- encountered 1-fill of length " << currFillLengthRemaining << endl;
+			if (DEBUGGING) cout << "PWAHBitSetIterator::next() -- encountered 1-fill of length " << currFillLengthRemaining << " covering " << PWAHBitSet<P>::blocks_num_partitions(currFillLengthRemaining) << " partition(s)" << endl;
 
 			_lastBlockBitIndex++;
 			if (_lastBlockBitIndex >= _bitSet->_blockSize){
@@ -80,8 +80,8 @@ template<unsigned int P> int PWAHBitSetIterator<P>::next(){
 				_lastBlockIndex++;
 
 				if (_lastPartitionBlockIndex >= currFillLengthRemaining){
-					// No more blocks in this 1-fill word, skip to the next word
-					_lastWordPartitionIndex++;
+					// No more blocks in this 1-fill partition, skip to the next partition
+					_lastWordPartitionIndex += PWAHBitSet<P>::blocks_num_partitions(currFillLengthRemaining);
 					_lastPartitionBlockIndex = 0;
 
 					// Enter next iteration of while-loop to find the next word
@@ -102,9 +102,9 @@ template<unsigned int P> int PWAHBitSetIterator<P>::next(){
 		} else if (PWAHBitSet<P>::is_zerofill(currWord, _lastWordPartitionIndex)){
 			// Partition contains 0-fill, not interesting! Skip to next partition
 			currFillLengthRemaining = PWAHBitSet<P>::fill_length(currWord, _lastWordPartitionIndex);
-			if (DEBUGGING) cout << "PWAHBitSetIterator::next() -- encountered 0-fill of length " << currFillLengthRemaining << endl;
+			if (DEBUGGING) cout << "PWAHBitSetIterator::next() -- encountered 0-fill of length " << currFillLengthRemaining << ", covering " << PWAHBitSet<P>::blocks_num_partitions(currFillLengthRemaining) << " partition(s)" << endl;
 
-			_lastWordPartitionIndex++;
+			_lastWordPartitionIndex += PWAHBitSet<P>::blocks_num_partitions(currFillLengthRemaining);
 			_lastPartitionBlockIndex = 0;
 			_lastBlockIndex += currFillLengthRemaining;
 			_lastBlockBitIndex = -1;

@@ -33,16 +33,19 @@ int main(int argc, char* argv[]) {
 
 	try {
 		PWAHBitSet<4>* bs1 = new PWAHBitSet<4>();
-		BitSetTester::testLongFill(bs1);
+		//BitSetTester::testLongFill(bs1);
 		DynamicBitSet* bs2 = new DynamicBitSet();
+		BitSetTester bt = BitSetTester(bs1, bs2);
+		//bt.testSetGet();
+		//exit(1);
 
 		//WAHBitSet* bs2 = new WAHBitSet();
 
 		//BitSetTester tester = BitSetTester(bs1, bs2);
 		//tester.testSetGet();
-		while(true){
-			BitSetTester::testOr();
-		}
+		//while(true){
+		//	BitSetTester::testOr();
+		//}
 
 		/**while (true){
 			BitSetTester::testIterator(bs1);
@@ -53,12 +56,12 @@ int main(int argc, char* argv[]) {
 	} catch (int e){
 		cerr << "Exception: " << e << endl;;
 	}
-	exit(1);
+	//exit(1);
 
 	string defFilename;
 	//defFilename = "../../Datasets/nuutila32.graph";
 	//defFilename = "../../Datasets/Semmle graphs/java/depends.graph";
-	defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/depends.graph";
+	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/depends.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/depends.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/successor.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/callgraph.graph";
@@ -69,7 +72,7 @@ int main(int argc, char* argv[]) {
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/categorypagelinks.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/pagelinks.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/child.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/samba/setflow.graph";
+	defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/samba/setflow.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/agrocyc.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/kegg.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/human.graph";

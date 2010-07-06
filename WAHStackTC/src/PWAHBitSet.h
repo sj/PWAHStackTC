@@ -37,12 +37,13 @@ public:
 	const int blocksize();
 
 	friend class PWAHBitSetIterator<P>;
+	friend class BitSetTester;
 
 private:
 	static const long _maxBlocksPerFill;
 	static const int _blockSize;
 	static const int _partitionOffsets[P];
-	static const bool _VERIFY = true;
+	static const bool _VERIFY = false;
 
 	int _lastUsedPartition; // partition index of last used partition within the last compressed word
 	long _plainBlockIndex; // the block index of the plain block
@@ -56,8 +57,9 @@ private:
 	inline static bool is_literal(long bits, unsigned short partitionIndex);
 	inline static bool is_literal_onefill(long bits, unsigned short partitionIndex);
 	inline static bool is_literal_zerofill(long bits, unsigned short partitionIndex);
-	static long extract_partition(long bits, unsigned short partitionIndex);
+	inline static long extract_partition(long bits, unsigned short partitionIndex);
 	inline static long clear_partition(long bits, unsigned short partitionIndex);
+	inline static short blocks_num_partitions(int numBlocks);
 
 	void compressPlainBlock();
 	void popLastPartition();
