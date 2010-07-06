@@ -16,6 +16,7 @@ CPP_SRCS += \
 ../src/PWAHBitSetIterator.cpp \
 ../src/PerformanceTimer.cpp \
 ../src/StaticBitSet.cpp \
+../src/TransitiveClosureAlgorithm.cpp \
 ../src/Validator.cpp \
 ../src/WAHBitSet.cpp \
 ../src/WAHBitSetIterator.cpp \
@@ -36,6 +37,7 @@ OBJS += \
 ./src/PWAHBitSetIterator.o \
 ./src/PerformanceTimer.o \
 ./src/StaticBitSet.o \
+./src/TransitiveClosureAlgorithm.o \
 ./src/Validator.o \
 ./src/WAHBitSet.o \
 ./src/WAHBitSetIterator.o \
@@ -56,6 +58,7 @@ CPP_DEPS += \
 ./src/PWAHBitSetIterator.d \
 ./src/PerformanceTimer.d \
 ./src/StaticBitSet.d \
+./src/TransitiveClosureAlgorithm.d \
 ./src/Validator.d \
 ./src/WAHBitSet.d \
 ./src/WAHBitSetIterator.d \
