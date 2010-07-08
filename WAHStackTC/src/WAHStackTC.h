@@ -51,7 +51,7 @@ public:
 	WAHStackTC(Graph& graph);
 	virtual ~WAHStackTC();
 
-	void computeTransitiveClosure(bool reflexitive, bool storeComponentMembers, int minOutDegreeForMultiOR);
+	void computeTransitiveClosure(bool reflexive, bool storeComponentMembers, int minOutDegreeForMultiOR);
 	string tcToString();
 	long countNumberOfEdgesInTC();
 	long countNumberOfEdgesInCondensedTC();
@@ -62,6 +62,8 @@ public:
 	long memoryUsedByBitSets();
 	void reportStatistics();
 	string algorithmName();
+
+	friend class BitSetTester;
 };
 
 #endif /* WAHSTACKTC_H_ */

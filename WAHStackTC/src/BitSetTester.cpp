@@ -13,6 +13,8 @@
 #include "PWAHBitSet.h"
 #include "WAHBitSet.h"
 #include "DynamicBitSet.h"
+#include "Graph.h"
+#include "WAHStackTC.h"
 #include <math.h>
 using namespace std;
 
@@ -34,6 +36,43 @@ BitSetTester::~BitSetTester() {
  */
 float BitSetTester::rand_float(){
 	return (rand() % 1000) / 1000.0;
+}
+
+void BitSetTester::compareMemoryUsage(){
+	Graph g = Graph::parseChacoFile("/home/bas/afstuderen/Datasets/Semmle graphs/c++/depends.graph");
+	WAHStackTC<PWAHBitSet<4> >* wstc_pwah4 = new WAHStackTC<PWAHBitSet<4> >(g);
+	WAHStackTC<WAHBitSet>* wstc_wah = new WAHStackTC<WAHBitSet>(g);
+
+	wstc_pwah4->computeTransitiveClosure(false, false, 0);
+	wstc_wah->computeTransitiveClosure(false, false, 0);
+
+	cout << "PWAHBitSet<4> uses " << wstc_pwah4->memoryUsedByBitSets() << " bits" << endl;
+	cout << "WAHBitSet uses " << wstc_wah->memoryUsedByBitSets() << " bits" << endl;
+
+	vector<PWAHBitSet<4>* > pwah4 = wstc_pwah4->_componentSuccessors;
+	vector<WAHBitSet*> wah = wstc_wah->_componentSuccessors;
+
+	if (pwah4.size() != wah.size()){
+		cout << "Sizes don't match: " << pwah4.size() << " versus " << wah.size() << endl;
+	} else {
+		cout << "Sizes match: " << pwah4.size() << " bit sets" << endl;
+		for (int i = 0; i < pwah4.size(); i++){
+			if (pwah4[i] == NULL) continue;
+
+			if (pwah4[i]->memoryUsage() > wah[i]->memoryUsage() + 32){
+				cout << "========================== " << pwah4[i]->memoryUsage() << " versus " << wah[i]->memoryUsage() << " ====================================" << endl;
+				cout << pwah4[i]->toString() << endl;
+				cout << "=================" << endl;
+				cout << wah[i]->toString() << endl;
+				cout << "========================================================================" << endl << endl;
+			} else {
+				//cout << i << " OK: " << pwah4[i]->memoryUsage() << " versus " << wah[i]->memoryUsage() << " bits" << endl;
+			}
+		}
+	}
+	cout << "done" << endl;
+	delete wstc_pwah4;
+	delete wstc_wah;
 }
 
 void BitSetTester::testOr(){

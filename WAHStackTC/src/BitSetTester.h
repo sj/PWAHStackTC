@@ -23,6 +23,7 @@ public:
 	static void compare(BitSet* bs1, BitSet* bs2);
 	static void testLongFill(BitSet* bitset);
 	static void testIterator(BitSet* bitset, bool randomise);
+	static void compareMemoryUsage();
 	static void testOr();
 	void testSetGet();
 

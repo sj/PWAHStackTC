@@ -92,6 +92,7 @@ void Validator::validate(){
 					tca->computeTransitiveClosure((reflexive == 1), false, 0);
 					time1 = timer.reset();
 					cout << "done, that took " << time1 << " msecs." << endl;
+					cout << "Memory in use by data structure: " << tca->memoryUsedByBitSets() << " bits." << endl;
 					cout << "Validating number of edges in TC: ";
 					cout.flush();
 

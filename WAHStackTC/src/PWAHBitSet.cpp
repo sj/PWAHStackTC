@@ -1216,13 +1216,14 @@ template<unsigned int P> int PWAHBitSet<P>::countNumberOfBlocks(){
  * This function will update _compressedWords and _lastUsedPartition
  */
 template<unsigned int P> void PWAHBitSet<P>::popLastPartition(){
-	const bool DEBUGGING = false;
+	const bool DEBUGGING = true;
 	if (_VERIFY) assert(_compressedWords.size() > 0);
 
 	if (_lastUsedPartition == 0){
-		if (DEBUGGING) cout << "PWAHBitSet::popLastPartition -- removing last word" << endl;
+		if (DEBUGGING) cout << "PWAHBitSet::popLastPartition -- last used partition = 0, number of compressed words = " << _compressedWords.size() << " => removing last word" << endl;
 		_compressedWords.pop_back();
 		_lastUsedPartition = P - 1;
+		if (DEBUGGING) cout << "PWAHBitSet::popLastPartition -- done! Last used partition = " << _lastUsedPartition << ", number of compressed words = " << _compressedWords.size() << endl;
 	} else {
 		if (DEBUGGING) cout << "PWAHBitSet::popLastPartition -- clearing partition " << _lastUsedPartition << endl;
 		_compressedWords[_compressedWords.size() - 1] = clear_partition(_compressedWords.back(), _lastUsedPartition);
@@ -1285,7 +1286,9 @@ template<unsigned int P> PWAHBitSet<P>* PWAHBitSet<P>::constructByOr(const PWAHB
 }
 
 template<unsigned int P> const long PWAHBitSet<P>::memoryUsage(){
-	throw string("PWAHBitSet::memoryUsage not implemented");
+	long res = _compressedWords.size() * 64;
+	res += 64; // plain word
+	return res;
 }
 
 template<unsigned int P> BitSetIterator* PWAHBitSet<P>::iterator(){

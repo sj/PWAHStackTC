@@ -57,16 +57,19 @@ int main(int argc, char* argv[]) {
 
 		delete bs1;
 		delete bs2;
+
+
+		BitSetTester::compareMemoryUsage();
 	} catch (int e){
 		cerr << "Exception: " << e << endl;;
 	}
-	//exit(1);
+	exit(1);
 
 	string defFilename;
 	//defFilename = "../../Datasets/nuutila32.graph";
 	//defFilename = "../../Datasets/Semmle graphs/java/depends.graph";
-	defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/depends.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/depends.graph";
+	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/depends.graph";
+	defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/depends.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/successor.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/callgraph.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/successors.graph";
@@ -205,6 +208,8 @@ int main(int argc, char* argv[]) {
 			}
 			cout.flush();
 			cout << tca->countNumberOfEdgesInTC() << " edges" << endl;
+
+			cout << "Memory used by the " << tca->algorithmName() << " data structure: " << tca->memoryUsedByBitSets() << " bits" << endl;
 
 			if (RAND_MAX < graph.getNumberOfVertices()){
 				cerr << "Warning! RAND_MAX=" << RAND_MAX << ", whilst number of vertices = " << graph.getNumberOfVertices() << ". Not every vertex can possibly be reached." << endl;

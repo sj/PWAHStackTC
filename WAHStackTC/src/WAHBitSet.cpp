@@ -152,7 +152,8 @@ const bool WAHBitSet::get(int bitIndex){
 
 string WAHBitSet::toBitString(int value){
 	stringstream res;
-	for (int bit = 0; bit < 32; bit++){
+	res << "0b";
+	for (int bit = 31; bit >= 0; bit--){
 		if (I_GET_BIT(value, bit)) res << "1";
 		else res << "0";
 	}
@@ -163,6 +164,7 @@ string WAHBitSet::toBitString(int value){
 const string WAHBitSet::toString(){
 	stringstream res;
 
+	res << "Last bit set: " << _lastBitIndex << endl;
 	for (unsigned int i = 0; i < _compressedBits.size(); i++){
 		res << toBitString(_compressedBits[i]) << endl;
 	}
