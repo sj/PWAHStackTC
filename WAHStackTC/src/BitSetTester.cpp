@@ -38,7 +38,7 @@ float BitSetTester::rand_float(){
 	return (rand() % 1000) / 1000.0;
 }
 
-void BitSetTester::compareMemoryUsage(){
+void BitSetTester::diff(){
 	Graph g = Graph::parseChacoFile("/home/bas/afstuderen/Datasets/Semmle graphs/c++/depends.graph");
 	WAHStackTC<PWAHBitSet<4> >* wstc_pwah4 = new WAHStackTC<PWAHBitSet<4> >(g);
 	WAHStackTC<WAHBitSet>* wstc_wah = new WAHStackTC<WAHBitSet>(g);
@@ -53,13 +53,14 @@ void BitSetTester::compareMemoryUsage(){
 	vector<WAHBitSet*> wah = wstc_wah->_componentSuccessors;
 
 	if (pwah4.size() != wah.size()){
-		cout << "Sizes don't match: " << pwah4.size() << " versus " << wah.size() << endl;
+		cout << "Number of bitsets doesn't: " << pwah4.size() << " versus " << wah.size() << endl;
 	} else {
 		cout << "Sizes match: " << pwah4.size() << " bit sets" << endl;
 		for (int i = 0; i < pwah4.size(); i++){
 			if (pwah4[i] == NULL) continue;
+			compare(pwah4[i], wah[i]);
 
-			if (pwah4[i]->memoryUsage() > wah[i]->memoryUsage() + 32){
+			/**if (pwah4[i]->memoryUsage() > wah[i]->memoryUsage() + 32){
 				cout << "========================== " << pwah4[i]->memoryUsage() << " versus " << wah[i]->memoryUsage() << " ====================================" << endl;
 				cout << pwah4[i]->toString() << endl;
 				cout << "=================" << endl;
@@ -67,7 +68,7 @@ void BitSetTester::compareMemoryUsage(){
 				cout << "========================================================================" << endl << endl;
 			} else {
 				//cout << i << " OK: " << pwah4[i]->memoryUsage() << " versus " << wah[i]->memoryUsage() << " bits" << endl;
-			}
+			}**/
 		}
 	}
 	cout << "done" << endl;
@@ -134,7 +135,7 @@ void BitSetTester::testOr(){
 
 void BitSetTester::testSetGet(){
 	for (int i = 1; i < 100; i++){
-		randomise(_bs1, _bs2, 102400);
+		randomise(_bs1, _bs2, 10240);
 		cout << "Done randomising pass " << i << endl;
 
 		compare(_bs1, _bs2);
@@ -194,12 +195,15 @@ void BitSetTester::compare(BitSet* bitset1, BitSet* bitset2){
 		val2 = bitset2->get(i);
 
 		if (val1 != val2){
+			cout.flush();
 			cerr << printBitSets(bitset1, bitset2) << endl;
 
 			stringstream str;
 			str << "BitSets disagree on bit " << i << ": ";
 			str << "bitset1[" << i << "] = " << (val1 ? "true" : "false") << ", ";
 			str << "bitset2[" << i << "] = " << (val2 ? "true" : "false");
+
+			cerr << str.str() << endl;
 			throw str.str();
 		}
 

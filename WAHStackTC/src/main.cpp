@@ -36,11 +36,15 @@ int main(int argc, char* argv[]) {
 	runValidatorWhenRequested(argc, argv);
 
 	try {
-		PWAHBitSet<4>* bs1 = new PWAHBitSet<4>();
+		PWAHBitSet<8>* bs1 = new PWAHBitSet<8>();
 		//BitSetTester::testLongFill(bs1);
 		DynamicBitSet* bs2 = new DynamicBitSet();
 		BitSetTester bt = BitSetTester(bs1, bs2);
+		//while (true) BitSetTester::testOr();
+
+		//BitSetTester::diff();
 		//bt.testSetGet();
+
 		//exit(1);
 
 		//WAHBitSet* bs2 = new WAHBitSet();
@@ -51,25 +55,23 @@ int main(int argc, char* argv[]) {
 		//	BitSetTester::testOr();
 		//}
 
-		/**while (true){
-			BitSetTester::testIterator(bs1);
-		}**/
+		//while (true) BitSetTester::testIterator(bs1, true);
 
 		delete bs1;
 		delete bs2;
 
 
-		BitSetTester::compareMemoryUsage();
+		//BitSetTester::compareMemoryUsage();
 	} catch (int e){
 		cerr << "Exception: " << e << endl;;
 	}
-	exit(1);
+	//exit(1);
 
 	string defFilename;
 	//defFilename = "../../Datasets/nuutila32.graph";
 	//defFilename = "../../Datasets/Semmle graphs/java/depends.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/depends.graph";
-	defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/depends.graph";
+	defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/depends.graph";
+	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/depends.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/successor.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/callgraph.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/successors.graph";
@@ -91,7 +93,7 @@ int main(int argc, char* argv[]) {
 	cmdLineArgs["filename"] = defFilename;
 	cmdLineArgs["reflexitive"] = "unset";
 	cmdLineArgs["run-validator"] = "unset";
-	cmdLineArgs["bitset-implementation"] = "pwah-4";
+	cmdLineArgs["bitset-implementation"] = "pwah-8";
 
 	// By default: use multi-OR when a component has out-degree of at least 5
 	cmdLineArgs["min-multi-or"] = "0";
@@ -163,6 +165,8 @@ int main(int argc, char* argv[]) {
 				tca = new WAHStackTC<PWAHBitSet<2> >(graph);
 			} else if (cmdLineArgs["bitset-implementation"] == "pwah-4"){
 				tca = new WAHStackTC<PWAHBitSet<4> >(graph);
+			} else if (cmdLineArgs["bitset-implementation"] == "pwah-8"){
+				tca = new WAHStackTC<PWAHBitSet<8> >(graph);
 			} else if (cmdLineArgs["bitset-implementation"] == "wah"){
 				tca = new WAHStackTC<WAHBitSet>(graph);
 			} else {

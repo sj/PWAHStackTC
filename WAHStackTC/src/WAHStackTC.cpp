@@ -362,8 +362,6 @@ template<class B> void WAHStackTC<B>::dfsVisit(unsigned int vertexIndex){
 		if (debug) cout << "done!";
 
 		_componentSuccessors.push_back(successors);
-		//_componentSuccessors.push_back(NULL);
-		//delete successors;
 	} // else: vertex is not a component root
 
 

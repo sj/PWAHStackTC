@@ -25,7 +25,7 @@ template<unsigned int P> void PWAHBitSetIterator<P>::reset(){
 	_lastBlockBitIndex = -1;
 	_lastWordIndex = 0;
 	_lastPartitionBlockIndex = 0;
-	_lastWordPartitionIndex = 0;
+	_lastWordPartitionIndex = 1;
 
 	_atStart = true;
 	_atEnd = false;
@@ -55,12 +55,12 @@ template<unsigned int P> int PWAHBitSetIterator<P>::next(){
 
 		if (_lastBlockIndex < _bitSet->_plainBlockIndex){
 			if (DEBUGGING) cout << "PWAHBitSetIterator::next() -- checking block with index " << _lastBlockIndex << " within compressed word with wordindex " << _lastWordIndex << endl;
-			currWord = _bitSet->_compressedWords[_lastWordIndex];
+			currWord = _bitSet->_words[_lastWordIndex];
 		} else if (_lastBlockIndex == _bitSet->_plainBlockIndex){
 			if (DEBUGGING) cout << "PWAHBitSetIterator::next() -- checking plain block with block index " << _lastBlockIndex << endl;
 			_lastWordPartitionIndex = 0;
-			_lastWordIndex = _bitSet->_compressedWords.size();
-			currWord = _bitSet->_plainBlock;
+			_lastWordIndex = _bitSet->_words.size();
+			currWord = _bitSet->_words[0];
 		} else {
 			if (DEBUGGING) cout << "PWAHBitSetIterator::next() -- blockindex " << _lastBlockIndex << " out of bounds: at end!"<< endl;
 			_atEnd = true;

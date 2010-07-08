@@ -46,11 +46,10 @@ private:
 	static const int _partitionOffsets[P];
 	static const bool _VERIFY = false;
 
-	int _lastUsedPartition; // partition index of last used partition within the last compressed word
+	unsigned short _lastUsedPartition; // partition index of last used partition within the vector of words
 	long _plainBlockIndex; // the block index of the plain block
-	long _plainBlock;
 	long _lastBitIndex;
-	vector<long> _compressedWords;
+	vector<long> _words;
 
 	inline static bool is_fill(long bits, unsigned short partitionIndex);
 	static bool is_onefill(long bits, unsigned short partitionIndex);
@@ -62,7 +61,7 @@ private:
 	inline static long clear_partition(long bits, unsigned short partitionIndex);
 	inline static short blocks_num_partitions(int numBlocks);
 
-	void compressPlainBlock();
+	void compressPlainPartition();
 	void popLastPartition();
 	void addFill(bool oneFill, int numBlocks);
 	void addExtendedFill(bool oneFill, int numBlocks);
