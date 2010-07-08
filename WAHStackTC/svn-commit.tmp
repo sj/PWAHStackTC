@@ -1,5 +1,0 @@
-Validator now creates a clean checkout and starts building from there
-
---This line, and those below, will be ignored--
-
-M    run-validator.sh
