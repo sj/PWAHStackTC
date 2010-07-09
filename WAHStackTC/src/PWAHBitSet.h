@@ -18,7 +18,7 @@ template<unsigned int P> class PWAHBitSetIterator;
 template<unsigned int P>
 class PWAHBitSet : public BitSet {
 public:
-	PWAHBitSet();
+	PWAHBitSet(int indexIntervalSize = -1);
 	virtual ~PWAHBitSet(){}
 
 	void set(int bitIndex);
@@ -50,6 +50,10 @@ private:
 	long _plainBlockIndex; // the block index of the plain block
 	long _lastBitIndex;
 	vector<long> _words;
+	const int _indexChunkSize;
+	vector<int> _indexWord;
+	vector<unsigned short> _indexPartition;
+	vector<int> _indexPartitionOffset;
 
 	inline static bool is_fill(long bits, unsigned short partitionIndex);
 	static bool is_onefill(long bits, unsigned short partitionIndex);
@@ -63,12 +67,14 @@ private:
 
 	void compressPlainPartition();
 	void popLastPartition();
-	void addFill(bool oneFill, int numBlocks);
-	void addExtendedFill(bool oneFill, int numBlocks);
-	void addLiteral(long value);
-	void addFillPartition(bool oneFill, int numBlocks);
+	void addFill(bool oneFill, int numBlocks, int firstBlockIndex);
+	void addExtendedFillPartitions(bool oneFill, int numBlocks, int firstBlockIndex);
+	void addLiteral(long value, int blockIndex);
+	void addFillPartition(bool oneFill, int numBlocks, int firstBlockIndex);
 	void addPartition(bool isFill, long value);
 	void decompressLastBlock();
+	void updateIndex(int numBlocks, int firstBlockIndex);
+	void setIndexEntry(int chunkIndex, int indexWord, int indexPartition, int indexPartitionOffset);
 	int countNumberOfBlocks();
 };
 

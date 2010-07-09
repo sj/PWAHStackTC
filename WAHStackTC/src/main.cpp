@@ -70,7 +70,7 @@ int main(int argc, char* argv[]) {
 	string defFilename;
 	//defFilename = "../../Datasets/nuutila32.graph";
 	//defFilename = "../../Datasets/Semmle graphs/java/depends.graph";
-	defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/depends.graph";
+	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/depends.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/depends.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/successor.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/callgraph.graph";
@@ -81,7 +81,7 @@ int main(int argc, char* argv[]) {
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/categorypagelinks.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/pagelinks.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/child.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/samba/setflow.graph";
+	defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/samba/setflow.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/agrocyc.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/kegg.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/human.graph";
@@ -197,7 +197,7 @@ int main(int argc, char* argv[]) {
 			//cout << wstc.tcToString();
 			cout << "Number of components (vertices in condensation graph): " << tca->getNumberOfComponents() << endl;
 
-			if (!reflexitive){
+			/*if (!reflexitive){
 				cout << "Counting number of edges in condensed transitive closure... ";
 			} else {
 				cout << "Counting number of edges in REFLEXITIVE condensed transitive closure... ";
@@ -211,7 +211,7 @@ int main(int argc, char* argv[]) {
 				cout << "Counting number of edges in REFLEXITIVE transitive closure... ";
 			}
 			cout.flush();
-			cout << tca->countNumberOfEdgesInTC() << " edges" << endl;
+			cout << tca->countNumberOfEdgesInTC() << " edges" << endl;*/
 
 			cout << "Memory used by the " << tca->algorithmName() << " data structure: " << tca->memoryUsedByBitSets() << " bits" << endl;
 
