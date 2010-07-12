@@ -135,7 +135,7 @@ void BitSetTester::testOr(){
 
 void BitSetTester::testSetGet(){
 	for (int i = 1; i < 100; i++){
-		randomise(_bs1, _bs2, 10240);
+		randomise(_bs1, _bs2, 1024);
 		cout << "Done randomising pass " << i << endl;
 
 		compare(_bs1, _bs2);

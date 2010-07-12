@@ -18,12 +18,13 @@ template<unsigned int P> class PWAHBitSetIterator;
 template<unsigned int P>
 class PWAHBitSet : public BitSet {
 public:
-	PWAHBitSet(int indexIntervalSize = -1);
+	PWAHBitSet(int indexChunkSize = 128);
 	virtual ~PWAHBitSet(){}
 
 	void set(int bitIndex);
 	void set(int bitIndex, bool value);
 	void clear();
+	const bool get(int bitIndex, bool disableIndex);
 	const bool get(int bitIndex);
 	const unsigned int size();
 	static void multiOr(PWAHBitSet** bitSets, unsigned int numBitSets, PWAHBitSet* result);
@@ -44,7 +45,7 @@ private:
 	static const long _maxBlocksPerFill;
 	static const int _blockSize;
 	static const int _partitionOffsets[P];
-	static const bool _VERIFY = false;
+	static const bool _VERIFY = true;
 
 	unsigned short _lastUsedPartition; // partition index of last used partition within the vector of words
 	long _plainBlockIndex; // the block index of the plain block

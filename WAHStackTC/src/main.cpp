@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
 		//while (true) BitSetTester::testOr();
 
 		//BitSetTester::diff();
-		//bt.testSetGet();
+		bt.testSetGet();
 
 		//exit(1);
 
@@ -65,7 +65,7 @@ int main(int argc, char* argv[]) {
 	} catch (int e){
 		cerr << "Exception: " << e << endl;;
 	}
-	//exit(1);
+	exit(1);
 
 	string defFilename;
 	//defFilename = "../../Datasets/nuutila32.graph";

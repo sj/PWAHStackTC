@@ -461,6 +461,12 @@ template<> long PWAHBitSet<8>::fill_length(long bits, unsigned short partitionIn
 	bool thisIsOneFill = is_onefill(bits, partitionIndex);
 
 	if (_VERIFY){
+		// Check whether the partition actually contain a fill...
+		if (!is_fill(bits, partitionIndex)){
+			cerr << "PWAHBitSet<8>::fill_length called on literal partition? (partitionIndex=" << partitionIndex << ")" << endl;
+			cerr << toBitString(bits) << endl;
+			throw string("Can't determine fill length of literal word");
+		}
 		// Check whether the previous partition contains a fill of equal type
 		if (partitionIndex > 0){
 			if (is_fill(bits, partitionIndex - 1) && thisIsOneFill == is_onefill(bits, partitionIndex - 1)){
@@ -550,6 +556,19 @@ template<unsigned int P> void PWAHBitSet<P>::clear(){
 }
 
 template<unsigned int P> const bool PWAHBitSet<P>::get(int bitIndex){
+	return get(bitIndex, false);
+}
+
+/**
+ * \brief Determines whether the bit at the given index is set
+ *
+ * This operation takes O(n) times on PWAHBitSet instances without index,
+ * or O(k) time on indexes PWAHBitSet instances (k denotes the index granularity)
+ *
+ * \param bitIndex the index of the desired bit
+ * \parma disableIndex when true, prevents the 'get' method from using the search index
+ */
+template<unsigned int P> const bool PWAHBitSet<P>::get(int bitIndex, bool disableIndex){
 	const bool DEBUGGING = false;
 	const int blockIndex = bitIndex / _blockSize;
 	if (DEBUGGING) cout << "PWAHBitSet::get[" << bitIndex << "] -- bit in block " << blockIndex << endl;
@@ -563,68 +582,73 @@ template<unsigned int P> const bool PWAHBitSet<P>::get(int bitIndex){
 	} else {
 		// Requested bit is located somewhere in the compressed bits
 
-		if (_indexChunkSize > 0){
+		unsigned int initialWordIndex = 0;
+		unsigned int initialPartitionIndex = 0;
+		long currBlockIndex = -1;
+
+		if (_indexChunkSize > 0 && !disableIndex){
 			// Index available
-			// TODO
-			throw string("not yet implemented");
+			const int chunkIndex = bitIndex / _indexChunkSize;
+			initialWordIndex = _indexWord[chunkIndex];
+			initialPartitionIndex = _indexPartition[chunkIndex];
+			currBlockIndex = chunkIndex * _indexChunkSize - _indexPartitionOffset[chunkIndex];
+			if (DEBUGGING) cout << "PWAHBitSet::get[" << bitIndex << "] -- block " << blockIndex << " already compressed, using index: chunkIndex=" << chunkIndex << ", initialWordIndex=" << initialWordIndex << ", initialPartitionIndex=" << initialPartitionIndex << ", currBlockIndex=" << currBlockIndex << endl;
 		} else {
-			// No index available, scan compressed words
 			if (DEBUGGING) cout << "PWAHBitSet::get[" << bitIndex << "] -- block " << blockIndex << " already compressed, scanning..." << endl;
+		}
 
-			// Iterate over all words
-			long currWord;
-			long currBlockIndex = -1;
-			for (unsigned int w = 0; w < _words.size(); w++){
-				currWord = _words[w];
 
-				// Iterate over partitions in this word
-				for (unsigned int p = 0; p < P; p++){
-					if (w == 0 && p == 0) continue; // skip: word 0, partition 0 contains plain block
+		// Iterate over all words
+		long currWord;
 
-					if (is_onefill(currWord, p)){
-						// Partition represents a 1-fill
+		for (unsigned int w = initialWordIndex; w < _words.size(); w++){
+			currWord = _words[w];
 
-						// TODO: extended fills
-						currBlockIndex += fill_length(currWord, p);
-						if (DEBUGGING) cout << "PWAHBitSet::get[" << bitIndex << "] -- encountered 1-fill extending to block " << currBlockIndex << endl;
-						if (currBlockIndex >= blockIndex){
-							if (DEBUGGING) cout << "PWAHBitSet::get[" << bitIndex << "] -- bit is set" << endl;
-							return true;
-						}
-					} else if (is_zerofill(currWord, p)){
-						// Partition represents a 0-fill
+			// Iterate over partitions in this word
+			for (unsigned int p = initialPartitionIndex; p < P; p++){
+				if (w == 0 && p == 0) continue; // skip: word 0, partition 0 contains plain block
 
-						// TODO: extended fills
-						currBlockIndex += fill_length(currWord, p);
-						if (DEBUGGING) cout << "PWAHBitSet::get[" << bitIndex << "] -- encountered 0-fill extending to block " << currBlockIndex << endl;
-						if (currBlockIndex >= blockIndex){
-							if (DEBUGGING) cout << "PWAHBitSet::get[" << bitIndex << "] -- bit is not set" << endl;
-							return false;
-						}
-					} else {
-						// Partition contains a literal word, it's safe to skip one block
-						currBlockIndex++;
-						if (DEBUGGING) cout << "PWAHBitSet::get[" << bitIndex << "] -- encountered literal at block " << currBlockIndex << endl;
+				if (is_onefill(currWord, p)){
+					// Partition represents a 1-fill
 
-						if (currBlockIndex == blockIndex){
-							long partition = extract_partition(currWord, p);
-							if (DEBUGGING){
-								cout << "PWAHBitSet::get[" << bitIndex << "] -- bit resides within partition " << p << ": " << toBitString(partition) << " at position " << (bitIndex % _blockSize) << endl;
-								cout << "PWAHBitSet::get[" << bitIndex << "] -- bit is " << (L_GET_BIT(partition, bitIndex % _blockSize) ? "" : "not ") << "set" << endl;
-							}
-							return L_GET_BIT(partition, bitIndex % _blockSize);
-						}
+					currBlockIndex += fill_length(currWord, p);
+					if (DEBUGGING) cout << "PWAHBitSet::get[" << bitIndex << "] -- encountered 1-fill extending to block " << currBlockIndex << endl;
+					if (currBlockIndex >= blockIndex){
+						if (DEBUGGING) cout << "PWAHBitSet::get[" << bitIndex << "] -- bit is set" << endl;
+						return true;
 					}
+				} else if (is_zerofill(currWord, p)){
+					// Partition represents a 0-fill
 
-					if (currBlockIndex > blockIndex){
+					currBlockIndex += fill_length(currWord, p);
+					if (DEBUGGING) cout << "PWAHBitSet::get[" << bitIndex << "] -- encountered 0-fill extending to block " << currBlockIndex << endl;
+					if (currBlockIndex >= blockIndex){
 						if (DEBUGGING) cout << "PWAHBitSet::get[" << bitIndex << "] -- bit is not set" << endl;
 						return false;
 					}
+				} else {
+					// Partition contains a literal word, it's safe to skip one block
+					currBlockIndex++;
+					if (DEBUGGING) cout << "PWAHBitSet::get[" << bitIndex << "] -- encountered literal at block " << currBlockIndex << endl;
+
+					if (currBlockIndex == blockIndex){
+						long partition = extract_partition(currWord, p);
+						if (DEBUGGING){
+							cout << "PWAHBitSet::get[" << bitIndex << "] -- bit resides within partition " << p << ": " << toBitString(partition) << " at position " << (bitIndex % _blockSize) << endl;
+							cout << "PWAHBitSet::get[" << bitIndex << "] -- bit is " << (L_GET_BIT(partition, bitIndex % _blockSize) ? "" : "not ") << "set" << endl;
+						}
+						return L_GET_BIT(partition, bitIndex % _blockSize);
+					}
 				}
 
-				if (DEBUGGING) cout << "PWAHBitSet::get[" << bitIndex << "] -- haven't found bit yet, considering next word..." << endl;
-			} // end if: index or not
-		}
+				if (currBlockIndex > blockIndex){
+					if (DEBUGGING) cout << "PWAHBitSet::get[" << bitIndex << "] -- bit is not set" << endl;
+					return false;
+				}
+			}
+
+			if (DEBUGGING) cout << "PWAHBitSet::get[" << bitIndex << "] -- haven't found bit yet, considering next word..." << endl;
+		} // end if: index or not
 	}
 
 	throw string("unexpected state");
@@ -744,9 +768,9 @@ template<unsigned int P> void PWAHBitSet<P>::compressPlainPartition(){
  *
  */
 template<unsigned int P> void PWAHBitSet<P>::addFill(bool oneFill, int numBlocks, int firstBlockIndex){
-	const bool DEBUGGING = false;
+	const bool DEBUGGING = true;
 	if (_VERIFY) assert(numBlocks > 0);
-	if (DEBUGGING) cout << "PWAHBitSet::addFill(" << (oneFill ? "1" : "0") << ", " << numBlocks << " blocks)" << endl;
+	if (DEBUGGING) cout << "PWAHBitSet::addFill(" << (oneFill ? "1" : "0") << ", " << numBlocks << " blocks). firstBlockIndex=" << firstBlockIndex << endl;
 
 	// Check last compressed word
 	if (_words.size() > 0){
@@ -859,16 +883,20 @@ template<unsigned int P> void PWAHBitSet<P>::addFillPartition(bool oneFill, int 
  * \param firstBlockIndex the index of the first block which was added to the partition
  */
 template<unsigned int P> void PWAHBitSet<P>::updateIndex(int numBlocks, int firstBlockIndex){
+	const bool DEBUGGING = true;
 	if (_indexChunkSize <= 0) return;
+	if (DEBUGGING) cout << "PWAHBitSet<" << P << ">::updateIndex: numBlocks=" << numBlocks << ", firstBlockIndex=" << firstBlockIndex << ", indexChunkSize=" << _indexChunkSize << endl;
 
 	// One or more entries should be added to the search indices when one or more
 	// of the added blocks contain bits which are supposed to be indexed.
 	const int firstBitIndex = firstBlockIndex * _blockSize;
 	const int numBits = numBlocks * _blockSize;
-	const int lastBitIndex = firstBlockIndex + numBits - 1;
+	const int lastBitIndex = firstBitIndex + numBits - 1;
 
 	const int firstChunk = firstBitIndex / _indexChunkSize;
 	const int lastChunk = lastBitIndex / _indexChunkSize;
+
+	if (DEBUGGING) cout << "PWAHBitSet::updateIndex: firstChunk=" << firstChunk << ", lastChunk=" << lastChunk << endl;
 
 	if (firstBitIndex % _indexChunkSize == 0){
 		// Add entry for the first bit
@@ -908,15 +936,25 @@ template<unsigned int P> void PWAHBitSet<P>::updateIndex(int numBlocks, int firs
  * \param indexPartitionOffset the offset (in blocks) within the partition
  */
 template<unsigned int P> void PWAHBitSet<P>::setIndexEntry(int chunkIndex, int indexWord, int indexPartition, int indexPartitionOffset){
-	assert(_indexWord.size() >= chunkIndex);
+	const bool DEBUGGING = true;
+	if (DEBUGGING) cout << "PWAHBitSet::setIndexEntry -- setting index for chunk " << chunkIndex << endl;
+	if (_VERIFY){
+		if (_indexWord.size() < chunkIndex){
+			cerr << "Trying to add index for chunk " << chunkIndex << ", but chunk " << (chunkIndex -1) << " hasn't been indexed yet? Number of indexed chunks = " << _indexWord.size() << endl;
+			cerr << this->toString() << endl;
+			throw string("inconsistency");
+		}
+	}
 
 	if (_indexWord.size() > chunkIndex){
 		// This chunk has been indexed before, update entries
+		if (DEBUGGING) cout << "PWAHBitSet::setIndexEntry -- updating chunkIndex=" << chunkIndex << ", indexword=" << indexWord << ", indexPartition=" << indexPartitionOffset << ", indexPartitionOffset=" << indexPartitionOffset << endl;
 		_indexWord[chunkIndex] = indexWord;
 		_indexPartition[chunkIndex] = indexPartition;
 		_indexPartitionOffset[chunkIndex] = indexPartitionOffset;
 	} else {
 		// Chunk not seen before, add entries
+		if (DEBUGGING) cout << "PWAHBitSet::setIndexEntry -- adding chunkIndex=" << chunkIndex << ", indexword=" << indexWord << ", indexPartition=" << indexPartitionOffset << ", indexPartitionOffset=" << indexPartitionOffset << endl;
 		_indexWord.push_back(indexWord);
 		_indexPartition.push_back(indexPartition);
 		_indexPartitionOffset.push_back(indexPartitionOffset);
@@ -1018,7 +1056,7 @@ template<unsigned int P> void PWAHBitSet<P>::addPartition(bool isFill, long valu
  * \param result pointer to a WAHBitSet to store the result of the logical OR
  */
 template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet<P>** bitSets, unsigned int numBitSets, PWAHBitSet<P>* result){
-	const bool DEBUGGING = false;
+	const bool DEBUGGING = true;
 	if (DEBUGGING) cout << endl << endl << "Performing multi-way OR on " << numBitSets << " BitSets" << endl;
 	if (numBitSets == 0) return;
 	if (result->_words.size() == 0) result->_words.push_back(0L);
@@ -1234,7 +1272,7 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet<P>** bitSets, un
 			// First check whether there is a postponed 0-fill floating around
 			if (postponedZeroFillSize != 0){
 				if (DEBUGGING) cout << "Before adding 1-fill: processing postponed 0-fill of length " << postponedZeroFillSize << endl;
-				result->addFill(false, postponedZeroFillSize, rBlockIndex);
+				result->addFill(false, postponedZeroFillSize, rBlockIndex - postponedZeroFillSize);
 				postponedZeroFillSize = 0;
 			}
 
@@ -1251,11 +1289,11 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet<P>** bitSets, un
 			// First, check whether there is a postponed 0-fill or 1-fill floating around
 			if (postponedOneFillSize != 0){
 				if (DEBUGGING) cout << "Before adding literal: processing postponed 1-fill of length " << postponedOneFillSize << endl;
-				result->addFill(true, postponedOneFillSize, rBlockIndex);
+				result->addFill(true, postponedOneFillSize, rBlockIndex - postponedOneFillSize);
 				postponedOneFillSize = 0;
 			} else if (postponedZeroFillSize != 0){
 				if (DEBUGGING) cout << "Before adding literal: processing postponed 0-fill of length " << postponedZeroFillSize << endl;
-				result->addFill(false, postponedZeroFillSize, rBlockIndex);
+				result->addFill(false, postponedZeroFillSize, rBlockIndex - postponedZeroFillSize);
 				postponedZeroFillSize = 0;
 			}
 
@@ -1269,7 +1307,7 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet<P>** bitSets, un
 			// First, check whether there is a postponed 1-fill floating around
 			if (postponedOneFillSize != 0){
 				if (DEBUGGING) cout << "Before adding 0-fill: processing postponed 1-fill of length " << postponedOneFillSize << endl;
-				result->addFill(true, postponedOneFillSize, rBlockIndex);
+				result->addFill(true, postponedOneFillSize, rBlockIndex - postponedOneFillSize);
 				postponedOneFillSize = 0;
 			}
 
@@ -1283,11 +1321,11 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet<P>** bitSets, un
 			// Before stopping, check whether there is a postponed 0-fill or 1-fill floating around
 			if (postponedOneFillSize != 0){
 				if (DEBUGGING) cout << "Processing postponed 1-fill of length " << postponedOneFillSize << endl;
-				result->addFill(true, postponedOneFillSize, rBlockIndex);
+				result->addFill(true, postponedOneFillSize, rBlockIndex - postponedOneFillSize);
 				postponedOneFillSize = 0;
 			} else if (postponedZeroFillSize != 0){
 				if (DEBUGGING) cout << "Processing postponed 0-fill of length " << postponedZeroFillSize << endl;
-				result->addFill(false, postponedZeroFillSize, rBlockIndex);
+				result->addFill(false, postponedZeroFillSize, rBlockIndex - postponedZeroFillSize);
 				postponedZeroFillSize = 0;
 			}
 
@@ -1626,15 +1664,15 @@ template<> void PWAHBitSet<4>::addExtendedFillPartitions(bool oneFill, int numBl
 template<> void PWAHBitSet<8>::addExtendedFillPartitions(bool oneFill, int numBlocks, int firstBlockIndex){
 	// Determine the number of partitions required to store this extended fill
 	assert(numBlocks > _maxBlocksPerFill);
-	const bool DEBUGGING = false;
+	const bool DEBUGGING = true;
 	const unsigned short numPartitions = blocks_num_partitions(numBlocks);
 	const unsigned short nextAvailPartition = (_lastUsedPartition + 1) % 8;
 	const unsigned short numAvailablePartitions = 8 - nextAvailPartition;
 
-	if (DEBUGGING) cout << "PWAHBitSet::addExtendedFill -- adding extended " << (oneFill ? "1" : "0") << "-fill of " << numBlocks << ", covering " << numPartitions << " partitions, starting at partition " << nextAvailPartition << endl;
+	if (DEBUGGING) cout << "PWAHBitSet::addExtendedFillPartitions -- adding extended " << (oneFill ? "1" : "0") << "-fill of " << numBlocks << " blocks (firstBlockIndex=" << firstBlockIndex << "), covering " << numPartitions << " partitions, starting at partition " << nextAvailPartition << endl;
 	if (numAvailablePartitions < numPartitions){
 		// Not enough partitions available in this word
-		if (DEBUGGING) cout << "PWAHBitSet::addExtendedFill -- only " << numAvailablePartitions << " partitions available in current word, splitting fill..." << endl;
+		if (DEBUGGING) cout << "PWAHBitSet::addExtendedFillPartitions -- only " << numAvailablePartitions << " partitions available in current word, splitting fill..." << endl;
 
 		// How many blocks can be stored in the available partitions?
 		int numBlocksInFirstWord = pow(2, numAvailablePartitions * 6) - 1;
@@ -1655,7 +1693,7 @@ template<> void PWAHBitSet<8>::addExtendedFillPartitions(bool oneFill, int numBl
 		}
 
 		if (DEBUGGING){
-			cout << "PWAHBitSet::addExtendedFill -- done adding split extended fill, resulting words: " << endl;
+			cout << "PWAHBitSet::addExtendedFillPartitions -- done adding split extended fill, resulting words: " << endl;
 			cout << toBitString(_words[_words.size() - 2]) << endl;
 			cout << toBitString(_words[_words.size() - 1]) << endl;
 		}
@@ -1668,18 +1706,21 @@ template<> void PWAHBitSet<8>::addExtendedFillPartitions(bool oneFill, int numBl
 		for (int i = 0; i < numPartitions; i++){
 			currBits = (numBlocks >> i * 6) & mask6;
 			if (i == 0){
-				addFillPartition(oneFill, currBits, firstBlockIndex);
+				addFillPartition(oneFill, currBits, -1);
+				updateIndex(numBlocks, firstBlockIndex);
 			} else {
 				addFillPartition(oneFill, currBits, -1);
 			}
 		}
 
+		if (_VERIFY){
+			assert(fill_length(_words.back(), nextAvailPartition) == numBlocks);
+		}
+
 		if (DEBUGGING) cout << "PWAHBitSet::addExtendedFill -- done adding extended fill, result: " << toBitString(_words.back()) << endl;
 	}
 
-	if (_VERIFY){
-		assert(fill_length(_words.back(), nextAvailPartition) == numBlocks);
-	}
+
 }
 
 template<> string PWAHBitSet<1>::bsImplementationName(){
