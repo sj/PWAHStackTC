@@ -43,7 +43,8 @@ int main(int argc, char* argv[]) {
 		//while (true) BitSetTester::testOr();
 
 		//BitSetTester::diff();
-		bt.testSetGet();
+		//BitSetTester::testSetGetIndex();
+		//bt.testSetGet();
 
 		//exit(1);
 
@@ -65,7 +66,7 @@ int main(int argc, char* argv[]) {
 	} catch (int e){
 		cerr << "Exception: " << e << endl;;
 	}
-	exit(1);
+	//exit(1);
 
 	string defFilename;
 	//defFilename = "../../Datasets/nuutila32.graph";
@@ -81,19 +82,20 @@ int main(int argc, char* argv[]) {
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/categorypagelinks.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/pagelinks.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/child.graph";
-	defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/samba/setflow.graph";
+	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/samba/setflow.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/agrocyc.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/kegg.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/human.graph";
+	defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/xmark.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Pajek/patents.graph";
 
 	typedef map<string,string> mapType;
 	map<string, string> cmdLineArgs;
 	cmdLineArgs["num-runs"] = "1";
 	cmdLineArgs["filename"] = defFilename;
-	cmdLineArgs["reflexitive"] = "unset";
+	cmdLineArgs["reflexive"] = "unset";
 	cmdLineArgs["run-validator"] = "unset";
-	cmdLineArgs["bitset-implementation"] = "pwah-8";
+	cmdLineArgs["bitset-implementation"] = "pwah-4";
 
 	// By default: use multi-OR when a component has out-degree of at least 5
 	cmdLineArgs["min-multi-or"] = "0";
@@ -127,7 +129,7 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	const bool reflexitive = (cmdLineArgs["reflexitive"] != "unset");
+	const bool reflexitive = (cmdLineArgs["reflexive"] != "unset");
 	const int minMultiOR = atoi(cmdLineArgs["min-multi-or"].c_str());
 	const string filename = cmdLineArgs["filename"];
 	const int numRuns = atoi(cmdLineArgs["num-runs"].c_str());

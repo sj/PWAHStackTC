@@ -194,7 +194,7 @@ template<class B> void WAHStackTC<B>::dfsVisit(unsigned int vertexIndex){
 			if (!_storeComponentVertices && !_reflexitive){
 				explicitlyStoreSelfLoop = true;
 			} // else: no need to explicitly store self-loop
-		}
+		} // else: no self loop
 
 		B* successors = NULL;
 		unsigned int numAdjacentComponents = _cStack->size() - _savedCStackSize[vertexIndex];
@@ -218,8 +218,8 @@ template<class B> void WAHStackTC<B>::dfsVisit(unsigned int vertexIndex){
 			if (!use_multiway_or){
 				if (explicitlyStoreSelfLoop){
 					// When using regular OR, a self loop should be recorded by pushing the
-					// new component index on the stack with adjacent components. In case of multi-way
-					// or, the self loop will
+					// new component index on the stack with adjacent components. In case of
+					// multi-way or, the self loop will be added later on in the process
 					_cStack->push(newComponentIndex);
 					numAdjacentComponents++;
 				}

@@ -133,9 +133,27 @@ void BitSetTester::testOr(){
 
 }
 
+void BitSetTester::testSetGetIndex(){
+	PWAHBitSet<4>* bs = new PWAHBitSet<4>();
+	for (int i = 10; i < 18; i++){
+		bs->set(i * 10);
+	}
+
+	for (int i = 10; i < 18; i++){
+		if (!bs->get(i * 10)){
+			cout.flush();
+			cerr << "Bit " << (i * 10) << " not set?" << endl;
+			cerr << bs->toString() << endl;
+			throw string("bleh");
+		}
+	}
+
+	delete bs;
+}
+
 void BitSetTester::testSetGet(){
 	for (int i = 1; i < 100; i++){
-		randomise(_bs1, _bs2, 1024);
+		randomise(_bs1, _bs2, 102400);
 		cout << "Done randomising pass " << i << endl;
 
 		compare(_bs1, _bs2);
