@@ -190,6 +190,28 @@ template<> inline long PWAHBitSet<8>::clear_partition(long word, unsigned short 
  * \brief Determines the number of partitions required to store a fill of a certain
  * number of blocks
  */
+template<> short PWAHBitSet<8>::blocks_num_partitions(int numBlocks){
+	if (numBlocks > 1073741823) return 6; 	// 2^(6*5) - 1
+	else if (numBlocks > 16777215) return 5;// 2^(6*4) - 1
+	else if (numBlocks > 262143) return 4; 	// 2^(6*3) - 1
+	else if (numBlocks > 4095) return 3; 	// 2^(6*2) - 1
+	else if (numBlocks > 63) return 2; 		// 2^6 - 1
+	else return 1;
+}
+template<> short PWAHBitSet<4>::blocks_num_partitions(int numBlocks){
+	if (numBlocks > 268435455) return 3; 	// 2^(14*2) - 1
+	else if (numBlocks > 16383) return 2;	// 2^14 - 1
+	else return 1;
+}
+template<> short PWAHBitSet<2>::blocks_num_partitions(int numBlocks){
+	return 1;
+}
+template<> short PWAHBitSet<1>::blocks_num_partitions(int numBlocks){
+	return 1;
+}
+
+/**
+Generic implementation stated below works just fine, but is slower...
 template<unsigned int P> inline short PWAHBitSet<P>::blocks_num_partitions(int numBlocks){
 	// number of bits available for expressing fill length
 	const short flBits = _blockSize - 1;
@@ -200,12 +222,13 @@ template<unsigned int P> inline short PWAHBitSet<P>::blocks_num_partitions(int n
 	// Compute number of partitions required to store the number of blocks, without
 	// having to call ceil(...)
 	return (numBits + flBits - 1) / flBits;
-}
+}**/
+
+
 
 
 /**
  * \brief Checks whether the partition with index 'partitionIndex' within 'bits' consists of a 0-fill
- * TODO: check can be performed using a single instruction...
  */
 template<unsigned int P> bool PWAHBitSet<P>::is_zerofill(long bits, unsigned short partitionIndex){
 	return is_fill(bits, partitionIndex) && !is_onefill(bits, partitionIndex);
@@ -333,67 +356,14 @@ template<> long PWAHBitSet<2>::fill_length(long bits, unsigned short partitionIn
 	// of the (indices 63 & 62) of the 64-bit word tell us whether the partitions contain
 	// literal data or represent fills. The most significant bits of each partition (bit index
 	// 61 for partition 1, bit index 30 for partition 0) denote the type of the fill.
-	// In case of an extended fill (see extensive description above), both partitions need to
-	// be glued together.
+	// NOTE: PWAHBitSet<2> does not support extended fills. A fill can contain at most
+	// 2^30 - 1 = 1,073,741,823 blocks, representing 33,285,996,513 bits.
 	const bool DEBUGGING = false;
+	if (_VERIFY) assert(is_fill(bits, partitionIndex));
 	if (DEBUGGING) cout << "PWAHBitSet::fill_length -- partition " << partitionIndex << " of " << toBitString(bits) << endl;
 
-	if (partitionIndex == 1){
-		if (_VERIFY){
-			// Check whether the partition at index 0 contains an identical fill. In that case,
-			// the partitions make a extended fill and an exception should be thrown. The fill
-			// length of partition 1 is considered undefined.
-
-			if (L_GET_BIT(bits, 63) && L_GET_BIT(bits, 62)){
-				// Both partitions represent a fill
-
-				if (
-						(L_GET_BIT(bits, 61) != 0 && L_GET_BIT(bits, 30) != 0) ||
-						(L_GET_BIT(bits, 61) == 0 && L_GET_BIT(bits, 30) == 0)){
-					// Both partitions represent the _same type_ of fill
-					throw string("Fill length of fill in partition is undefined");
-				}
-			}
-		}
-
-		// No need to check for extended fills, since this is the last partition of this word
-		// and extended fills do not span multiple words.
-		// Bit 61 denotes the type of fill, bits 31-60 denote the length of the fill. After clearing
-		// the other bits, shifting the bits 31-60 to the right (31 positions) will yield the length
-		// of the fill.
-		if (DEBUGGING) cout << "PWAHBitSet::fill_length -- result: " << ((bits & 0b0001111111111111111111111111111110000000000000000000000000000000) >> 31) << endl;
-		return ((bits & 0b0001111111111111111111111111111110000000000000000000000000000000) >> 31);
-	} else if (partitionIndex == 0){
-		// Check whether the fill spans both partitions 0 and 1
-		const long extOneFill = 0b1110000000000000000000000000000001000000000000000000000000000000;
-		const long extZeroFill = 0b1100000000000000000000000000000000000000000000000000000000000000;
-		const long andRes = (bits & extOneFill);
-
-		if (andRes == extZeroFill || andRes == extOneFill){
-			// Extended fill! Take bits 60-31 and 29-0, concatenate => length of the fill emerges
-			if (DEBUGGING) cout << "PWAHBitSet::fill_length -- encountered an extended 1-fill!" << endl;
-
-			// Bits from partition 0 denoting length: bits 0-29
-			long part0 = (bits & 0b0000000000000000000000000000000000111111111111111111111111111111);
-
-			// Bits from partition 1 denoting length: bits 31-60
-			long part1 = (bits & 0b0001111111111111111111111111111110000000000000000000000000000000);
-
-
-			// Shift the bits from partition 1 one position to the right, and return the logical OR
-			// with the bits from partition0.
-			if (DEBUGGING) cout << "PWAHBitSet::fill_length -- result: " << ((part1 >> 1) | part0) << endl;
-			return ((part1 >> 1) | part0);
-		} else {
-			// Regular fill, just check the length of the fill in partition 0. Partition 0 resides
-			// in the least significant bits of the 64-bit word. The type of the fill is stored
-			// in bit 30, bits 0-29 are used to indicate the length of the fill.
-			// Simply clearing all other bits will yield the requested length.
-			if (DEBUGGING) cout << "PWAHBitSet::fill_length -- result: " << (bits & 0b0000000000000000000000000000000000111111111111111111111111111111) << endl;
-			return (bits & 0b0000000000000000000000000000000000111111111111111111111111111111);
-		}
-	}
-	throw string("Invalid partition index");
+	if (partitionIndex == 0) return (bits & 0b0000000000000000000000000000000000111111111111111111111111111111);
+	else return ((bits & 0b0001111111111111111111111111111110000000000000000000000000000000) >> 31);
 }
 template<> long PWAHBitSet<4>::fill_length(long bits, unsigned short partitionIndex){
 	/**
@@ -566,10 +536,10 @@ template<unsigned int P> const bool PWAHBitSet<P>::get(int bitIndex){
  * or O(k) time on indexes PWAHBitSet instances (k denotes the index granularity)
  *
  * \param bitIndex the index of the desired bit
- * \parma disableIndex when true, prevents the 'get' method from using the search index
+ * \param disableIndex when true, prevents the 'get' method from using the search index
  */
 template<unsigned int P> const bool PWAHBitSet<P>::get(int bitIndex, bool disableIndex){
-	const bool DEBUGGING = true;
+	const bool DEBUGGING = false;
 	const int blockIndex = bitIndex / _blockSize;
 	if (DEBUGGING) cout << "PWAHBitSet::get[" << bitIndex << "] -- bit in block " << blockIndex << endl;
 

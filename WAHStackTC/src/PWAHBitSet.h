@@ -64,7 +64,7 @@ private:
 	inline static bool is_literal_zerofill(long bits, unsigned short partitionIndex);
 	inline static long extract_partition(long bits, unsigned short partitionIndex);
 	inline static long clear_partition(long bits, unsigned short partitionIndex);
-	inline static short blocks_num_partitions(int numBlocks);
+	static short blocks_num_partitions(int numBlocks);
 
 	void compressPlainPartition();
 	void popLastPartition();
