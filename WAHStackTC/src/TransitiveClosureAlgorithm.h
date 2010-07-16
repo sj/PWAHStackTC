@@ -8,6 +8,8 @@
 #ifndef TRANSITIVECLOSUREALGORITHM_H_
 #define TRANSITIVECLOSUREALGORITHM_H_
 #include <string>
+#include <vector>
+#include "BitSet.h"
 using namespace std;
 
 class TransitiveClosureAlgorithm {
@@ -26,6 +28,7 @@ public:
 	virtual long memoryUsedByBitSets() = 0;
 	virtual void reportStatistics() = 0;
 	virtual string algorithmName() = 0;
+	virtual long memoryUsedByIntervalLists() = 0;
 };
 
 #endif /* TRANSITIVECLOSUREALGORITHM_H_ */

@@ -62,6 +62,7 @@ public:
 	long memoryUsedByBitSets();
 	void reportStatistics();
 	string algorithmName();
+	long memoryUsedByIntervalLists();
 
 	friend class BitSetTester;
 };

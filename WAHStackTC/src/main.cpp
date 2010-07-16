@@ -14,6 +14,7 @@
 #include "WAHBitSetTester.h"
 #include "PerformanceTimer.h"
 #include "TransitiveClosureAlgorithm.h"
+#include "IntervalBitSet.h"
 using namespace std;
 
 void runValidatorWhenRequested(int argc, char* argv[]){
@@ -84,9 +85,9 @@ int main(int argc, char* argv[]) {
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/child.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/samba/setflow.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/agrocyc.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/kegg.graph";
+	defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/kegg.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/human.graph";
-	defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/xmark.graph";
+	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/xmark.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Pajek/patents.graph";
 
 	typedef map<string,string> mapType;
@@ -95,7 +96,7 @@ int main(int argc, char* argv[]) {
 	cmdLineArgs["filename"] = defFilename;
 	cmdLineArgs["reflexive"] = "unset";
 	cmdLineArgs["run-validator"] = "unset";
-	cmdLineArgs["bitset-implementation"] = "pwah-4";
+	cmdLineArgs["bitset-implementation"] = "pwah-8";
 
 	// By default: use multi-OR when a component has out-degree of at least 5
 	cmdLineArgs["min-multi-or"] = "0";
@@ -216,6 +217,11 @@ int main(int argc, char* argv[]) {
 			cout << tca->countNumberOfEdgesInTC() << " edges" << endl;*/
 
 			cout << "Memory used by the " << tca->algorithmName() << " data structure: " << tca->memoryUsedByBitSets() << " bits" << endl;
+
+			// Check how much memory an interval list would have used
+			cout << "Memory used by equivalent interval lists: ";
+			cout.flush();
+			cout << tca->memoryUsedByIntervalLists() << " bits" << endl;
 
 			if (RAND_MAX < graph.getNumberOfVertices()){
 				cerr << "Warning! RAND_MAX=" << RAND_MAX << ", whilst number of vertices = " << graph.getNumberOfVertices() << ". Not every vertex can possibly be reached." << endl;

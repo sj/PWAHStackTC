@@ -19,6 +19,7 @@
 #include "PWAHBitSet.h"
 #include <stdexcept>
 #include "BitSetTester.h"
+#include "IntervalBitSet.h"
 using namespace std;
 
 template<class B> WAHStackTC<B>::WAHStackTC(Graph& graph) {
@@ -602,6 +603,19 @@ template<class B> void WAHStackTC<B>::writeToChacoFile(string filename){
 
 template<class B> int WAHStackTC<B>::getNumberOfComponents(){
 	return _componentSizes.size();
+}
+
+template<class B> long WAHStackTC<B>::memoryUsedByIntervalLists(){
+	long res = 0;
+	for (int i = 0; i < _componentSuccessors.size(); i++){
+		if (_componentSuccessors[i] != NULL){
+			IntervalBitSet* ibs = new IntervalBitSet();
+			IntervalBitSet::copy(_componentSuccessors[i], ibs);
+			res += ibs->memoryUsage();
+			delete ibs;
+		}
+	}
+	return res;
 }
 
 /**
