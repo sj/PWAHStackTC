@@ -18,6 +18,7 @@
 #include "PWAHBitSet.h"
 #include "BitSet.h"
 #include "TransitiveClosureAlgorithm.h"
+#include "IntervalBitSet.h"
 using namespace std;
 
 template <class B>
@@ -64,7 +65,11 @@ public:
 	string algorithmName();
 	long memoryUsedByIntervalLists();
 
-	friend class BitSetTester;
+	friend class BitSetTester<IntervalBitSet>;
+	friend class BitSetTester<WAHBitSet>;
+	friend class BitSetTester<PWAHBitSet<2> >;
+	friend class BitSetTester<PWAHBitSet<4> >;
+	friend class BitSetTester<PWAHBitSet<8> >;
 };
 
 #endif /* WAHSTACKTC_H_ */

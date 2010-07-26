@@ -12,6 +12,7 @@
 #include "BitSet.h"
 #include "DynamicBitSet.h"
 #include "WAHBitSetIterator.h"
+#include "BitSetTester.h"
 using namespace std;
 
 class WAHBitSet : public BitSet {
@@ -82,7 +83,7 @@ public:
 
 	friend class WAHBitSetIterator;
 	friend class WAHBitSetTester;
-	friend class BitSetTester;
+	friend class BitSetTester<WAHBitSet>;
 };
 
 #endif /* WAHBITSET_H_ */

@@ -16,15 +16,16 @@
 #include "Graph.h"
 #include "WAHStackTC.h"
 #include <math.h>
+#include "IntervalBitSet.h"
 using namespace std;
 
-BitSetTester::BitSetTester(BitSet* bs1, BitSet* bs2) {
+template<class B> BitSetTester<B>::BitSetTester(BitSet* bs1, BitSet* bs2) {
 	srand ( time(NULL) );
 	_bs1 = bs1;
 	_bs2 = bs2;
 }
 
-BitSetTester::~BitSetTester() {
+template<class B> BitSetTester<B>::~BitSetTester() {
 	// TODO Auto-generated destructor stub
 }
 
@@ -34,11 +35,11 @@ BitSetTester::~BitSetTester() {
  * Note that this function uses modulo calculation to generate the random number, which will
  * result in a very slight bias.
  */
-float BitSetTester::rand_float(){
+template<class B> float BitSetTester<B>::rand_float(){
 	return (rand() % 1000) / 1000.0;
 }
 
-void BitSetTester::diff(){
+template<class B> void BitSetTester<B>::diff(){
 	Graph g = Graph::parseChacoFile("/home/bas/afstuderen/Datasets/Semmle graphs/c++/depends.graph");
 	WAHStackTC<PWAHBitSet<4> >* wstc_pwah4 = new WAHStackTC<PWAHBitSet<4> >(g);
 	WAHStackTC<WAHBitSet>* wstc_wah = new WAHStackTC<WAHBitSet>(g);
@@ -76,64 +77,48 @@ void BitSetTester::diff(){
 	delete wstc_wah;
 }
 
-void BitSetTester::testOr(){
-	PWAHBitSet<4>* pwbs1 = new PWAHBitSet<4>();
-	PWAHBitSet<4>* pwbs2 = new PWAHBitSet<4>();
-	PWAHBitSet<4>* pwbs3 = new PWAHBitSet<4>();
-	PWAHBitSet<4>* pwbs_res = new PWAHBitSet<4>();
-	WAHBitSet *dbs1, *dbs2, *dbs3, *dbs_tempres, *dbs_res;
+template<class B> void BitSetTester<B>::testOr(int numBitSets){
+	B* b_result = new B();
+	cout << "BitSetTester::testOr -- testing multi OR on " << numBitSets << " bitsets of type " << b_result->bsImplementationName() << endl;
+	B** b_bitsets = new B*[numBitSets];
+	WAHBitSet** wah_bitsets = new WAHBitSet*[numBitSets];
+	WAHBitSet* wah_result = new WAHBitSet();
 
-	dbs1 = new WAHBitSet();
-	dbs2 = new WAHBitSet();
-	dbs3 = new WAHBitSet();
-	dbs_res = new WAHBitSet();
+	for (unsigned int i = 0; i < numBitSets; i++){
+		cout << "BitSetTester::testOr -- randomising BitSets " << i << "... ";
+		cout.flush();
 
-	randomise(pwbs1, dbs1, 256);
-	if (pwbs1->countNumberOfBlocks() != pwbs1->_plainBlockIndex + 1){
-		cerr << "BitSet 1 contains " << pwbs1->countNumberOfBlocks() << " blocks, but plainBlockIndex=" << pwbs1->_plainBlockIndex << endl;
-		cerr << pwbs1->toString() << endl;
-		throw string("inconsistency");
+		wah_bitsets[i] = new WAHBitSet();
+		b_bitsets[i] = new B();
+		randomise(b_bitsets[i], wah_bitsets[i], 15000);
+
+		compare(b_bitsets[i], wah_bitsets[i]);
+		cout << "done" << endl;
 	}
-	randomise(pwbs2, dbs2, 128);
-	randomise(pwbs3, dbs3, 160);
 
-	PWAHBitSet<4>** pw_bitsets = new PWAHBitSet<4>*[3];
-	pw_bitsets[0] = pwbs1;
-	pw_bitsets[1] = pwbs2;
-	pw_bitsets[2] = pwbs3;
-
-	WAHBitSet** w_bitsets = new WAHBitSet*[3];
-	w_bitsets[0] = dbs1;
-	w_bitsets[1] = dbs2;
-	w_bitsets[2] = dbs3;
 
 	cout << "Input to MultiOR:" << endl;
-	cout << printBitSets(pwbs1, pwbs2, pwbs3);
+	for (int i = 0; i < numBitSets; i++){
+		cout << "BitSet " << i << ": ";
+		cout << b_bitsets[i]->toString() << endl;
+	}
 	cout.flush();
 
-	PWAHBitSet<4>::multiOr(pw_bitsets, 3, pwbs_res);
-	WAHBitSet::multiOr(w_bitsets, 3, dbs_res);
-	//dbs_tempres = WAHBitSet::constructByOr(dbs1, dbs2);
-	//dbs_res = WAHBitSet::constructByOr(dbs_tempres, dbs3);
+	B::multiOr(b_bitsets, numBitSets, b_result);
+	WAHBitSet::multiOr(wah_bitsets, numBitSets, wah_result);
 
 	//cout << "Results of OR operation:" << endl;
 	//cout << printBitSets(pwbs_res, dbs_res);
 
-	compare(pwbs_res, dbs_res);
+	compare(b_result, wah_result);
 
-	delete pwbs1;
-	delete pwbs2;
-	delete pwbs3;
-	delete pwbs_res;
-
-	delete dbs1;
-	delete dbs2;
-	delete dbs3;
-	delete dbs_res;
-
+	delete[] b_bitsets;
+	delete[] wah_bitsets;
+	delete wah_result;
+	delete b_result;
 }
 
-void BitSetTester::testSetGetIndex(){
+template<class B> void BitSetTester<B>::testSetGetIndex(){
 	PWAHBitSet<4>* bs = new PWAHBitSet<4>();
 	for (int i = 10; i < 18; i++){
 		bs->set(i * 10);
@@ -151,7 +136,7 @@ void BitSetTester::testSetGetIndex(){
 	delete bs;
 }
 
-void BitSetTester::testSetGet(){
+template<class B> void BitSetTester<B>::testSetGet(){
 	for (int i = 1; i < 100; i++){
 		randomise(_bs1, _bs2, 102400);
 		cout << "Done randomising pass " << i << endl;
@@ -164,16 +149,17 @@ void BitSetTester::testSetGet(){
 	cout << "Done!" << endl;
 }
 
-void BitSetTester::testIterator(BitSet* bitset, bool randomiseBitset){
+template<class B> void BitSetTester<B>::testIterator(BitSet* bitset, bool randomiseBitset){
 	cout << "BitSetTester::testIterator() -- starting..." << endl;
 	if (randomiseBitset) randomise(bitset, 15000);
+	cout << bitset->toString() << endl;
 
 	BitSetIterator* it = bitset->iterator();
 	bool value;
 	for (unsigned int i = 0; i < bitset->size(); i++){
 		value = bitset->get(i);
 		if (value){
-			//cout << "BitSetTester::testIterator() -- bit " << i << " should be set..." << endl;
+			cout << "BitSetTester::testIterator() -- bit " << i << " should be set..." << endl;
 			if (it->next() != i){
 				cout.flush();
 				cerr << "BitSet causing problems:" << endl;
@@ -196,13 +182,16 @@ void BitSetTester::testIterator(BitSet* bitset, bool randomiseBitset){
 	cout << "BitSetTester::testIterator() -- done" << endl;
 }
 
-void BitSetTester::compare(BitSet* bitset1, BitSet* bitset2){
+template<class B> void BitSetTester<B>::compare(BitSet* bitset1, BitSet* bitset2){
 	if (bitset1->size() != bitset2->size()){
 		cerr << printBitSets(bitset1, bitset2) << endl;
 		stringstream str;
 		str << "Sizes don't match: ";
 		str << "bitset1->size() = " << bitset1->size() << ", ";
 		str << "bitset2->size() = " << bitset2->size() << endl;
+		cout.flush();
+		cerr << str.str();
+		cerr.flush();
 		throw str.str();
 	}
 	cout << "Comparing BitSets of size " << bitset1->size() << endl;
@@ -231,7 +220,7 @@ void BitSetTester::compare(BitSet* bitset1, BitSet* bitset2){
 	cout << "Done comparing!" << endl;
 }
 
-void BitSetTester::testLongFill(BitSet* bitset){
+template<class B> void BitSetTester<B>::testLongFill(BitSet* bitset){
 	bitset->clear();
 
 	bitset->set(268435456);
@@ -247,8 +236,9 @@ void BitSetTester::testLongFill(BitSet* bitset){
  *
  * The first BitSet is used as 'base' for defining block sizes. The second BitSet can be NULL
  */
-void BitSetTester::randomise(BitSet* bitset1, BitSet* bitset2, int maxBits){
-	const bool DEBUGGING = false;
+template<class B> void BitSetTester<B>::randomise(BitSet* bitset1, BitSet* bitset2, int maxBits){
+	const bool DEBUGGING = true;
+	srand ( time(NULL) );
 
 	bitset1->clear();
 	if (bitset2 != NULL) bitset2->clear();
@@ -261,27 +251,28 @@ void BitSetTester::randomise(BitSet* bitset1, BitSet* bitset2, int maxBits){
 
 	// Fill the bit set with a random number of bits, somewhere between 0 and a big number
 	//int numBlocks = (rand() % 10000000) / 31;
+	int blockSize = bitset1->blocksize() > 0 ? bitset1->blocksize() : 64;
 	int numBits = rand() % maxBits;
-	int numBlocks = numBits / bitset1->blocksize() + 1;
+	int numBlocks = numBits / blockSize + 1;
 	int offset;
 
 	if (DEBUGGING) cout << "BitSetTester::randomise -- Setting " << numBlocks << " blocks consisting of " << bitset1->blocksize() << " bits each." << endl;
 	for (int block = 0; block < numBlocks; block++){
-		offset = block * bitset1->blocksize();
+		offset = block * blockSize;
 
 		if (rand_float() <= fillProb){
 			// Construct a block in such a way that a fill will occur
 			bool onefill = rand_float() <= oneFillProb;
 			if (DEBUGGING) cout << "BitSetTester::randomise -- Constructing block " << block << ": will be stored as " << (onefill ? "1" : "0") << "-fill word" << endl;
 
-			for (int bit = offset; bit < offset + bitset1->blocksize(); bit++){
+			for (int bit = offset; bit < offset + blockSize; bit++){
 				bitset1->set(bit, onefill);
 				if (bitset2 != NULL) bitset2->set(bit, onefill);
 			}
 		} else {
 			// Construct a block with random bits
 			if (DEBUGGING) cout << "BitSetTester::randomise -- Constructing block " << block << ": will be stored as literal word" << endl;
-			for (int bit = offset; bit < offset + bitset1->blocksize(); bit++){
+			for (int bit = offset; bit < offset + blockSize; bit++){
 				bool value = rand_float() < 0.5;
 				bitset1->set(bit, value);
 				if (bitset2 != NULL) bitset2->set(bit, value);
@@ -289,26 +280,45 @@ void BitSetTester::randomise(BitSet* bitset1, BitSet* bitset2, int maxBits){
 		}
 	}
 
-	if (DEBUGGING) cout << "BitSetTester::randomise -- done randomising!" << endl;
+	if (DEBUGGING){
+		cout << "BitSetTester::randomise -- done randomising!" << endl;
+		cout << "BitSetTester::randomise -- result: " << endl;
+		cout << bitset1->toString() << endl;
+	}
 }
 
-string BitSetTester::printBitSets(BitSet* bitset1, BitSet* bitset2){
-	return printBitSets(bitset1, bitset2, NULL);
+template<class B> string BitSetTester<B>::printBitSets(BitSet* bitset1, BitSet* bitset2){
+	BitSet** bitsets = new BitSet*[2];
+	bitsets[0] = bitset1;
+	bitsets[1] = bitset2;
+	return printBitSets(bitsets, 2);
 }
 
-string BitSetTester::printBitSets(BitSet* bitset1, BitSet* bitset2, BitSet* bitset3){
+template<class B> string BitSetTester<B>::printBitSets(BitSet* bitset1, BitSet* bitset2, BitSet* bitset3){
+	BitSet** bitsets = new BitSet*[3];
+	bitsets[0] = bitset1;
+	bitsets[1] = bitset2;
+	bitsets[1] = bitset3;
+	return printBitSets(bitsets, 3);
+}
+
+template<class B> string BitSetTester<B>::printBitSets(BitSet** bitSets, int numBitSets){
 	stringstream res;
-	res << "BitSet 1:" << endl;
-	res << bitset1->toString() << endl << endl;
-	res << "BitSet 2:" << endl;
-	res << bitset2->toString() << endl;
-	if (bitset3 != NULL){
-		res << "BitSet 3:" << endl;
-		res << bitset3->toString() << endl;
+
+	for (int i = 0; i < numBitSets; i++){
+		res << "BitSet " << i << endl;
+		res << bitSets[i]->toString() << endl << endl;
 	}
 	return res.str();
 }
 
-void BitSetTester::randomise(BitSet* bitset1, int maxBits){
+template<class B> void BitSetTester<B>::randomise(BitSet* bitset1, int maxBits){
 	randomise(bitset1, NULL, maxBits);
 }
+
+
+template class BitSetTester<IntervalBitSet>;
+template class BitSetTester<WAHBitSet>;
+template class BitSetTester<PWAHBitSet<2> >;
+template class BitSetTester<PWAHBitSet<4> >;
+template class BitSetTester<PWAHBitSet<8> >;

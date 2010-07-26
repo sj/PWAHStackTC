@@ -31,7 +31,7 @@ void WAHBitSetTester::testIterator(){
 	while (true){
 		WAHBitSet* wbs;
 		int maxBits = 5000;
-		BitSetTester::randomise(wbs, maxBits);
+		BitSetTester<WAHBitSet>::randomise(wbs, maxBits);
 
 		cout << wbs->toString() << endl;
 		WAHBitSetIterator iter(wbs);
@@ -72,7 +72,7 @@ void WAHBitSetTester::testMultiOr(){
 
 		for (int i = 0; i < numSourceBitSets; i++){
 			bitsets[i] = new WAHBitSet();
-			BitSetTester::randomise(bitsets[i], numBits);
+			BitSetTester<WAHBitSet>::randomise(bitsets[i], numBits);
 			cout << "BitSet " << i << endl;
 			cout << bitsets[i]->toString() << endl << endl;
 		}
@@ -157,8 +157,8 @@ void WAHBitSetTester::testOr(){
 		cout.flush();
 		DynamicBitSet* dbs1 = new DynamicBitSet(); //(wahbs1);
 		DynamicBitSet* dbs2 = new DynamicBitSet(); //(wahbs2);
-		BitSetTester::randomise(dbs1, NULL, 100000);
-		BitSetTester::randomise(dbs2, NULL, 100000);
+		BitSetTester<WAHBitSet>::randomise(dbs1, NULL, 100000);
+		BitSetTester<WAHBitSet>::randomise(dbs2, NULL, 100000);
 		cout << "done, that took " << timer.reset() << " msecs" << endl;
 		//wahbs1 = WAHBitSet::constructFailingExample1();
 		//wahbs2 = WAHBitSet::constructFailingExample2();

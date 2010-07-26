@@ -37,10 +37,10 @@ int main(int argc, char* argv[]) {
 	runValidatorWhenRequested(argc, argv);
 
 	try {
-		PWAHBitSet<8>* bs1 = new PWAHBitSet<8>();
-		//BitSetTester::testLongFill(bs1);
-		DynamicBitSet* bs2 = new DynamicBitSet();
-		BitSetTester bt = BitSetTester(bs1, bs2);
+		//while (true) BitSetTester<IntervalBitSet>::testOr(5);
+
+		//while (true) BitSetTester::testIterator(new IntervalBitSet(), true);
+
 		//while (true) BitSetTester::testOr();
 
 		//BitSetTester::diff();
@@ -59,8 +59,6 @@ int main(int argc, char* argv[]) {
 
 		//while (true) BitSetTester::testIterator(bs1, true);
 
-		delete bs1;
-		delete bs2;
 
 
 		//BitSetTester::compareMemoryUsage();
@@ -83,9 +81,9 @@ int main(int argc, char* argv[]) {
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/categorypagelinks.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/pagelinks.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/child.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/samba/setflow.graph";
+	defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/samba/setflow.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/agrocyc.graph";
-	defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/kegg.graph";
+	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/kegg.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/human.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/xmark.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Pajek/patents.graph";
@@ -96,7 +94,7 @@ int main(int argc, char* argv[]) {
 	cmdLineArgs["filename"] = defFilename;
 	cmdLineArgs["reflexive"] = "unset";
 	cmdLineArgs["run-validator"] = "unset";
-	cmdLineArgs["bitset-implementation"] = "pwah-8";
+	cmdLineArgs["bitset-implementation"] = "interval";
 
 	// By default: use multi-OR when a component has out-degree of at least 5
 	cmdLineArgs["min-multi-or"] = "0";
@@ -172,6 +170,8 @@ int main(int argc, char* argv[]) {
 				tca = new WAHStackTC<PWAHBitSet<8> >(graph);
 			} else if (cmdLineArgs["bitset-implementation"] == "wah"){
 				tca = new WAHStackTC<WAHBitSet>(graph);
+			} else if (cmdLineArgs["bitset-implementation"] == "interval"){
+				tca = new WAHStackTC<IntervalBitSet>(graph);
 			} else {
 				cerr << "Invalid BitSet implementation specified on command line" << endl;
 				exit(1);
@@ -200,7 +200,7 @@ int main(int argc, char* argv[]) {
 			//cout << wstc.tcToString();
 			cout << "Number of components (vertices in condensation graph): " << tca->getNumberOfComponents() << endl;
 
-			/*if (!reflexitive){
+			if (!reflexitive){
 				cout << "Counting number of edges in condensed transitive closure... ";
 			} else {
 				cout << "Counting number of edges in REFLEXITIVE condensed transitive closure... ";
@@ -214,7 +214,7 @@ int main(int argc, char* argv[]) {
 				cout << "Counting number of edges in REFLEXITIVE transitive closure... ";
 			}
 			cout.flush();
-			cout << tca->countNumberOfEdgesInTC() << " edges" << endl;*/
+			cout << tca->countNumberOfEdgesInTC() << " edges" << endl;
 
 			cout << "Memory used by the " << tca->algorithmName() << " data structure: " << tca->memoryUsedByBitSets() << " bits" << endl;
 

@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include "PWAHBitSet.h"
 #include "TransitiveClosureAlgorithm.h"
+#include "IntervalBitSet.h"
 using namespace std;
 
 Validator::Validator() {}
@@ -80,12 +81,13 @@ void Validator::validate(){
 			cout << "Expecting " << expectedNumEdges[i] << " edges in TC, " << expectedReflexiveNumEdges[i] << " edges in reflexive TC..." << endl;
 			Graph graph = Graph::parseChacoFile(filename);
 
-			for (int bstype = 0; bstype < 4; bstype++){
+			for (int bstype = 0; bstype < 5; bstype++){
 				for (int reflexive = 0; reflexive <= 1; reflexive++){
 					if (bstype == 0) tca = new WAHStackTC<PWAHBitSet<2> >(graph);
 					else if (bstype == 1) tca = new WAHStackTC<PWAHBitSet<4> >(graph);
 					else if (bstype == 2) tca = new WAHStackTC<PWAHBitSet<8> >(graph);
 					else if (bstype == 3) tca = new WAHStackTC<WAHBitSet>(graph);
+					else if (bstype == 4) tca = new WAHStackTC<IntervalBitSet>(graph);
 					else throw string("???");
 
 					cout << "Computing " << (reflexive == 1 ? "reflexive" : "") << "TC using " << tca->algorithmName() << "... ";

@@ -11,6 +11,8 @@ CPP_SRCS += \
 ../src/DynamicStack.cpp \
 ../src/Graph.cpp \
 ../src/IntBitMacros.cpp \
+../src/IntervalBitSet.cpp \
+../src/IntervalBitSetIterator.cpp \
 ../src/LongBitMacros.cpp \
 ../src/PWAHBitSet.cpp \
 ../src/PWAHBitSetIterator.cpp \
@@ -32,6 +34,8 @@ OBJS += \
 ./src/DynamicStack.o \
 ./src/Graph.o \
 ./src/IntBitMacros.o \
+./src/IntervalBitSet.o \
+./src/IntervalBitSetIterator.o \
 ./src/LongBitMacros.o \
 ./src/PWAHBitSet.o \
 ./src/PWAHBitSetIterator.o \
@@ -53,6 +57,8 @@ CPP_DEPS += \
 ./src/DynamicStack.d \
 ./src/Graph.d \
 ./src/IntBitMacros.d \
+./src/IntervalBitSet.d \
+./src/IntervalBitSetIterator.d \
 ./src/LongBitMacros.d \
 ./src/PWAHBitSet.d \
 ./src/PWAHBitSetIterator.d \

@@ -11,6 +11,7 @@
 #include <sstream>
 using namespace std;
 
+template<class B>
 class BitSetTester {
 public:
 	BitSetTester(BitSet* bs1, BitSet* bs2);
@@ -25,9 +26,10 @@ public:
 	static void testLongFill(BitSet* bitset);
 	static void testIterator(BitSet* bitset, bool randomise);
 	static void diff();
-	static void testOr();
+	static void testOr(int numBitsets);
 	void testSetGet();
 
+	static string printBitSets(BitSet** bitsets, int numBitSets);
 	static string printBitSets(BitSet* bs1, BitSet* bs2);
 	static string printBitSets(BitSet* bs1, BitSet* bs2, BitSet* bs3);
 private:

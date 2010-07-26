@@ -279,6 +279,7 @@ template<class B> void WAHStackTC<B>::dfsVisit(unsigned int vertexIndex){
 				// increasing order.
 				_mergeTimer.resume();
 				B* adjacentComponentBits = new B();
+
 				int lastIndex = -1;
 				for (unsigned int i = 0; i < numUniqueAdjacentComponents; i++){
 					if (uniqueAdjacentComponentIndices[i] == lastIndex) continue;
@@ -299,7 +300,7 @@ template<class B> void WAHStackTC<B>::dfsVisit(unsigned int vertexIndex){
 				if (explicitlyStoreSelfLoop){
 					successors->set(newComponentIndex);
 				} else {
-					successors->set(newComponentIndex, false);
+					//successors->set(newComponentIndex, false);
 				}
 				_mergeTimer.pause();
 			} else {
@@ -622,6 +623,7 @@ template<class B> long WAHStackTC<B>::memoryUsedByIntervalLists(){
  * Instruct the compiler which templates to instantiate
  */
 template class WAHStackTC<WAHBitSet>;
+template class WAHStackTC<IntervalBitSet>;
 template class WAHStackTC<PWAHBitSet<1> >;
 template class WAHStackTC<PWAHBitSet<2> >;
 template class WAHStackTC<PWAHBitSet<4> >;
