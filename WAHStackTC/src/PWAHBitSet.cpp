@@ -1051,8 +1051,6 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet<P>** bitSets, un
 	if (numBitSets == 0) return;
 	if (result->_words.size() == 0) result->_words.push_back(0L);
 
-	// TODO: in case of just 1 BitSet: make a copy
-
 	// Current position in result BitSet: block index
 	unsigned int rBlockIndex = 0;
 
