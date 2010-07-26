@@ -300,7 +300,7 @@ template<class B> void WAHStackTC<B>::dfsVisit(unsigned int vertexIndex){
 				if (explicitlyStoreSelfLoop){
 					successors->set(newComponentIndex);
 				} else {
-					//successors->set(newComponentIndex, false);
+					successors->set(newComponentIndex, false);
 				}
 				_mergeTimer.pause();
 			} else {

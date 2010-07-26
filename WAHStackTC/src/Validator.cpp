@@ -90,7 +90,7 @@ void Validator::validate(){
 					else if (bstype == 4) tca = new WAHStackTC<IntervalBitSet>(graph);
 					else throw string("???");
 
-					cout << "Computing " << (reflexive == 1 ? "reflexive" : "") << "TC using " << tca->algorithmName() << "... ";
+					cout << "Computing " << (reflexive == 1 ? "reflexive " : "") << "TC using " << tca->algorithmName() << "... ";
 					timer.reset();
 					tca->computeTransitiveClosure((reflexive == 1), false, 0);
 					time1 = timer.reset();
