@@ -19,7 +19,7 @@ template<unsigned int P> class PWAHBitSetIterator;
 template<unsigned int P>
 class PWAHBitSet : public BitSet {
 public:
-	PWAHBitSet(int indexChunkSize = 8192);
+	PWAHBitSet(int indexChunkSize = 1024);
 	virtual ~PWAHBitSet(){}
 
 	void set(int bitIndex);

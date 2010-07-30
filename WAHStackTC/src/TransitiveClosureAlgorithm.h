@@ -29,6 +29,7 @@ public:
 	virtual void reportStatistics() = 0;
 	virtual string algorithmName() = 0;
 	virtual long memoryUsedByIntervalLists() = 0;
+	virtual double computeAverageLocalClusteringCoefficient() = 0;
 };
 
 #endif /* TRANSITIVECLOSUREALGORITHM_H_ */

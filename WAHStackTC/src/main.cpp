@@ -71,18 +71,23 @@ int main(int argc, char* argv[]) {
 	//defFilename = "../../Datasets/nuutila32.graph";
 	//defFilename = "../../Datasets/Semmle graphs/java/depends.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/depends.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/depends.graph";
-	defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/successor.graph";
+	defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/depends.graph";
+	//defFilename = "/tmp/test.graph";
+	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/callgraph.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/callgraph.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/successors.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/child.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/polycalls.graph";
+	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/calls.graph";
+	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/child.graph";
+	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/subtype.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Pajek/patents.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/categorypagelinks.graph";
+	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/categorylinks.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/pagelinks.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/child.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/samba/setflow.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/agrocyc.graph";
+	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/reactome.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/kegg.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/human.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/xmark.graph";
@@ -128,7 +133,7 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	const bool reflexitive = (cmdLineArgs["reflexive"] != "unset");
+	const bool reflexive = (cmdLineArgs["reflexive"] != "unset");
 	const int minMultiOR = atoi(cmdLineArgs["min-multi-or"].c_str());
 	const string filename = cmdLineArgs["filename"];
 	const int numRuns = atoi(cmdLineArgs["num-runs"].c_str());
@@ -154,7 +159,11 @@ int main(int argc, char* argv[]) {
 		cout << graph.computeMinOutDegree() << ", " << graph.computeMaxOutDegree() << ", " << graph.computeAvgOutDegree() << endl;
 		cout << "Min, max, average in degree: ";
 		cout << graph.computeMinInDegree() << ", " << graph.computeMaxInDegree() << ", " << graph.computeAvgInDegree() << endl;
-
+		cout << "Average local clustering coefficient: ";
+		cout.flush();
+		cout.precision(8);
+		cout << graph.computeAverageLocalClusteringCoefficient() << endl;
+		cout.precision(4);
 
 		double tmp;
 
@@ -177,7 +186,7 @@ int main(int argc, char* argv[]) {
 				exit(1);
 			}
 
-			if (!reflexitive){
+			if (!reflexive){
 				cout << "Computing transitive closure using " << tca->algorithmName() << " ";
 			} else {
 				cout << "Computing REFLEXITIVE transitive closure using " << tca->algorithmName() << " ";
@@ -190,31 +199,38 @@ int main(int argc, char* argv[]) {
 				cout << "(using multi-OR when out-degree >= " << minMultiOR << ")... ";
 			}
 			cout.flush();
-			tca->computeTransitiveClosure(reflexitive, false, minMultiOR);
+			tca->computeTransitiveClosure(reflexive, false, minMultiOR);
 
 			tmp = timer.reset();
 			totalConstructionTime += tmp;
 			cout << "done, that took " << tmp << " msecs" << endl;
 			cout.flush();
 
-			//cout << wstc.tcToString();
 			cout << "Number of components (vertices in condensation graph): " << tca->getNumberOfComponents() << endl;
 
-			if (!reflexitive){
+			if (!reflexive){
 				cout << "Counting number of edges in condensed transitive closure... ";
 			} else {
-				cout << "Counting number of edges in REFLEXITIVE condensed transitive closure... ";
+				cout << "Counting number of edges in REFLEXIVE condensed transitive closure... ";
 			}
 			cout.flush();
 			cout << tca->countNumberOfEdgesInCondensedTC() << " edges" << endl;
 
-			if (!reflexitive){
+			if (!reflexive){
 				cout << "Counting number of edges in transitive closure... ";
 			} else {
-				cout << "Counting number of edges in REFLEXITIVE transitive closure... ";
+				cout << "Counting number of edges in REFLEXIVE transitive closure... ";
 			}
 			cout.flush();
 			cout << tca->countNumberOfEdgesInTC() << " edges" << endl;
+
+/*
+			cout << "Average local clustering coefficient of condensation graph: ";
+			cout.flush();
+			cout.precision(8);
+			cout << tca->computeAverageLocalClusteringCoefficient() << endl;
+			cout.precision(4);
+*/
 
 			cout << "Memory used by the " << tca->algorithmName() << " data structure: " << tca->memoryUsedByBitSets() << " bits" << endl;
 

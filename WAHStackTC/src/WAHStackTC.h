@@ -57,6 +57,8 @@ public:
 	long countNumberOfEdgesInTC();
 	long countNumberOfEdgesInCondensedTC();
 	long countNumberOfEdgesInCondensedTC(bool ignoreSelfLoops, bool ignoreSingletonSelfLoops);
+	double computeLocalClusteringCoefficient(int componentIndex);
+	double computeAverageLocalClusteringCoefficient();
 	int getNumberOfComponents();
 	void writeToChacoFile(string filename);
 	bool reachable(int src, int dst);

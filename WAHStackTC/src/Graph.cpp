@@ -14,15 +14,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <fstream>
+#include <assert.h>
+#include "StaticBitSet.h"
 using namespace std;
 
-Graph::Graph() {
-	// TODO Auto-generated constructor stub
-}
-
-Graph::~Graph() {
-	// TODO Auto-generated destructor stub
-}
+Graph::Graph() {}
+Graph::~Graph() {}
 
 unsigned int Graph::getNumberOfVertices(){
 	return _vertices.size();
@@ -38,6 +35,60 @@ unsigned int Graph::countNumberOfEdges(){
 		numEdges += _vertices[v].size();
 	}
 	return numEdges;
+}
+
+double Graph::computeLocalClusteringCoefficient(int vertexIndex){
+	StaticBitSet neighbourhood = StaticBitSet(_vertices.size());
+	int neighbourhoodSize = 0;
+
+	// Populate neighbourhood
+	for (unsigned int i = 0; i < _vertices[vertexIndex].size(); i++){
+		if (_vertices[vertexIndex][i] == vertexIndex) continue; // ignore self-loops
+		if (neighbourhood.get(_vertices[vertexIndex][i])) continue; // ignore duplicate edges
+
+		neighbourhood.set(_vertices[vertexIndex][i]);
+		neighbourhoodSize++;
+	}
+
+	if (neighbourhoodSize > 0){
+		// Loop over adjacent vertices a_i and check whether a_i is connected
+		// to an other adjacent vertex a_j
+		int currNeighbour;
+		int numEdgesInNeighbourhood = 0;
+		for (unsigned int i = 0; i < _vertices[vertexIndex].size(); i++){
+			if (_vertices[vertexIndex][i] == vertexIndex) continue; // ignore self-loops
+			if (!neighbourhood.get(_vertices[vertexIndex][i])) continue; // ignore duplicate edges
+
+			currNeighbour = _vertices[vertexIndex][i];
+
+			// Loop over adjacent vertices of the neighbour
+			for (unsigned int j = 0; j < _vertices[currNeighbour].size(); j++){
+				if (neighbourhood.get(_vertices[currNeighbour][j])){
+					numEdgesInNeighbourhood++;
+				}
+			}
+		}
+
+		double localC = (double) numEdgesInNeighbourhood / (neighbourhoodSize * neighbourhoodSize);
+		if (localC > 1){
+			cerr << "vertex " << vertexIndex << " local clustering coefficient=" << localC << ", numEdgesInNeighbourhood=" << numEdgesInNeighbourhood << ", neighbourhoodSize=" << neighbourhoodSize << endl;
+			assert(localC <= 1);
+		}
+
+		return localC;
+	} else {
+		return 0;
+	}
+}
+
+double Graph::computeAverageLocalClusteringCoefficient(){
+	double sum = 0;
+
+	for (unsigned int i = 0; i < _vertices.size(); i++){
+		sum += computeLocalClusteringCoefficient(i);
+	}
+
+	return (double) sum / _vertices.size();
 }
 
 

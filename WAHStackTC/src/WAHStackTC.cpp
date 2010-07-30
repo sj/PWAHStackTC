@@ -20,6 +20,7 @@
 #include <stdexcept>
 #include "BitSetTester.h"
 #include "IntervalBitSet.h"
+#include <assert.h>
 using namespace std;
 
 template<class B> WAHStackTC<B>::WAHStackTC(Graph& graph) {
@@ -616,6 +617,70 @@ template<class B> long WAHStackTC<B>::memoryUsedByIntervalLists(){
 			delete ibs;
 		}
 	}
+	return res;
+}
+
+template<class B> double WAHStackTC<B>::computeAverageLocalClusteringCoefficient(){
+	double total = 0;
+
+	for (unsigned int i = 0; i < _componentSuccessors.size(); i++){
+		total += computeLocalClusteringCoefficient(i);
+	}
+
+	return total / _componentSuccessors.size();
+}
+
+template<class B> double WAHStackTC<B>::computeLocalClusteringCoefficient(int componentIndex){
+	if (_componentSuccessors[componentIndex] == NULL) return 0;
+	StaticBitSet neighbourhood = StaticBitSet(_componentSuccessors.size());
+	int neighbourhoodSize = 0;
+
+	// Register neighbourhood in StaticBitSet
+	BitSetIterator* it = _componentSuccessors[componentIndex]->iterator();
+	int currNeighbourIndex = it->next();
+	while (it->next() >= 0){
+		if (currNeighbourIndex != componentIndex){ // skip self-loops
+			cout << "component " << componentIndex << ": " << currNeighbourIndex << " is neighbour" << endl;
+			neighbourhood.set(currNeighbourIndex);
+			neighbourhoodSize++;
+		}
+		currNeighbourIndex = it->next();
+	}
+	delete it;
+	cout << "Neighbourhood of component " << componentIndex << " contains " << neighbourhoodSize << " components" << endl;
+	if(neighbourhoodSize == 0) return 0;
+
+	int numEdgesInNeighbourhood = 0;
+	int currNeighbourNeighbourIndex;
+	it = _componentSuccessors[componentIndex]->iterator();
+	BitSetIterator* nIt;
+	currNeighbourIndex = it->next();
+	while (it->next() >= 0){
+		// Process currSuccessorIndex, check whether it neighbours are also neighbours
+		// of componentIndex
+
+		if (_componentSuccessors[currNeighbourIndex] != NULL){
+			cout << "Neighbourhood of " << componentIndex << ": iterating over neighbours of " << currNeighbourIndex << endl;
+			nIt = _componentSuccessors[currNeighbourIndex]->iterator();
+			currNeighbourNeighbourIndex = nIt->next();
+
+			while (currNeighbourNeighbourIndex >= 0){
+				if (neighbourhood.get(currNeighbourNeighbourIndex)){
+					cout << "Neighbourhood of " << componentIndex << ": " << currNeighbourIndex << " has neighbour " << currNeighbourNeighbourIndex << ", which is also a neighbour of " << componentIndex << endl;
+					numEdgesInNeighbourhood++;
+				}
+				currNeighbourNeighbourIndex = nIt->next();
+			}
+			delete nIt;
+		}
+
+		currNeighbourIndex = it->next();
+	}
+	delete it;
+
+	double res = (double) numEdgesInNeighbourhood / (neighbourhoodSize * neighbourhoodSize);
+	cout << componentIndex << " has local correlation coefficient of " << res << endl;
+	assert(res <= 1);
 	return res;
 }
 

@@ -29,6 +29,8 @@ public:
 	int computeMinOutDegree();
 	int findMinOutDegreeVertex();
 
+	double computeAverageLocalClusteringCoefficient();
+	double computeLocalClusteringCoefficient(int vertexIndex);
 	int computeMaxInDegree();
 	int findMaxInDegreeVertex();
 	float computeAvgInDegree();
