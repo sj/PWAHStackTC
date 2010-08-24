@@ -637,7 +637,9 @@ template<unsigned int P> const bool PWAHBitSet<P>::get(int bitIndex, bool disabl
 		} // end if: index or not
 	}
 
-	throw string("unexpected state");
+	stringstream ss;
+	ss << "PWAHBitSet::get[" << bitIndex << "]: unexpected state";
+	throw string(ss.str());
 }
 
 template<unsigned int P> const unsigned int PWAHBitSet<P>::size(){

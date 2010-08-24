@@ -549,13 +549,16 @@ template<class B> long WAHStackTC<B>::countNumberOfEdgesInTC(){
 }
 
 template<class B> bool WAHStackTC<B>::reachable(int src, int dst){
+	const bool DEBUGGING = false;
 	if (src >= _graph->getNumberOfVertices()) throw range_error("Source index out of bounds");
 	if (dst >= _graph->getNumberOfVertices()) throw range_error("Source index out of bounds");
+	if (DEBUGGING) cout << "WAHStackTC::reachable " << src << " -> " << dst << " (vertex indices)" << endl;
 
 	if (src == dst) return _vertexSelfLoop->get(src);
-
 	int srcComponent = _vertexComponents[src];
 	int dstComponent = _vertexComponents[dst];
+
+	if (DEBUGGING) cout << "WAHStackTC::reachable " << srcComponent << " -> " << dstComponent << " (component indices)" << endl;
 
 	if (_componentSuccessors[srcComponent] == NULL){
 		// Source component didn't have any adjacent components
@@ -563,9 +566,9 @@ template<class B> bool WAHStackTC<B>::reachable(int src, int dst){
 	} else if (srcComponent == dstComponent){
 		// Source and destination are within the same component!
 		// Determine whether the component contains a self-loop
-		if (_reflexitive || _componentSizes[src] > 1){
+		if (_reflexitive || _componentSizes[srcComponent] > 1){
 			return true;
-		} else if (_componentSizes[src] == 1 && _storeComponentVertices){
+		} else if (_componentSizes[srcComponent] == 1 && _storeComponentVertices){
 			return _vertexSelfLoop->get(src);
 		} // else: unable to determine which vertex is the only member of the component...
 	}
