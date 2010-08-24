@@ -1674,12 +1674,12 @@ template<> void PWAHBitSet<8>::addExtendedFillPartitions(bool oneFill, int numBl
 		numBlocks -= numBlocksInFirstWord;
 		firstBlockIndex += numBlocksInFirstWord;
 
-		if (numBlocks < _maxBlocksPerFill){
+		if (numBlocks > _maxBlocksPerFill){
+			addExtendedFillPartitions(oneFill, numBlocks, firstBlockIndex);
+		} else {
 			// Remaining number of blocks not sufficient to build an extended fill,
 			// add regular fill
 			addFillPartition(oneFill, numBlocks, firstBlockIndex);
-		} else {
-			addExtendedFillPartitions(oneFill, numBlocks, firstBlockIndex);
 		}
 
 		if (DEBUGGING){
