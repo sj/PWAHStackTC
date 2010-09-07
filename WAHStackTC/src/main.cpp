@@ -122,6 +122,7 @@ int main(int argc, char* argv[]) {
 	cmdLineArgs["run-validator"] = "unset";
 	cmdLineArgs["bitset-implementation"] = "pwah-8";
 	cmdLineArgs["no-details"] = "unset";
+	cmdLineArgs["index-chunk-size"] = "-1";
 
 	// By default: use multi-OR when a component has out-degree of at least 5
 	cmdLineArgs["min-multi-or"] = "0";
@@ -160,9 +161,11 @@ int main(int argc, char* argv[]) {
 	const int minMultiOR = atoi(cmdLineArgs["min-multi-or"].c_str());
 	const string filename = cmdLineArgs["filename"];
 	const int numRuns = atoi(cmdLineArgs["num-runs"].c_str());
+	const int indexChunkSize = atoi(cmdLineArgs["index-chunk-size"].c_str());
 	const int numQueries = 1000000;
 	double totalConstructionTime = 0;
 	double totalQueryTime = 0;
+	long memUsage = 0;
 
 	if (cmdLineArgs["run-validator"] != "unset"){
 		// Validation should have been performed earlier?!
@@ -199,10 +202,13 @@ int main(int argc, char* argv[]) {
 			TransitiveClosureAlgorithm* tca;
 			if (cmdLineArgs["bitset-implementation"] == "pwah-2"){
 				tca = new WAHStackTC<PWAHBitSet<2> >(graph);
+				PWAHBitSet<2>::setIndexChunkSize(indexChunkSize);
 			} else if (cmdLineArgs["bitset-implementation"] == "pwah-4"){
 				tca = new WAHStackTC<PWAHBitSet<4> >(graph);
+				PWAHBitSet<4>::setIndexChunkSize(indexChunkSize);
 			} else if (cmdLineArgs["bitset-implementation"] == "pwah-8"){
 				tca = new WAHStackTC<PWAHBitSet<8> >(graph);
+				PWAHBitSet<8>::setIndexChunkSize(indexChunkSize);
 			} else if (cmdLineArgs["bitset-implementation"] == "wah"){
 				tca = new WAHStackTC<WAHBitSet>(graph);
 			} else if (cmdLineArgs["bitset-implementation"] == "interval"){
@@ -297,7 +303,9 @@ int main(int argc, char* argv[]) {
 			totalQueryTime += tmp;
 			cout << "done, that took " << tmp << " msecs" << endl;
 			if (!nodetails) cout << numReachable << " pairs turned out to be reachable." << endl;
-			cout << "Number of bits required to store WAH compressed bitsets: " << tca->memoryUsedByBitSets() << endl;
+
+			memUsage = tca->memoryUsedByBitSets();
+			cout << "Number of bits required to store WAH compressed bitsets: " << memUsage << endl;
 			delete[] rndDst;
 			delete[] rndSrc;
 			delete tca;
@@ -311,7 +319,8 @@ int main(int argc, char* argv[]) {
 		// Machine readable
 		cout << "AVG_CONSTR_TIME=" << avgConstructionTime << endl;
 		cout << "AVG_QUERY_TIME=" << avgQueryTime << endl;
-		exit(1);
+		cout << "MEM_USAGE=" << memUsage << endl;
+		exit(0);
 	} catch (string str){
 		cerr << "Exception: " << str << endl;
 		cerr.flush();

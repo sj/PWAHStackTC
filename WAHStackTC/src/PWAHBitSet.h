@@ -19,7 +19,7 @@ template<unsigned int P> class PWAHBitSetIterator;
 template<unsigned int P>
 class PWAHBitSet : public BitSet {
 public:
-	PWAHBitSet(int indexChunkSize = 1024);
+	PWAHBitSet();
 	virtual ~PWAHBitSet(){}
 
 	void set(int bitIndex);
@@ -32,6 +32,7 @@ public:
 	static PWAHBitSet* constructByOr(const PWAHBitSet* first, const PWAHBitSet* second);
 	static string toBitString(long value);
 	static long fill_length(long bits, unsigned short partitionIndex);
+	static void setIndexChunkSize(int chunkSize);
 	const long memoryUsage();
 	string bsImplementationName();
 
@@ -47,12 +48,12 @@ private:
 	static const int _blockSize;
 	static const int _partitionOffsets[P];
 	static const bool _VERIFY = false;
+	static int _indexChunkSize; // default: don't use indices
 
 	unsigned short _lastUsedPartition; // partition index of last used partition within the vector of words
 	long _plainBlockIndex; // the block index of the plain block
 	long _lastBitIndex;
 	vector<long> _words;
-	const int _indexChunkSize;
 	vector<int> _indexWord;
 	vector<unsigned short> _indexPartition;
 	vector<int> _indexPartitionOffset;

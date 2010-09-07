@@ -17,6 +17,14 @@
 using namespace std;
 
 /**
+ * Default: don't use indices
+ */
+template<> int PWAHBitSet<1>::_indexChunkSize = -1;
+template<> int PWAHBitSet<2>::_indexChunkSize = -1;
+template<> int PWAHBitSet<4>::_indexChunkSize = -1;
+template<> int PWAHBitSet<8>::_indexChunkSize = -1;
+
+/**
  * Define the offset of partitions within the 64 bit word.
  */
 template<> const int PWAHBitSet<1>::_partitionOffsets[1] = {0};
@@ -506,13 +514,17 @@ template<unsigned int P> string PWAHBitSet<P>::toBitString(long value){
 /**
  * Constructor for PWAHBitSet
  */
-template<unsigned int P> PWAHBitSet<P>::PWAHBitSet(int indexChunkSize):
+template<unsigned int P> PWAHBitSet<P>::PWAHBitSet():
 			// Initialise variables
-			_plainBlockIndex(0), _lastBitIndex(-1), _lastUsedPartition(0), _words(vector<long>()), _indexChunkSize(indexChunkSize){
+			_plainBlockIndex(0), _lastBitIndex(-1), _lastUsedPartition(0), _words(vector<long>()){
 
 	// Assert to check whether the long primitive type consists of 64 bits. Might the data type
 	// consist of any other number of bits, weird things will happen...
 	assert(sizeof(long) == (64 / CHAR_BIT));
+}
+
+template<unsigned int P> void PWAHBitSet<P>::setIndexChunkSize(int chunkSize){
+	PWAHBitSet<P>::_indexChunkSize = chunkSize;
 }
 
 template<unsigned int P> void PWAHBitSet<P>::clear(){
@@ -1714,16 +1726,32 @@ template<> void PWAHBitSet<8>::addExtendedFillPartitions(bool oneFill, int numBl
 }
 
 template<> string PWAHBitSet<1>::bsImplementationName(){
-	return "PWAHBitSet<1>";
+	stringstream ss;
+	ss << "PWAHBitSet<1> -- ";
+	if (_indexChunkSize == -1) ss << "not indexed";
+	else ss << "index chunk size: " << _indexChunkSize;
+	return ss.str();
 }
 template<> string PWAHBitSet<2>::bsImplementationName(){
-	return "PWAHBitSet<2>";
+	stringstream ss;
+	ss << "PWAHBitSet<2> -- ";
+	if (_indexChunkSize == -1) ss << "not indexed";
+	else ss << "index chunk size: " << _indexChunkSize;
+	return ss.str();
 }
 template<> string PWAHBitSet<4>::bsImplementationName(){
-	return "PWAHBitSet<4>";
+	stringstream ss;
+	ss << "PWAHBitSet<4> -- ";
+	if (_indexChunkSize == -1) ss << "not indexed";
+	else ss << "index chunk size: " << _indexChunkSize;
+	return ss.str();
 }
 template<> string PWAHBitSet<8>::bsImplementationName(){
-	return "PWAHBitSet<8>";
+	stringstream ss;
+	ss << "PWAHBitSet<8> -- ";
+	if (_indexChunkSize == -1) ss << "not indexed";
+	else ss << "index chunk size: " << _indexChunkSize;
+	return ss.str();
 }
 
 /**
@@ -1733,3 +1761,4 @@ template class PWAHBitSet<1>;
 template class PWAHBitSet<2>;
 template class PWAHBitSet<4>;
 template class PWAHBitSet<8>;
+
