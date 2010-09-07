@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
 	cout.precision(4);
 
 	// Increase stack size
-	const rlim_t sSize = 1024 * 1024 * 32; // 32 Megabytes
+	const rlim_t sSize = 1024 * 1024 * 128; // 128 Megabytes
 	struct rlimit rl;
 
 	if (getrlimit(RLIMIT_STACK, &rl) == 0){
