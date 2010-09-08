@@ -1511,6 +1511,11 @@ template<unsigned int P> PWAHBitSet<P>* PWAHBitSet<P>::constructByOr(const PWAHB
 
 template<unsigned int P> const long PWAHBitSet<P>::memoryUsage(){
 	long res = _words.size() * 64;
+	if (_indexChunkSize > -1){
+		// Include memory usage by _indexWord, _indexPartition,
+		// _indexPartitionOffset: 3 vectors containing longs
+		res += 3 * 64 * _indexPartitionOffset.size();
+	}
 	return res;
 }
 
