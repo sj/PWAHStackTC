@@ -553,6 +553,7 @@ template<unsigned int P> const bool PWAHBitSet<P>::get(int bitIndex){
 template<unsigned int P> const bool PWAHBitSet<P>::get(int bitIndex, bool disableIndex){
 	const bool DEBUGGING = false;
 	const int blockIndex = bitIndex / _blockSize;
+	long currBlockIndex = -1;
 	if (DEBUGGING) cout << "PWAHBitSet::get[" << bitIndex << "] -- bit in block " << blockIndex << endl;
 
 	if (blockIndex > _plainBlockIndex){
@@ -567,7 +568,6 @@ template<unsigned int P> const bool PWAHBitSet<P>::get(int bitIndex, bool disabl
 		unsigned int initialWordIndex = 0;
 		unsigned int initialPartitionIndex = 0;
 		unsigned int currPartitionIndex = 0;
-		long currBlockIndex = -1;
 		int currFillLength;
 
 		if (_indexChunkSize > 0 && !disableIndex){
@@ -651,7 +651,7 @@ template<unsigned int P> const bool PWAHBitSet<P>::get(int bitIndex, bool disabl
 
 	stringstream ss;
 	ss << "PWAHBitSet::get[" << bitIndex << "]: unexpected state. ";
-	ss << "Scanned past last word, block " << blockIndex << " hasn't been located? ";
+	ss << "Scanned past last word (containing block " << currBlockIndex << "), but block " << blockIndex << " hasn't been located? ";
 
 	if (_indexChunkSize > 0 && !disableIndex){
 		// Index available, provide details in exception
@@ -659,7 +659,7 @@ template<unsigned int P> const bool PWAHBitSet<P>::get(int bitIndex, bool disabl
 		const int chunkFirstBit = chunkIndex * _indexChunkSize;
 		const int initialWordIndex = _indexWord[chunkIndex];
 		const int currPartitionIndex = _indexPartition[chunkIndex];
-		const int currBlockIndex = chunkFirstBit / _blockSize - _indexPartitionOffset[chunkIndex] - 1;
+		currBlockIndex = chunkFirstBit / _blockSize - _indexPartitionOffset[chunkIndex] - 1;
 
 		ss << "Indexing active. Scanning started at word " << initialWordIndex << ", partition " << currPartitionIndex;
 		ss << " which contains block " << currBlockIndex;
