@@ -651,7 +651,7 @@ template<unsigned int P> const bool PWAHBitSet<P>::get(int bitIndex, bool disabl
 
 	stringstream ss;
 	ss << "PWAHBitSet::get[" << bitIndex << "]: unexpected state. ";
-	ss << "Scanned past last word (containing block " << currBlockIndex << "), but block " << blockIndex << " hasn't been located? ";
+	ss << "Scanned past last word (index " << (_words.size() - 1) << ", containing block " << currBlockIndex << "), but block " << blockIndex << " hasn't been located? ";
 
 	if (_indexChunkSize > 0 && !disableIndex){
 		// Index available, provide details in exception
