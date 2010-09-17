@@ -650,7 +650,20 @@ template<unsigned int P> const bool PWAHBitSet<P>::get(int bitIndex, bool disabl
 	}
 
 	stringstream ss;
-	ss << "PWAHBitSet::get[" << bitIndex << "]: unexpected state";
+	ss << "PWAHBitSet::get[" << bitIndex << "]: unexpected state. ";
+	ss << "Scanned past last word, block " << blockIndex << " hasn't been located? ";
+
+	if (_indexChunkSize > 0 && !disableIndex){
+		// Index available, provide details in exception
+		const int chunkIndex = bitIndex / _indexChunkSize;
+		const int chunkFirstBit = chunkIndex * _indexChunkSize;
+		const int initialWordIndex = _indexWord[chunkIndex];
+		const int currPartitionIndex = _indexPartition[chunkIndex];
+		const int currBlockIndex = chunkFirstBit / _blockSize - _indexPartitionOffset[chunkIndex] - 1;
+
+		ss << "Indexing active. Scanning started at word " << initialWordIndex << ", partition " << currPartitionIndex;
+		ss << " which contains block " << currBlockIndex;
+	}
 	throw string(ss.str());
 }
 
