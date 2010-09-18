@@ -578,7 +578,23 @@ template<unsigned int P> const bool PWAHBitSet<P>::get(int bitIndex, bool disabl
 			initialWordIndex = _indexWord[chunkIndex];
 			currPartitionIndex = _indexPartition[chunkIndex];
 			currBlockIndex = chunkFirstBit / _blockSize - _indexPartitionOffset[chunkIndex] - 1;
-			if (DEBUGGING) cout << "PWAHBitSet::get[" << bitIndex << "] -- block " << blockIndex << " already compressed, using index: chunkIndex=" << chunkIndex << ", initialWordIndex=" << initialWordIndex << ", initialPartitionIndex=" << initialPartitionIndex << ", currBlockIndex=" << currBlockIndex << endl;
+			if (DEBUGGING){
+				cout << "PWAHBitSet::get[" << bitIndex << "] -- block " << blockIndex << " already compressed, using index to speed up scanning..." << endl;
+				cout << "PWAHBitSet::get[" << bitIndex << "] -- Index: chunkIndex = " << bitIndex << " / " << _indexChunkSize << " = " << chunkIndex << endl;
+				cout << "PWAHBitSet::get[" << bitIndex << "] -- Index: first bit in chunk " << chunkIndex << ": " << chunkFirstBit << endl;
+				cout << "PWAHBitSet::get[" << bitIndex << "] -- Index: initialWordIndex=" << initialWordIndex << ", initialPartitionIndex=" << initialPartitionIndex << endl;
+				cout << "PWAHBitSet::get[" << bitIndex << "] -- Index: scan starts at blockindex " << chunkFirstBit << " / " << _blockSize << " - " << _indexPartitionOffset[chunkIndex] << " - 1 = " << currBlockIndex << endl;
+			}
+
+			if (chunkIndex >= _indexPartitionOffset.size()){
+				// Requested chunk not available?!
+				stringstream ss;
+				ss << "PWAHBitSet::get[" << bitIndex << "]: Index contains only " << _indexPartitionOffset.size() << " entry/entries, entry with index " << chunkIndex << " is out of bounds!";
+				ss << "\n";
+				ss << this->toString();
+				throw ss.str();
+			}
+
 		} else {
 			if (DEBUGGING) cout << "PWAHBitSet::get[" << bitIndex << "] -- block " << blockIndex << " already compressed, scanning..." << endl;
 		}
@@ -663,6 +679,7 @@ template<unsigned int P> const bool PWAHBitSet<P>::get(int bitIndex, bool disabl
 
 		ss << "Indexing active. Scanning started at word " << initialWordIndex << ", partition " << currPartitionIndex;
 		ss << " which contains block " << currBlockIndex;
+		//ss << ". Without using index, query returns: " << (get(bitIndex, true) ? "true" : "false");
 	}
 	throw string(ss.str());
 }
@@ -954,6 +971,7 @@ template<unsigned int P> void PWAHBitSet<P>::updateIndex(int numBlocks, int firs
  */
 template<unsigned int P> void PWAHBitSet<P>::setIndexEntry(int chunkIndex, int indexWord, int indexPartition, int indexPartitionOffset){
 	const bool DEBUGGING = false;
+
 	if (DEBUGGING) cout << "PWAHBitSet::setIndexEntry -- setting index for chunk " << chunkIndex << endl;
 	if (_VERIFY){
 		if (_indexWord.size() < chunkIndex){
@@ -1656,8 +1674,14 @@ template<> void PWAHBitSet<4>::addExtendedFillPartitions(bool oneFill, int numBl
 		int part2 = numBlocks & 0b00001111111111111100000000000000;
 		part2 >>= 14;
 
-		// Add the two fill partitions
-		addFillPartition(oneFill, part1, firstBlockIndex);
+		// Add the two fill partitions, but instruct 'addFillPartition'
+		// not to touch the indexing data structures
+		addFillPartition(oneFill, part1, -1);
+
+		// Manually update index
+		updateIndex(numBlocks, firstBlockIndex);
+
+		// Add second partition of the fill (updating index data structures not required)
 		addFillPartition(oneFill, part2, -1);
 
 		if (DEBUGGING) cout << "PWAHBitSet<4>::addExtendedFill -- part1: " << toBitString(part1) << endl;
@@ -1726,6 +1750,10 @@ template<> void PWAHBitSet<8>::addExtendedFillPartitions(bool oneFill, int numBl
 		for (int i = 0; i < numPartitions; i++){
 			currBits = (numBlocks >> i * 6) & mask6;
 			if (i == 0){
+				// i = 0: first partition of this extended fill
+				// add the partition using 'addFillPartition', but instruct
+				// 'addFillPartition' not to update the index data structures,
+				// since the fill length is expressed using multiple partitions
 				addFillPartition(oneFill, currBits, -1);
 				updateIndex(numBlocks, firstBlockIndex);
 			} else {
