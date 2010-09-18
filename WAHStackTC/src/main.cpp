@@ -109,10 +109,11 @@ int main(int argc, char* argv[]) {
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/agrocyc.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/reactome.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/kegg.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/human.graph";
+	defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/human.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/xmark.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Pajek/patents.graph";
-	defFilename = "/home/bas/temp/crashgraphs/285c287ce.graph";
+	//defFilename = "/home/bas/temp/crashgraphs/285c287ce.graph";
+	//defFilename = "/home/bas/temp/crashgraphs/0-250000-20000.graph";
 
 	typedef map<string,string> mapType;
 	map<string, string> cmdLineArgs;
@@ -183,6 +184,8 @@ int main(int argc, char* argv[]) {
 			cout << "done, that took " << timer.reset() << " msecs" << endl;
 			cout << "Number of vertices: " << graph.getNumberOfVertices() << ", ";
 			cout << "number of edges: " << graph.countNumberOfEdges() << endl;
+
+			/**
 			cout << "Min, max, average out degree: ";
 			cout << graph.computeMinOutDegree() << ", " << graph.computeMaxOutDegree() << ", " << graph.computeAvgOutDegree() << endl;
 			cout << "Min, max, average in degree: ";
@@ -192,6 +195,7 @@ int main(int argc, char* argv[]) {
 			cout.precision(8);
 			cout << graph.computeAverageLocalClusteringCoefficient() << endl;
 			cout.precision(4);
+			**/
 		}
 
 		double tmp;
