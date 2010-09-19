@@ -572,8 +572,8 @@ template<unsigned int P> const bool PWAHBitSet<P>::get(int bitIndex, bool disabl
 
 		if (_indexChunkSize > 0 && !disableIndex){
 			// Index available
-			const int chunkIndex = bitIndex / _indexChunkSize;
-			const int chunkFirstBit = chunkIndex * _indexChunkSize;
+			const unsigned int chunkIndex = bitIndex / _indexChunkSize;
+			const unsigned int chunkFirstBit = chunkIndex * _indexChunkSize;
 
 			initialWordIndex = _indexWord[chunkIndex];
 			currPartitionIndex = _indexPartition[chunkIndex];
@@ -969,7 +969,7 @@ template<unsigned int P> void PWAHBitSet<P>::updateIndex(int numBlocks, int firs
  * \param indexPartition the partition index in which the chunk starts
  * \param indexPartitionOffset the offset (in blocks) within the partition
  */
-template<unsigned int P> void PWAHBitSet<P>::setIndexEntry(int chunkIndex, int indexWord, int indexPartition, int indexPartitionOffset){
+template<unsigned int P> void PWAHBitSet<P>::setIndexEntry(unsigned int chunkIndex, int indexWord, int indexPartition, int indexPartitionOffset){
 	const bool DEBUGGING = false;
 
 	if (DEBUGGING) cout << "PWAHBitSet::setIndexEntry -- setting index for chunk " << chunkIndex << endl;
@@ -1128,7 +1128,7 @@ template<unsigned int P> void PWAHBitSet<P>::multiOr(PWAHBitSet<P>** bitSets, un
 
 	if (DEBUGGING){
 		cout << "Input to multi-or:" << endl;
-		for (int i = 0; i < numBitSets; i++){
+		for (unsigned int i = 0; i < numBitSets; i++){
 			cout << "BitSet " << i << ":" << endl;
 			cout << bitSets[i]->toString() << endl;
 		}

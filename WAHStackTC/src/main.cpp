@@ -102,14 +102,14 @@ int main(int argc, char* argv[]) {
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/child.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/subtype.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Pajek/patents.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/categorypagelinks.graph";
+	defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/categorypagelinks.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/categorylinks.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/pagelinks.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/samba/setflow.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/agrocyc.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/reactome.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/kegg.graph";
-	defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/human.graph";
+	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/human.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/xmark.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Pajek/patents.graph";
 	//defFilename = "/home/bas/temp/crashgraphs/285c287ce.graph";
@@ -123,7 +123,8 @@ int main(int argc, char* argv[]) {
 	cmdLineArgs["run-validator"] = "unset";
 	cmdLineArgs["bitset-implementation"] = "pwah-8";
 	cmdLineArgs["no-details"] = "unset";
-	cmdLineArgs["index-chunk-size"] = "-1";
+	//cmdLineArgs["index-chunk-size"] = "-1";
+	cmdLineArgs["index-chunk-size"] = "4096";
 
 	// By default: use multi-OR when a component has out-degree of at least 5
 	cmdLineArgs["min-multi-or"] = "0";

@@ -77,7 +77,7 @@ private:
 	void addPartition(bool isFill, long value);
 	void decompressLastBlock();
 	void updateIndex(int numBlocks, int firstBlockIndex);
-	void setIndexEntry(int chunkIndex, int indexWord, int indexPartition, int indexPartitionOffset);
+	void setIndexEntry(unsigned int chunkIndex, int indexWord, int indexPartition, int indexPartitionOffset);
 	int countNumberOfBlocks();
 };
 
