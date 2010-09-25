@@ -26,6 +26,7 @@ public:
 	virtual void writeToChacoFile(string filename) = 0;
 	virtual bool reachable(int src, int dst) = 0;
 	virtual long memoryUsedByBitSets() = 0;
+	virtual long totalMemoryUsage() = 0;
 	virtual void reportStatistics() = 0;
 	virtual string algorithmName() = 0;
 	virtual long memoryUsedByIntervalLists() = 0;

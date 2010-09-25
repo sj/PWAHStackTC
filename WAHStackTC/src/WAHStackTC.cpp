@@ -584,6 +584,11 @@ template<class B> long WAHStackTC<B>::memoryUsedByBitSets(){
 	return totalBits;
 }
 
+template<class B> long WAHStackTC<B>::totalMemoryUsage(){
+	long byBitSets = memoryUsedByBitSets();
+	return byBitSets + 32 * _graph->getNumberOfVertices();
+}
+
 template<class B> void WAHStackTC<B>::reportStatistics(){
 	cout << "Number of vertices: " << _graph->getNumberOfVertices() << endl;
 	cout << "Number of edges: " << _graph->countNumberOfEdges() << endl;

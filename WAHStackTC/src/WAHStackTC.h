@@ -63,6 +63,7 @@ public:
 	void writeToChacoFile(string filename);
 	bool reachable(int src, int dst);
 	long memoryUsedByBitSets();
+	long totalMemoryUsage();
 	void reportStatistics();
 	string algorithmName();
 	long memoryUsedByIntervalLists();

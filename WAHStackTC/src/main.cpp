@@ -271,7 +271,8 @@ int main(int argc, char* argv[]) {
 			cout.precision(4);
 */
 
-			cout << "Memory used by the " << tca->algorithmName() << " data structure: " << tca->memoryUsedByBitSets() << " bits" << endl;
+			cout << "Memory used by the reachability data structures of the " << tca->algorithmName() << " algorithm: " << tca->memoryUsedByBitSets() << " bits" << endl;
+			cout << "Total memory used by the " << tca->algorithmName() << " algorithm: " << tca->totalMemoryUsage() << " bits" << endl;
 
 			if (!nodetails){
 				// Check how much memory an interval list would have used
@@ -309,7 +310,7 @@ int main(int argc, char* argv[]) {
 			cout << "done, that took " << tmp << " msecs" << endl;
 			if (!nodetails) cout << numReachable << " pairs turned out to be reachable." << endl;
 
-			memUsage = tca->memoryUsedByBitSets();
+			memUsage = tca->totalMemoryUsage();
 			cout << "Number of bits required to store WAH compressed bitsets: " << memUsage << endl;
 			delete[] rndDst;
 			delete[] rndSrc;
