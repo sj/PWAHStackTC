@@ -123,8 +123,8 @@ int main(int argc, char* argv[]) {
 	cmdLineArgs["run-validator"] = "unset";
 	cmdLineArgs["bitset-implementation"] = "pwah-8";
 	cmdLineArgs["no-details"] = "unset";
-	//cmdLineArgs["index-chunk-size"] = "-1";
-	cmdLineArgs["index-chunk-size"] = "4096";
+	cmdLineArgs["index-chunk-size"] = "-1";
+	//cmdLineArgs["index-chunk-size"] = "4096";
 
 	// By default: use multi-OR when a component has out-degree of at least 5
 	cmdLineArgs["min-multi-or"] = "0";
