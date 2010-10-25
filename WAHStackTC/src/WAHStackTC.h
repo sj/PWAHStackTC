@@ -57,6 +57,9 @@ public:
 	long countNumberOfEdgesInTC();
 	long countNumberOfEdgesInCondensedTC();
 	long countNumberOfEdgesInCondensedTC(bool ignoreSelfLoops, bool ignoreSingletonSelfLoops);
+	float countAverageNumberOfIntervals(bool countNulls = true);
+	int countMaxNumberOfIntervals();
+	long countTotalNumberOfIntervals();
 	double computeLocalClusteringCoefficient(int componentIndex);
 	double computeAverageLocalClusteringCoefficient();
 	int getNumberOfComponents();
@@ -64,7 +67,7 @@ public:
 	bool reachable(int src, int dst);
 	long memoryUsedByBitSets();
 	long totalMemoryUsage();
-	void reportStatistics();
+	string getStatistics();
 	string algorithmName();
 	long memoryUsedByIntervalLists();
 

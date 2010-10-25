@@ -589,13 +589,63 @@ template<class B> long WAHStackTC<B>::totalMemoryUsage(){
 	return byBitSets + 32 * _graph->getNumberOfVertices();
 }
 
-template<class B> void WAHStackTC<B>::reportStatistics(){
-	cout << "Number of vertices: " << _graph->getNumberOfVertices() << endl;
-	cout << "Number of edges: " << _graph->countNumberOfEdges() << endl;
-	cout << "Number of strongly connected components: " << _componentSizes.size() << endl;
-
-	cout << "Number of bits required to store all WAH bitsets: " << this->memoryUsedByBitSets() << endl;
+template<class B> string WAHStackTC<B>::getStatistics(){
+	return "";
 }
+
+template<> long WAHStackTC<IntervalBitSet>::countTotalNumberOfIntervals(){
+	long count = 0;
+	for(unsigned int i = 0; i < _componentSuccessors.size(); i++){
+		if (_componentSuccessors[i] != NULL){
+			count += _componentSuccessors[i]->numberOfIntervals();
+		}
+	}
+	return count;
+}
+
+template<> int WAHStackTC<IntervalBitSet>::countMaxNumberOfIntervals(){
+	unsigned int max = 0;
+	for(unsigned int i = 0; i < _componentSuccessors.size(); i++){
+		if (_componentSuccessors[i] != NULL){
+			if (max < _componentSuccessors[i]->numberOfIntervals()) max = _componentSuccessors[i]->numberOfIntervals();
+		}
+	}
+
+	return max;
+}
+
+template<> float WAHStackTC<IntervalBitSet>::countAverageNumberOfIntervals(bool countNulls){
+	long total = this->countTotalNumberOfIntervals();
+
+	if (countNulls){
+		return total / ((float) _componentSuccessors.size());
+	} else {
+		// Count number of (non-null) interval lists
+		int count = 0;
+		for(unsigned int i = 0; i < _componentSuccessors.size(); i++){
+			if (_componentSuccessors[i] != NULL){
+				count++;
+			}
+		}
+
+		return total / ((float) count);
+	}
+}
+
+template<> string WAHStackTC<IntervalBitSet>::getStatistics(){
+	stringstream ss;
+	//ss << "Number of vertices: " << _graph->getNumberOfVertices() << endl;
+	/**ss << "Number of edges: " << _graph->countNumberOfEdges() << endl;
+	ss << "Number of strongly connected components: " << _componentSizes.size() << endl;
+	ss << "Number of bits required to store all WAH bitsets: " << this->memoryUsedByBitSets() << endl;**/
+	ss << "Total number of intervals in all interval lists: " << this->countTotalNumberOfIntervals() << endl;
+	ss << "Average number (including 0-count of NULL-lists) of intervals in interval lists: " << this->countAverageNumberOfIntervals(true) << endl;
+	ss << "Average number (excluding 0-count of NULL-lists) of intervals in interval lists: " << this->countAverageNumberOfIntervals(false) << endl;
+	ss << "Number of intervals in largest interval list: " << this->countMaxNumberOfIntervals();
+	return ss.str();
+}
+
+
 
 template<class B> string WAHStackTC<B>::algorithmName(){
 	stringstream ss;

@@ -99,10 +99,10 @@ int main(int argc, char* argv[]) {
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/child.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/polycalls.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/calls.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/child.graph";
+	defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/child.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/subtype.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Pajek/patents.graph";
-	defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/categorypagelinks.graph";
+	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/categorypagelinks.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/categorylinks.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/pagelinks.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/samba/setflow.graph";
@@ -114,6 +114,7 @@ int main(int argc, char* argv[]) {
 	//defFilename = "/home/bas/afstuderen/Datasets/Pajek/patents.graph";
 	//defFilename = "/home/bas/temp/crashgraphs/285c287ce.graph";
 	//defFilename = "/home/bas/temp/crashgraphs/0-250000-20000.graph";
+	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/firefox/callgraph.graph";
 
 	typedef map<string,string> mapType;
 	map<string, string> cmdLineArgs;
@@ -121,7 +122,7 @@ int main(int argc, char* argv[]) {
 	cmdLineArgs["filename"] = defFilename;
 	cmdLineArgs["reflexive"] = "unset";
 	cmdLineArgs["run-validator"] = "unset";
-	cmdLineArgs["bitset-implementation"] = "pwah-8";
+	cmdLineArgs["bitset-implementation"] = "interval";
 	cmdLineArgs["no-details"] = "unset";
 	cmdLineArgs["index-chunk-size"] = "-1";
 	//cmdLineArgs["index-chunk-size"] = "4096";
@@ -272,7 +273,6 @@ int main(int argc, char* argv[]) {
 */
 
 			cout << "Memory used by the reachability data structures of the " << tca->algorithmName() << " algorithm: " << tca->memoryUsedByBitSets() << " bits" << endl;
-			cout << "Total memory used by the " << tca->algorithmName() << " algorithm: " << tca->totalMemoryUsage() << " bits" << endl;
 
 			if (!nodetails){
 				// Check how much memory an interval list would have used
@@ -281,6 +281,12 @@ int main(int argc, char* argv[]) {
 				cout << tca->memoryUsedByIntervalLists() << " bits" << endl;
 			}
 
+			cout << "Total memory used by the " << tca->algorithmName() << " algorithm: " << tca->totalMemoryUsage() << " bits" << endl;
+
+			//if (!nodetails){
+				//cout << "Additional statistics:" << endl;
+				cout << tca->getStatistics() << endl;
+			//}
 			if (RAND_MAX < graph.getNumberOfVertices()){
 				cerr << "Warning! RAND_MAX=" << RAND_MAX << ", whilst number of vertices = " << graph.getNumberOfVertices() << ". Not every vertex can possibly be reached." << endl;
 			}

@@ -216,7 +216,7 @@ Graph Graph::parseChacoFile(string filename){
 
 	PerformanceTimer timer = PerformanceTimer::start();
 	ifstream input_file(filename.c_str());
-	char buffer[262144];
+	char buffer[2621440];
 
 	input_file.clear();
 	input_file.seekg(0);

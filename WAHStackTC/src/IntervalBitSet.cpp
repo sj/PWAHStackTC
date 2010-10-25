@@ -72,6 +72,11 @@ const bool IntervalBitSet::equals(BitSet* otherBitSet){
 	throw string("not implemented");
 }
 
+const unsigned int IntervalBitSet::numberOfIntervals(){
+	return _upper.size();
+}
+
+
 const unsigned int IntervalBitSet::size(){
 	return _lastBitTouched + 1;
 }

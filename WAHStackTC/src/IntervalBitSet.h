@@ -21,8 +21,11 @@ public:
 	long memoryUsage();
 
 	const string toString();
+	const string toDetailString();
 	const bool equals(BitSet* otherBitSet);
 	const unsigned int size();
+	const unsigned int numberOfIntervals();
+
 	void clear();
 	void set(int bitIndex, bool value);
 	void set(int bitIndex);
@@ -37,7 +40,6 @@ public:
 
 private:
 	int _lastBitTouched;
-	IntervalBitSet* _bitset;
 	vector<int> _lower;
 	vector<int> _upper;
 
