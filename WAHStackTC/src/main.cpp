@@ -99,7 +99,7 @@ int main(int argc, char* argv[]) {
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/child.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/polycalls.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/calls.graph";
-	defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/child.graph";
+	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/child.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/subtype.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Pajek/patents.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/categorypagelinks.graph";
@@ -115,6 +115,7 @@ int main(int argc, char* argv[]) {
 	//defFilename = "/home/bas/temp/crashgraphs/285c287ce.graph";
 	//defFilename = "/home/bas/temp/crashgraphs/0-250000-20000.graph";
 	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/firefox/callgraph.graph";
+	defFilename = "/home/bas/afstuderen/Datasets/Semmle/firefox/file-depends.graph";
 
 	typedef map<string,string> mapType;
 	map<string, string> cmdLineArgs;
@@ -220,7 +221,7 @@ int main(int argc, char* argv[]) {
 			} else if (cmdLineArgs["bitset-implementation"] == "interval"){
 				tca = new WAHStackTC<IntervalBitSet>(graph);
 			} else {
-				cerr << "Invalid BitSet implementation specified on command line" << endl;
+				cerr << "Invalid BitSet implementation specified on command line: '" << cmdLineArgs["bitset-implementation"] << "'" << endl;
 				exit(1);
 			}
 
