@@ -7,7 +7,6 @@
 
 #include <iostream>
 #include "DynamicBitSet.h"
-#include "WAHBitSet.h"
 #include "BitSet.h"
 #include <stdexcept>
 #include <math.h>

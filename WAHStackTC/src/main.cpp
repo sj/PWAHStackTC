@@ -54,81 +54,14 @@ int main(int argc, char* argv[]) {
 	}
 
 
-	runValidatorWhenRequested(argc, argv);
-
-	try {
-		//while (true) BitSetTester<IntervalBitSet>::testOr(5);
-
-		//while (true) BitSetTester::testIterator(new IntervalBitSet(), true);
-
-		//while (true) BitSetTester::testOr();
-
-		//BitSetTester::diff();
-		//BitSetTester::testSetGetIndex();
-		//bt.testSetGet();
-
-		//exit(1);
-
-		//WAHBitSet* bs2 = new WAHBitSet();
-
-		//BitSetTester tester = BitSetTester(bs1, bs2);
-		//tester.testSetGet();
-		//while(true){
-		//	BitSetTester::testOr();
-		//}
-
-		//while (true) BitSetTester::testIterator(bs1, true);
-
-
-
-		//BitSetTester::compareMemoryUsage();
-	} catch (int e){
-		cerr << "Exception: " << e << endl;;
-	}
-	//exit(1);
-
-	string defFilename;
-	//defFilename = "../../Datasets/nuutila32.graph";
-	//defFilename = "../../Datasets/Semmle graphs/java/depends.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/depends.graph";
-	defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/depends.graph";
-	defFilename = "/tmp/test.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/callgraph.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/c++/callgraph.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/successors.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/child.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/polycalls.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/calls.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/child.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/java/subtype.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/Pajek/patents.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/categorypagelinks.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/categorylinks.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/wiki/pagelinks.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/samba/setflow.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/agrocyc.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/reactome.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/kegg.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/human.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/SigMod 08/real_data/xmark.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/Pajek/patents.graph";
-	//defFilename = "/home/bas/temp/crashgraphs/285c287ce.graph";
-	//defFilename = "/home/bas/temp/crashgraphs/0-250000-20000.graph";
-	//defFilename = "/home/bas/afstuderen/Datasets/Semmle graphs/firefox/callgraph.graph";
-	defFilename = "/home/bas/afstuderen/Datasets/Semmle/firefox/file-depends.graph";
-
 	typedef map<string,string> mapType;
 	map<string, string> cmdLineArgs;
 	cmdLineArgs["num-runs"] = "1";
-	cmdLineArgs["filename"] = defFilename;
+	cmdLineArgs["filename"] = "";
 	cmdLineArgs["reflexive"] = "unset";
-	cmdLineArgs["run-validator"] = "unset";
-	cmdLineArgs["bitset-implementation"] = "interval";
+	cmdLineArgs["bitset-implementation"] = "pwah-8";
 	cmdLineArgs["no-details"] = "unset";
 	cmdLineArgs["index-chunk-size"] = "-1";
-	//cmdLineArgs["index-chunk-size"] = "4096";
-
-	// By default: use multi-OR when a component has out-degree of at least 5
 	cmdLineArgs["min-multi-or"] = "0";
 
 	for (int i = 1; i < argc; i++){
@@ -160,6 +93,11 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
+	if (cmdLineArgs["filename"] == ""){
+		cerr << "No input file provided, please use command-line option --filename=myfile.graph" << endl;
+		exit (1);
+	}
+
 	const bool nodetails = (cmdLineArgs["no-details"] != "unset");
 	const bool reflexive = (cmdLineArgs["reflexive"] != "unset");
 	const int minMultiOR = atoi(cmdLineArgs["min-multi-or"].c_str());
@@ -170,12 +108,6 @@ int main(int argc, char* argv[]) {
 	double totalConstructionTime = 0;
 	double totalQueryTime = 0;
 	long memUsage = 0;
-
-	if (cmdLineArgs["run-validator"] != "unset"){
-		// Validation should have been performed earlier?!
-		cerr << "Something's wrong with the validator!" << endl;
-		exit(1);
-	}
 
 	try {
 		PerformanceTimer timer = PerformanceTimer::start();
