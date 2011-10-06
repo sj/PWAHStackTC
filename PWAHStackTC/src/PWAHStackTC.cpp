@@ -1,12 +1,12 @@
 /*
- * WAHStackTC.cpp
+ * PWAHStackTC.cpp
  *
  *  Created on: Apr 19, 2010
  *      Author: bas
  */
 
 
-#include "WAHStackTC.h"
+#include "PWAHStackTC.h"
 #include "Graph.h"
 #include "DynamicBitSet.h"
 #include <iostream>
@@ -23,11 +23,11 @@
 #include <assert.h>
 using namespace std;
 
-template<class B> WAHStackTC<B>::WAHStackTC(Graph& graph) {
+template<class B> PWAHStackTC<B>::PWAHStackTC(Graph& graph) {
 	_graph = &graph;
 }
 
-template<class B> WAHStackTC<B>::~WAHStackTC() {
+template<class B> PWAHStackTC<B>::~PWAHStackTC() {
 	// Free allocated memory for WAHBitSet objects representing successor sets
 	for (unsigned int i = 0; i < _componentSuccessors.size(); i++) delete _componentSuccessors[i];
 
@@ -35,7 +35,7 @@ template<class B> WAHStackTC<B>::~WAHStackTC() {
 	delete _vertexSelfLoop;
 }
 
-template<class B> void WAHStackTC<B>::computeTransitiveClosure(bool reflexitive, bool storeComponentMembers, int minOutDegreeForMultiOR){
+template<class B> void PWAHStackTC<B>::computeTransitiveClosure(bool reflexitive, bool storeComponentMembers, int minOutDegreeForMultiOR){
 	unsigned int numVertices = _graph->getNumberOfVertices();
 
 	_cStack = new DynamicStack(numVertices);
@@ -111,7 +111,7 @@ template<class B> void WAHStackTC<B>::computeTransitiveClosure(bool reflexitive,
 	delete[] _vertexDFSSeqNo;
 }
 
-template<class B> void WAHStackTC<B>::dfsVisit(unsigned int vertexIndex){
+template<class B> void PWAHStackTC<B>::dfsVisit(unsigned int vertexIndex){
 	const bool debug = false;
 
 	if (debug) cout << "Visiting vertex " << vertexIndex << endl;
@@ -371,7 +371,7 @@ template<class B> void WAHStackTC<B>::dfsVisit(unsigned int vertexIndex){
 	if (debug) cout << "Done visiting " << vertexIndex << ", returning DFS call" << endl;
 }
 
-template<class B> string WAHStackTC<B>::tcToString(){
+template<class B> string PWAHStackTC<B>::tcToString(){
 	stringstream stream;
 	stream << "== Vertices and components ==" << endl;
 	for (int v = 0; v < _graph->getNumberOfVertices(); v++){
@@ -399,7 +399,7 @@ template<class B> string WAHStackTC<B>::tcToString(){
  * between components (i.e. when multiple vertices from component A are connected to one or more vertices
  * in component B) are ignored.
  */
-template<class B> long WAHStackTC<B>::countNumberOfEdgesInCondensedTC(){
+template<class B> long PWAHStackTC<B>::countNumberOfEdgesInCondensedTC(){
 	return countNumberOfEdgesInCondensedTC(false, false);
 }
 
@@ -416,7 +416,7 @@ template<class B> long WAHStackTC<B>::countNumberOfEdgesInCondensedTC(){
  * \param ignoreSingletonSelfLoops Ignore all self-loops of singleton components (components consisting
  * of only one vertex)
  */
-template<class B> long WAHStackTC<B>::countNumberOfEdgesInCondensedTC(bool ignoreSelfLoops, bool ignoreSingletonSelfLoops){
+template<class B> long PWAHStackTC<B>::countNumberOfEdgesInCondensedTC(bool ignoreSelfLoops, bool ignoreSingletonSelfLoops){
 	long count = 0;
 	int currSuccessorIndex;
 
@@ -463,7 +463,7 @@ template<class B> long WAHStackTC<B>::countNumberOfEdgesInCondensedTC(bool ignor
 	return count;
 }
 
-template<class B> bool WAHStackTC<B>::componentHasSelfLoop(int componentIndex){
+template<class B> bool PWAHStackTC<B>::componentHasSelfLoop(int componentIndex){
 	if (_reflexitive || _storeComponentVertices){
 		// Self-loops were not stored explicitly, since their existence can be shown
 		// implicitly.
@@ -486,12 +486,12 @@ template<class B> bool WAHStackTC<B>::componentHasSelfLoop(int componentIndex){
 		}
 	} else {
 		// Self-loops were stored explicitly, this function should not be used
-		throw string("WAHStackTC::componentHasSelfLoop can not be used when self-loops are stored explicitly!");
+		throw string("PWAHStackTC::componentHasSelfLoop can not be used when self-loops are stored explicitly!");
 	}
 	return false;
 }
 
-template<class B> long WAHStackTC<B>::countNumberOfEdgesInTC(){
+template<class B> long PWAHStackTC<B>::countNumberOfEdgesInTC(){
 	/**
 	// Brute force without using iterators:
 	int compA, compB;
@@ -548,17 +548,17 @@ template<class B> long WAHStackTC<B>::countNumberOfEdgesInTC(){
 	return count;
 }
 
-template<class B> bool WAHStackTC<B>::reachable(int src, int dst){
+template<class B> bool PWAHStackTC<B>::reachable(int src, int dst){
 	const bool DEBUGGING = false;
 	if (src >= _graph->getNumberOfVertices()) throw range_error("Source index out of bounds");
 	if (dst >= _graph->getNumberOfVertices()) throw range_error("Source index out of bounds");
-	if (DEBUGGING) cout << "WAHStackTC::reachable " << src << " -> " << dst << " (vertex indices)" << endl;
+	if (DEBUGGING) cout << "PWAHStackTC::reachable " << src << " -> " << dst << " (vertex indices)" << endl;
 
 	if (src == dst) return _vertexSelfLoop->get(src);
 	int srcComponent = _vertexComponents[src];
 	int dstComponent = _vertexComponents[dst];
 
-	if (DEBUGGING) cout << "WAHStackTC::reachable " << srcComponent << " -> " << dstComponent << " (component indices)" << endl;
+	if (DEBUGGING) cout << "PWAHStackTC::reachable " << srcComponent << " -> " << dstComponent << " (component indices)" << endl;
 
 	if (_componentSuccessors[srcComponent] == NULL){
 		// Source component didn't have any adjacent components
@@ -576,7 +576,7 @@ template<class B> bool WAHStackTC<B>::reachable(int src, int dst){
 	return _componentSuccessors[srcComponent]->get(dstComponent);
 }
 
-template<class B> long WAHStackTC<B>::memoryUsedByBitSets(){
+template<class B> long PWAHStackTC<B>::memoryUsedByBitSets(){
 	long totalBits = 0;
 	for (unsigned int i = 0; i < _componentSizes.size(); i++){
 		if (_componentSuccessors[i] != NULL) totalBits += _componentSuccessors[i]->memoryUsage();
@@ -584,16 +584,16 @@ template<class B> long WAHStackTC<B>::memoryUsedByBitSets(){
 	return totalBits;
 }
 
-template<class B> long WAHStackTC<B>::totalMemoryUsage(){
+template<class B> long PWAHStackTC<B>::totalMemoryUsage(){
 	long byBitSets = memoryUsedByBitSets();
 	return byBitSets + 32 * _graph->getNumberOfVertices();
 }
 
-template<class B> string WAHStackTC<B>::getStatistics(){
+template<class B> string PWAHStackTC<B>::getStatistics(){
 	return "";
 }
 
-template<> long WAHStackTC<IntervalBitSet>::countTotalNumberOfIntervals(){
+template<> long PWAHStackTC<IntervalBitSet>::countTotalNumberOfIntervals(){
 	long count = 0;
 	for(unsigned int i = 0; i < _componentSuccessors.size(); i++){
 		if (_componentSuccessors[i] != NULL){
@@ -603,7 +603,7 @@ template<> long WAHStackTC<IntervalBitSet>::countTotalNumberOfIntervals(){
 	return count;
 }
 
-template<> int WAHStackTC<IntervalBitSet>::countMaxNumberOfIntervals(){
+template<> int PWAHStackTC<IntervalBitSet>::countMaxNumberOfIntervals(){
 	unsigned int max = 0;
 	for(unsigned int i = 0; i < _componentSuccessors.size(); i++){
 		if (_componentSuccessors[i] != NULL){
@@ -614,7 +614,7 @@ template<> int WAHStackTC<IntervalBitSet>::countMaxNumberOfIntervals(){
 	return max;
 }
 
-template<> float WAHStackTC<IntervalBitSet>::countAverageNumberOfIntervals(bool countNulls){
+template<> float PWAHStackTC<IntervalBitSet>::countAverageNumberOfIntervals(bool countNulls){
 	long total = this->countTotalNumberOfIntervals();
 
 	if (countNulls){
@@ -632,7 +632,7 @@ template<> float WAHStackTC<IntervalBitSet>::countAverageNumberOfIntervals(bool 
 	}
 }
 
-template<> string WAHStackTC<IntervalBitSet>::getStatistics(){
+template<> string PWAHStackTC<IntervalBitSet>::getStatistics(){
 	stringstream ss;
 	//ss << "Number of vertices: " << _graph->getNumberOfVertices() << endl;
 	/**ss << "Number of edges: " << _graph->countNumberOfEdges() << endl;
@@ -647,25 +647,25 @@ template<> string WAHStackTC<IntervalBitSet>::getStatistics(){
 
 
 
-template<class B> string WAHStackTC<B>::algorithmName(){
+template<class B> string PWAHStackTC<B>::algorithmName(){
 	stringstream ss;
 	B inst;
-	ss << "WAHStackTC<" << inst.bsImplementationName() << ">";
+	ss << "PWAHStackTC<" << inst.bsImplementationName() << ">";
 	return ss.str();
 }
 
 /**
  * Stores the transitive closure in a Chaco-formatted file. Can be huge!
  */
-template<class B> void WAHStackTC<B>::writeToChacoFile(string filename){
+template<class B> void PWAHStackTC<B>::writeToChacoFile(string filename){
 
 }
 
-template<class B> int WAHStackTC<B>::getNumberOfComponents(){
+template<class B> int PWAHStackTC<B>::getNumberOfComponents(){
 	return _componentSizes.size();
 }
 
-template<class B> long WAHStackTC<B>::memoryUsedByIntervalLists(){
+template<class B> long PWAHStackTC<B>::memoryUsedByIntervalLists(){
 	long res = 0;
 	for (int i = 0; i < _componentSuccessors.size(); i++){
 		if (_componentSuccessors[i] != NULL){
@@ -678,7 +678,7 @@ template<class B> long WAHStackTC<B>::memoryUsedByIntervalLists(){
 	return res;
 }
 
-template<class B> double WAHStackTC<B>::computeAverageLocalClusteringCoefficient(){
+template<class B> double PWAHStackTC<B>::computeAverageLocalClusteringCoefficient(){
 	double total = 0;
 
 	for (unsigned int i = 0; i < _componentSuccessors.size(); i++){
@@ -688,7 +688,7 @@ template<class B> double WAHStackTC<B>::computeAverageLocalClusteringCoefficient
 	return total / _componentSuccessors.size();
 }
 
-template<class B> double WAHStackTC<B>::computeLocalClusteringCoefficient(int componentIndex){
+template<class B> double PWAHStackTC<B>::computeLocalClusteringCoefficient(int componentIndex){
 	if (_componentSuccessors[componentIndex] == NULL) return 0;
 	StaticBitSet neighbourhood = StaticBitSet(_componentSuccessors.size());
 	int neighbourhoodSize = 0;
@@ -745,9 +745,9 @@ template<class B> double WAHStackTC<B>::computeLocalClusteringCoefficient(int co
 /**
  * Instruct the compiler which templates to instantiate
  */
-template class WAHStackTC<WAHBitSet>;
-template class WAHStackTC<IntervalBitSet>;
-template class WAHStackTC<PWAHBitSet<1> >;
-template class WAHStackTC<PWAHBitSet<2> >;
-template class WAHStackTC<PWAHBitSet<4> >;
-template class WAHStackTC<PWAHBitSet<8> >;
+template class PWAHStackTC<WAHBitSet>;
+template class PWAHStackTC<IntervalBitSet>;
+template class PWAHStackTC<PWAHBitSet<1> >;
+template class PWAHStackTC<PWAHBitSet<2> >;
+template class PWAHStackTC<PWAHBitSet<4> >;
+template class PWAHStackTC<PWAHBitSet<8> >;

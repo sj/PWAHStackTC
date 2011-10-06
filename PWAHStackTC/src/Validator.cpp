@@ -10,7 +10,7 @@
 #include <iostream>
 #include "PerformanceTimer.h"
 #include "Graph.h"
-#include "WAHStackTC.h"
+#include "PWAHStackTC.h"
 #include <stdlib.h>
 #include "PWAHBitSet.h"
 #include "TransitiveClosureAlgorithm.h"
@@ -83,11 +83,11 @@ void Validator::validate(){
 
 			for (int bstype = 0; bstype < 5; bstype++){
 				for (int reflexive = 0; reflexive <= 1; reflexive++){
-					if (bstype == 0) tca = new WAHStackTC<PWAHBitSet<2> >(graph);
-					else if (bstype == 1) tca = new WAHStackTC<PWAHBitSet<4> >(graph);
-					else if (bstype == 2) tca = new WAHStackTC<PWAHBitSet<8> >(graph);
-					else if (bstype == 3) tca = new WAHStackTC<WAHBitSet>(graph);
-					else if (bstype == 4) tca = new WAHStackTC<IntervalBitSet>(graph);
+					if (bstype == 0) tca = new PWAHStackTC<PWAHBitSet<2> >(graph);
+					else if (bstype == 1) tca = new PWAHStackTC<PWAHBitSet<4> >(graph);
+					else if (bstype == 2) tca = new PWAHStackTC<PWAHBitSet<8> >(graph);
+					else if (bstype == 3) tca = new PWAHStackTC<WAHBitSet>(graph);
+					else if (bstype == 4) tca = new PWAHStackTC<IntervalBitSet>(graph);
 					else throw string("???");
 
 					cout << "Computing " << (reflexive == 1 ? "reflexive " : "") << "TC using " << tca->algorithmName() << "... ";

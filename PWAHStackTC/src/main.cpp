@@ -9,7 +9,7 @@
 #include "BitSetTester.h"
 #include "Graph.h"
 #include "WAHBitSet.h"
-#include "WAHStackTC.h"
+#include "PWAHStackTC.h"
 #include "DynamicBitSet.h"
 #include "WAHBitSetTester.h"
 #include "PerformanceTimer.h"
@@ -48,7 +48,7 @@ int main(int argc, char* argv[]) {
 			rl.rlim_cur = sSize;
 			if (setrlimit(RLIMIT_STACK, &rl) != 0){
 				// Error...
-				cerr << "Warning: could not increase stack size. WAHStackTC might run into trouble..." << endl;
+				cerr << "Warning: could not increase stack size. PWAHStackTC might run into trouble..." << endl;
 			}
 		}
 	}
@@ -140,18 +140,18 @@ int main(int argc, char* argv[]) {
 
 			TransitiveClosureAlgorithm* tca;
 			if (cmdLineArgs["bitset-implementation"] == "pwah-2"){
-				tca = new WAHStackTC<PWAHBitSet<2> >(graph);
+				tca = new PWAHStackTC<PWAHBitSet<2> >(graph);
 				PWAHBitSet<2>::setIndexChunkSize(indexChunkSize);
 			} else if (cmdLineArgs["bitset-implementation"] == "pwah-4"){
-				tca = new WAHStackTC<PWAHBitSet<4> >(graph);
+				tca = new PWAHStackTC<PWAHBitSet<4> >(graph);
 				PWAHBitSet<4>::setIndexChunkSize(indexChunkSize);
 			} else if (cmdLineArgs["bitset-implementation"] == "pwah-8"){
-				tca = new WAHStackTC<PWAHBitSet<8> >(graph);
+				tca = new PWAHStackTC<PWAHBitSet<8> >(graph);
 				PWAHBitSet<8>::setIndexChunkSize(indexChunkSize);
 			} else if (cmdLineArgs["bitset-implementation"] == "wah"){
-				tca = new WAHStackTC<WAHBitSet>(graph);
+				tca = new PWAHStackTC<WAHBitSet>(graph);
 			} else if (cmdLineArgs["bitset-implementation"] == "interval"){
-				tca = new WAHStackTC<IntervalBitSet>(graph);
+				tca = new PWAHStackTC<IntervalBitSet>(graph);
 			} else {
 				cerr << "Invalid BitSet implementation specified on command line: '" << cmdLineArgs["bitset-implementation"] << "'" << endl;
 				exit(1);

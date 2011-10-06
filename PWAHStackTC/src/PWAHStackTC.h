@@ -1,5 +1,5 @@
 /*
- * WAHStackTC.h
+ * PWAHStackTC.h
  *
  *  Created on: Apr 19, 2010
  *      Author: bas
@@ -22,7 +22,7 @@
 using namespace std;
 
 template <class B>
-class WAHStackTC : public TransitiveClosureAlgorithm {
+class PWAHStackTC : public TransitiveClosureAlgorithm {
 private:
 	Graph* _graph;
 	vector<B*> _componentSuccessors; // stores the successor list (transitive closure) for each component
@@ -49,8 +49,8 @@ private:
 	void dfsVisit(unsigned int vertexIndex);
 
 public:
-	WAHStackTC(Graph& graph);
-	virtual ~WAHStackTC();
+	PWAHStackTC(Graph& graph);
+	virtual ~PWAHStackTC();
 
 	void computeTransitiveClosure(bool reflexive, bool storeComponentMembers, int minOutDegreeForMultiOR);
 	string tcToString();

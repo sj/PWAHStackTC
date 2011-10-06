@@ -14,7 +14,7 @@
 #include "WAHBitSet.h"
 #include "DynamicBitSet.h"
 #include "Graph.h"
-#include "WAHStackTC.h"
+#include "PWAHStackTC.h"
 #include <math.h>
 #include "IntervalBitSet.h"
 using namespace std;
@@ -41,8 +41,8 @@ template<class B> float BitSetTester<B>::rand_float(){
 
 template<class B> void BitSetTester<B>::diff(){
 	Graph g = Graph::parseChacoFile("/home/bas/afstuderen/Datasets/Semmle graphs/c++/depends.graph");
-	WAHStackTC<PWAHBitSet<4> >* wstc_pwah4 = new WAHStackTC<PWAHBitSet<4> >(g);
-	WAHStackTC<WAHBitSet>* wstc_wah = new WAHStackTC<WAHBitSet>(g);
+	PWAHStackTC<PWAHBitSet<4> >* wstc_pwah4 = new PWAHStackTC<PWAHBitSet<4> >(g);
+	PWAHStackTC<WAHBitSet>* wstc_wah = new PWAHStackTC<WAHBitSet>(g);
 
 	wstc_pwah4->computeTransitiveClosure(false, false, 0);
 	wstc_wah->computeTransitiveClosure(false, false, 0);
