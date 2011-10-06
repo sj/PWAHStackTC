@@ -1,8 +1,20 @@
-/*
- * BitSetTester.cpp
+/**
+ * Copyright 2010-2011 Sebastiaan J. van Schaik
  *
- *  Created on: Jun 7, 2010
- *      Author: bas
+ * This file is part of PWAHStackTC.
+ *
+ * PWAHStackTC is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * PWAHStackTC is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PWAHStackTC. If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "BitSetTester.h"
@@ -25,9 +37,7 @@ template<class B> BitSetTester<B>::BitSetTester(BitSet* bs1, BitSet* bs2) {
 	_bs2 = bs2;
 }
 
-template<class B> BitSetTester<B>::~BitSetTester() {
-	// TODO Auto-generated destructor stub
-}
+template<class B> BitSetTester<B>::~BitSetTester() {}
 
 /**
  * \brief Returns a random number between 0 and 1.

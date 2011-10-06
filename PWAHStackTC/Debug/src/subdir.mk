@@ -16,6 +16,7 @@ CPP_SRCS += \
 ../src/LongBitMacros.cpp \
 ../src/PWAHBitSet.cpp \
 ../src/PWAHBitSetIterator.cpp \
+../src/PWAHStackTC.cpp \
 ../src/PerformanceTimer.cpp \
 ../src/StaticBitSet.cpp \
 ../src/TransitiveClosureAlgorithm.cpp \
@@ -23,7 +24,6 @@ CPP_SRCS += \
 ../src/WAHBitSet.cpp \
 ../src/WAHBitSetIterator.cpp \
 ../src/WAHBitSetTester.cpp \
-../src/WAHStackTC.cpp \
 ../src/main.cpp 
 
 OBJS += \
@@ -39,6 +39,7 @@ OBJS += \
 ./src/LongBitMacros.o \
 ./src/PWAHBitSet.o \
 ./src/PWAHBitSetIterator.o \
+./src/PWAHStackTC.o \
 ./src/PerformanceTimer.o \
 ./src/StaticBitSet.o \
 ./src/TransitiveClosureAlgorithm.o \
@@ -46,7 +47,6 @@ OBJS += \
 ./src/WAHBitSet.o \
 ./src/WAHBitSetIterator.o \
 ./src/WAHBitSetTester.o \
-./src/WAHStackTC.o \
 ./src/main.o 
 
 CPP_DEPS += \
@@ -62,6 +62,7 @@ CPP_DEPS += \
 ./src/LongBitMacros.d \
 ./src/PWAHBitSet.d \
 ./src/PWAHBitSetIterator.d \
+./src/PWAHStackTC.d \
 ./src/PerformanceTimer.d \
 ./src/StaticBitSet.d \
 ./src/TransitiveClosureAlgorithm.d \
@@ -69,7 +70,6 @@ CPP_DEPS += \
 ./src/WAHBitSet.d \
 ./src/WAHBitSetIterator.d \
 ./src/WAHBitSetTester.d \
-./src/WAHStackTC.d \
 ./src/main.d 
 
 

@@ -29,8 +29,39 @@ void runValidatorWhenRequested(int argc, char* argv[]){
 	}
 }
 
-void bla(TransitiveClosureAlgorithm* tca){
-	cout << "BLA! " << tca->countNumberOfEdgesInTC() << endl;
+void printUsage(){
+	cerr << "Usage of PWAHStackTC:" << endl;
+	cerr << "  PWAHStackTC --arg1=val1 --arg2=val2" << endl << endl << endl;
+
+	cerr << "Command line parameters:" << endl << endl;
+
+	cerr << "--help" << endl;
+	cerr << "--usage" << endl;
+	cerr << "  Prints this usage information and exits." << endl << endl;
+
+	cerr << "--filename=myfile.graph" << endl;
+	cerr << "  Use myfile.graph as input file (expected format: chaco)." << endl << endl;
+
+	cerr << "--num-runs=5" << endl;
+	cerr << "  Runs the algorithm multiple (in this example: 5) times." << endl << endl;
+
+	cerr << "--reflexive" << endl;
+	cerr << "  Computes the reflexive transitive closure." << endl << endl;
+
+	cerr << "--bitset-implementation=pwah-8" << endl;
+	cerr << "  Specifies the bitset implementation to use. Valid implementations:" << endl;
+	cerr << "  pwah-2, pwah-4, pwah-8, wah, interval (default=pwah-8)." << endl << endl;
+
+	cerr << "--no-details" << endl;
+	cerr << "  Decreases verbosity." << endl << endl;
+
+	cerr << "--index-chuck-size=1024" << endl;
+	cerr << "  Sets the chunk size of the PWAH index (default: disable index)." << endl << endl;
+
+	cerr << "For more information:" << endl;
+	cerr << "Sebastiaan J. van Schaik. Answering reachability queries on large directed graphs, introducing a new data structure using bit vector compression. MSc. thesis, Utrecht University, 2010." << endl;
+	cerr << "Sebastiaan J. van Schaik and Oege de Moor. A memory efficient reachability data structure through bit vector compression. In SIGMOD '11: Proceedings of the 37th SIGMOD international conference on Management of data, pages 913-924, New York, NY, USA, 2011. ACM." << endl;
+
 }
 
 int main(int argc, char* argv[]) {
@@ -59,6 +90,8 @@ int main(int argc, char* argv[]) {
 	cmdLineArgs["num-runs"] = "1";
 	cmdLineArgs["filename"] = "";
 	cmdLineArgs["reflexive"] = "unset";
+	cmdLineArgs["help"] = "unset";
+	cmdLineArgs["usage"] = "unset";
 	cmdLineArgs["bitset-implementation"] = "pwah-8";
 	cmdLineArgs["no-details"] = "unset";
 	cmdLineArgs["index-chunk-size"] = "-1";
@@ -89,13 +122,20 @@ int main(int argc, char* argv[]) {
 		if (found == string::npos){
 			// Commandline argument invalid
 			cerr << "Invalid commandline argument: " << currArg << endl;
+			printUsage();
 			exit(1);
 		}
 	}
 
 	if (cmdLineArgs["filename"] == ""){
 		cerr << "No input file provided, please use command-line option --filename=myfile.graph" << endl;
+		printUsage();
 		exit (1);
+	}
+
+	if (cmdLineArgs["usage"] != "unset" || cmdLineArgs["help"] != "unset"){
+		printUsage();
+		exit(0);
 	}
 
 	const bool nodetails = (cmdLineArgs["no-details"] != "unset");
@@ -119,18 +159,6 @@ int main(int argc, char* argv[]) {
 			cout << "done, that took " << timer.reset() << " msecs" << endl;
 			cout << "Number of vertices: " << graph.getNumberOfVertices() << ", ";
 			cout << "number of edges: " << graph.countNumberOfEdges() << endl;
-
-			/**
-			cout << "Min, max, average out degree: ";
-			cout << graph.computeMinOutDegree() << ", " << graph.computeMaxOutDegree() << ", " << graph.computeAvgOutDegree() << endl;
-			cout << "Min, max, average in degree: ";
-			cout << graph.computeMinInDegree() << ", " << graph.computeMaxInDegree() << ", " << graph.computeAvgInDegree() << endl;
-			cout << "Average local clustering coefficient: ";
-			cout.flush();
-			cout.precision(8);
-			cout << graph.computeAverageLocalClusteringCoefficient() << endl;
-			cout.precision(4);
-			**/
 		}
 
 		double tmp;
@@ -154,6 +182,7 @@ int main(int argc, char* argv[]) {
 				tca = new PWAHStackTC<IntervalBitSet>(graph);
 			} else {
 				cerr << "Invalid BitSet implementation specified on command line: '" << cmdLineArgs["bitset-implementation"] << "'" << endl;
+				printUsage();
 				exit(1);
 			}
 
@@ -197,14 +226,6 @@ int main(int argc, char* argv[]) {
 				cout << tca->countNumberOfEdgesInTC() << " edges" << endl;
 			}
 
-/*
-			cout << "Average local clustering coefficient of condensation graph: ";
-			cout.flush();
-			cout.precision(8);
-			cout << tca->computeAverageLocalClusteringCoefficient() << endl;
-			cout.precision(4);
-*/
-
 			cout << "Memory used by the reachability data structures of the " << tca->algorithmName() << " algorithm: " << tca->memoryUsedByBitSets() << " bits" << endl;
 
 			if (!nodetails){
@@ -215,11 +236,8 @@ int main(int argc, char* argv[]) {
 			}
 
 			cout << "Total memory used by the " << tca->algorithmName() << " algorithm: " << tca->totalMemoryUsage() << " bits" << endl;
+			cout << tca->getStatistics() << endl;
 
-			//if (!nodetails){
-				//cout << "Additional statistics:" << endl;
-				cout << tca->getStatistics() << endl;
-			//}
 			if (RAND_MAX < graph.getNumberOfVertices()){
 				cerr << "Warning! RAND_MAX=" << RAND_MAX << ", whilst number of vertices = " << graph.getNumberOfVertices() << ". Not every vertex can possibly be reached." << endl;
 			}

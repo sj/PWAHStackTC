@@ -1,8 +1,20 @@
-/*
- * WAHBitSet.cpp
+/**
+ * Copyright 2010-2011 Sebastiaan J. van Schaik
  *
- *  Created on: Apr 10, 2010
- *      Author: bas
+ * This file is part of PWAHStackTC.
+ *
+ * PWAHStackTC is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * PWAHStackTC is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PWAHStackTC. If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <iostream>
@@ -553,8 +565,6 @@ void WAHBitSet::multiOr(WAHBitSet** bitSets, unsigned int numBitSets, WAHBitSet*
 	const bool debug = false;
 	if (debug) cout << "Performing multi-way OR on " << numBitSets << " BitSets" << endl;
 	if (numBitSets == 0) return;
-
-	// TODO: in case of just 1 BitSet: make a copy
 
 	unsigned int rBlockIndex = 0;
 	unsigned int* sWordIndex = new unsigned int[numBitSets];
