@@ -32,17 +32,16 @@
 using namespace std;
 
 
-StaticBitSet::StaticBitSet(int initialCapacity) {
+StaticBitSet::StaticBitSet(unsigned int initialCapacity) {
 	init(initialCapacity);
 }
 
 StaticBitSet::~StaticBitSet() {
-	cout.flush();
 	delete[] _bits;
 }
 
 
-void StaticBitSet::init(int capacity){
+void StaticBitSet::init(unsigned int capacity){
 	_capacity = capacity;
 	_numLongs = capacity / sizeof(long) + 1;
 	cout.flush();
@@ -52,11 +51,11 @@ void StaticBitSet::init(int capacity){
 	memset(_bits, 0,  _numLongs * sizeof(long));
 }
 
-void StaticBitSet::set(int bitIndex){
+void StaticBitSet::set(unsigned int bitIndex){
 	set(bitIndex, true);
 }
 
-void StaticBitSet::set(int bitIndex, bool value){
+void StaticBitSet::set(unsigned int bitIndex, bool value){
 	const bool debug = false;
 	if (bitIndex >= _capacity) throw string("Index out of bounds");
 	if (bitIndex >= _lastBitSet) _lastBitSet = bitIndex;
@@ -76,7 +75,7 @@ void StaticBitSet::set(int bitIndex, bool value){
 
 }
 
-const bool StaticBitSet::get(int bitIndex){
+const bool StaticBitSet::get(unsigned int bitIndex){
 	if (bitIndex >= _capacity) throw string ("Index out of bounds");
 	return L_GET_BIT(_bits[bitIndex / sizeof(long)], bitIndex % sizeof(long));
 }
@@ -109,8 +108,6 @@ const unsigned int StaticBitSet::capacity(){
 
 void StaticBitSet::clear(){
 	if (_firstBitSet == -1) return;
-	int offset = (_firstBitSet + 1) / sizeof(long);
-	int numBytes = ceil((float)(_lastBitSet - _firstBitSet) / sizeof(char));
 
 	memset(_bits, 0, _numLongs * sizeof(long));
 	_firstBitSet = -1;

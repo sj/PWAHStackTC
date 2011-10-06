@@ -67,7 +67,7 @@ template<class B> void BitSetTester<B>::diff(){
 		cout << "Number of bitsets doesn't: " << pwah4.size() << " versus " << wah.size() << endl;
 	} else {
 		cout << "Sizes match: " << pwah4.size() << " bit sets" << endl;
-		for (int i = 0; i < pwah4.size(); i++){
+		for (unsigned int i = 0; i < pwah4.size(); i++){
 			if (pwah4[i] == NULL) continue;
 			compare(pwah4[i], wah[i]);
 
@@ -87,7 +87,7 @@ template<class B> void BitSetTester<B>::diff(){
 	delete wstc_wah;
 }
 
-template<class B> void BitSetTester<B>::testOr(int numBitSets){
+template<class B> void BitSetTester<B>::testOr(unsigned int numBitSets){
 	B* b_result = new B();
 	cout << "BitSetTester::testOr -- testing multi OR on " << numBitSets << " bitsets of type " << b_result->bsImplementationName() << endl;
 	B** b_bitsets = new B*[numBitSets];
@@ -108,7 +108,7 @@ template<class B> void BitSetTester<B>::testOr(int numBitSets){
 
 
 	cout << "Input to MultiOR:" << endl;
-	for (int i = 0; i < numBitSets; i++){
+	for (unsigned int i = 0; i < numBitSets; i++){
 		cout << "BitSet " << i << ": ";
 		cout << b_bitsets[i]->toString() << endl;
 	}

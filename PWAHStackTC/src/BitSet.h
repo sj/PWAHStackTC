@@ -32,9 +32,9 @@ public:
 	virtual const bool equals(BitSet* otherBitSet);
 	virtual const unsigned int size() = 0;
 	virtual void clear() = 0;
-	virtual void set(int bitIndex, bool value) = 0;
-	virtual void set(int bitIndex);
-	virtual const bool get(int bitIndex) = 0;
+	virtual void set(unsigned int bitIndex, bool value) = 0;
+	virtual void set(unsigned int bitIndex);
+	virtual const bool get(unsigned int bitIndex) = 0;
 	virtual string bsImplementationName() = 0;
 	virtual BitSetIterator* iterator() = 0;
 

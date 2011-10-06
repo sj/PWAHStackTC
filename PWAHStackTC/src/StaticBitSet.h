@@ -30,15 +30,15 @@ private:
 	long* _bits;
 
 public:
-	StaticBitSet(int capacity);
+	StaticBitSet(unsigned int capacity);
 	virtual ~StaticBitSet();
 
-	void init(int initialCapacity = 64);
+	void init(unsigned int initialCapacity = 64);
 
 	void clear();
-	void set(int bitIndex);
-	void set(int bitIndex, bool value);
-	const bool get(int bitIndex);
+	void set(unsigned int bitIndex);
+	void set(unsigned int bitIndex, bool value);
+	const bool get(unsigned int bitIndex);
 	const string toString();
 	string toBitString(long value);
 	const unsigned int capacity();

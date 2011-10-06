@@ -39,9 +39,9 @@ public:
 	const unsigned int numberOfIntervals();
 
 	void clear();
-	void set(int bitIndex, bool value);
-	void set(int bitIndex);
-	const bool get(int bitIndex);
+	void set(unsigned int bitIndex, bool value);
+	void set(unsigned int bitIndex);
+	const bool get(unsigned int bitIndex);
 	string bsImplementationName();
 	BitSetIterator* iterator();
 	static void multiOr(IntervalBitSet** bitSets, unsigned int numBitSets, IntervalBitSet* result);

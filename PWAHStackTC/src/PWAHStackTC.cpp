@@ -257,7 +257,7 @@ template<class B> void PWAHStackTC<B>::dfsVisit(unsigned int vertexIndex){
 			// Prepare array of successor lists in case of multi-way OR
 			// Note the +1: one slot is allocated in case we'll need to sneak in an extra WAHBitSet
 			// for the MultiWay OR to work.
-			B** adjacentComponentsSuccessors;
+			B** adjacentComponentsSuccessors = NULL;
 			if (use_multiway_or) adjacentComponentsSuccessors = new B*[numAdjacentComponents + 1];
 
 			// Loop over the adjacent component indices to obtain the successor lists and
@@ -385,7 +385,7 @@ template<class B> void PWAHStackTC<B>::dfsVisit(unsigned int vertexIndex){
 template<class B> string PWAHStackTC<B>::tcToString(){
 	stringstream stream;
 	stream << "== Vertices and components ==" << endl;
-	for (int v = 0; v < _graph->getNumberOfVertices(); v++){
+	for (unsigned int v = 0; v < _graph->getNumberOfVertices(); v++){
 		stream << "Vertex " << v << ": component " << _vertexComponents[v] << endl;
 	}
 	stream << endl;
@@ -428,7 +428,7 @@ template<class B> long PWAHStackTC<B>::countNumberOfEdgesInCondensedTC(){
  * of only one vertex)
  */
 template<class B> long PWAHStackTC<B>::countNumberOfEdgesInCondensedTC(bool ignoreSelfLoops, bool ignoreSingletonSelfLoops){
-	long count = 0;
+	unsigned long count = 0;
 	int currSuccessorIndex;
 
 	if (ignoreSelfLoops) ignoreSingletonSelfLoops = true;
@@ -559,7 +559,7 @@ template<class B> long PWAHStackTC<B>::countNumberOfEdgesInTC(){
 	return count;
 }
 
-template<class B> bool PWAHStackTC<B>::reachable(int src, int dst){
+template<class B> bool PWAHStackTC<B>::reachable(unsigned int src, unsigned int dst){
 	const bool DEBUGGING = false;
 	if (src >= _graph->getNumberOfVertices()) throw range_error("Source index out of bounds");
 	if (dst >= _graph->getNumberOfVertices()) throw range_error("Source index out of bounds");
@@ -678,7 +678,7 @@ template<class B> int PWAHStackTC<B>::getNumberOfComponents(){
 
 template<class B> long PWAHStackTC<B>::memoryUsedByIntervalLists(){
 	long res = 0;
-	for (int i = 0; i < _componentSuccessors.size(); i++){
+	for (unsigned int i = 0; i < _componentSuccessors.size(); i++){
 		if (_componentSuccessors[i] != NULL){
 			IntervalBitSet* ibs = new IntervalBitSet();
 			IntervalBitSet::copy(_componentSuccessors[i], ibs);

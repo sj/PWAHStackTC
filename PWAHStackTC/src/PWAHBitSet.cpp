@@ -549,7 +549,7 @@ template<unsigned int P> void PWAHBitSet<P>::clear(){
 	_indexWord.clear();
 }
 
-template<unsigned int P> const bool PWAHBitSet<P>::get(int bitIndex){
+template<unsigned int P> const bool PWAHBitSet<P>::get(unsigned int bitIndex){
 	return get(bitIndex, false);
 }
 
@@ -562,7 +562,7 @@ template<unsigned int P> const bool PWAHBitSet<P>::get(int bitIndex){
  * \param bitIndex the index of the desired bit
  * \param disableIndex when true, prevents the 'get' method from using the search index
  */
-template<unsigned int P> const bool PWAHBitSet<P>::get(int bitIndex, bool disableIndex){
+template<unsigned int P> const bool PWAHBitSet<P>::get(unsigned int bitIndex, bool disableIndex){
 	const bool DEBUGGING = false;
 	const int blockIndex = bitIndex / _blockSize;
 	long currBlockIndex = -1;
@@ -705,11 +705,11 @@ template<unsigned int P> const unsigned int PWAHBitSet<P>::size(){
 /**
  * \brief Sets the bit with index 'bitIndex' in this PWAHBitSet to '1'
  */
-template<unsigned int P> void PWAHBitSet<P>::set(int bitIndex){
+template<unsigned int P> void PWAHBitSet<P>::set(unsigned int bitIndex){
 	set(bitIndex, true);
 }
 
-template<unsigned int P> void PWAHBitSet<P>::set(int bitIndex, bool value){
+template<unsigned int P> void PWAHBitSet<P>::set(unsigned int bitIndex, bool value){
 	const bool DEBUGGING = false;
 
 	if (_words.size() == 0) _words.push_back(0L);
@@ -893,7 +893,7 @@ template<unsigned int P> void PWAHBitSet<P>::addLiteral(long value, int blockInd
 	}
 }
 
-template<unsigned int P> void PWAHBitSet<P>::addFillPartition(bool oneFill, int numBlocks, int firstBlockIndex){
+template<unsigned int P> void PWAHBitSet<P>::addFillPartition(bool oneFill, long numBlocks, int firstBlockIndex){
 	assert(numBlocks <= _maxBlocksPerFill);
 
 	if (!oneFill){

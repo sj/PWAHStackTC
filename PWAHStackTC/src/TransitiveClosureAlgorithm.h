@@ -36,7 +36,7 @@ public:
 	virtual	long countNumberOfEdgesInCondensedTC(bool ignoreSelfLoops, bool ignoreSingletonSelfLoops) = 0;
 	virtual int getNumberOfComponents() = 0;
 	virtual void writeToChacoFile(string filename) = 0;
-	virtual bool reachable(int src, int dst) = 0;
+	virtual bool reachable(unsigned int src, unsigned int dst) = 0;
 	virtual long memoryUsedByBitSets() = 0;
 	virtual long totalMemoryUsage() = 0;
 	virtual string getStatistics() = 0;

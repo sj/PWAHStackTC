@@ -31,7 +31,7 @@ IntervalBitSet::IntervalBitSet() {
 
 IntervalBitSet::~IntervalBitSet() {}
 
-void IntervalBitSet::set(int bitIndex){
+void IntervalBitSet::set(unsigned int bitIndex){
 	const bool DEBUGGING = false;
 	if (DEBUGGING){
 		cout << "IntervalBitSet::set -- setting bit " << bitIndex << endl;
@@ -99,7 +99,7 @@ void IntervalBitSet::clear(){
 	_lastBitTouched = -1;
 }
 
-void IntervalBitSet::set(int bitIndex, bool value){
+void IntervalBitSet::set(unsigned int bitIndex, bool value){
 	if (!value){
 		if (_upper.size() == 0 || _upper.back() < bitIndex){
 			if (_lastBitTouched < bitIndex) _lastBitTouched = bitIndex;
@@ -111,7 +111,7 @@ void IntervalBitSet::set(int bitIndex, bool value){
 }
 
 
-const bool IntervalBitSet::get(int bitIndex){
+const bool IntervalBitSet::get(unsigned int bitIndex){
 	const bool DEBUGGING = false;
 	int currMinIntervalIndex = 0;
 	int currMaxIntervalIndex = _upper.size();

@@ -76,7 +76,7 @@ public:
 	double computeAverageLocalClusteringCoefficient();
 	int getNumberOfComponents();
 	void writeToChacoFile(string filename);
-	bool reachable(int src, int dst);
+	bool reachable(unsigned int src, unsigned int dst);
 	long memoryUsedByBitSets();
 	long totalMemoryUsage();
 	string getStatistics();

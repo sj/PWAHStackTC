@@ -81,7 +81,7 @@ void Validator::validate(){
 	try {
 		int numFail = 0;
 		int numPass = 0;
-		double time1, time2;
+		double time1;
 		long numEdges;
 		PerformanceTimer timer;
 		TransitiveClosureAlgorithm* tca;

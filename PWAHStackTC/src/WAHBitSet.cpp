@@ -43,7 +43,7 @@ WAHBitSet::WAHBitSet(DynamicBitSet* dynamicBitSet){
 	for (unsigned int i = 0; i < dynamicBitSet->size(); i++) this->set(i, dynamicBitSet->get(i));
 }
 
-void WAHBitSet::set(int bitIndex){
+void WAHBitSet::set(unsigned int bitIndex){
 	set(bitIndex, true);
 }
 
@@ -55,7 +55,7 @@ void WAHBitSet::init(){
 	_empty = true;
 }
 
-void WAHBitSet::set(int bitIndex, bool value){
+void WAHBitSet::set(unsigned int bitIndex, bool value){
 	if (DEBUGGING) cout << "WAHBitSet::set setting bit with index " << bitIndex << endl;
 	if (bitIndex < _plainWordBlockSeq * BLOCKSIZE){
 		// The passed bit was already compressed. Can't do anything about that.
@@ -115,7 +115,7 @@ void WAHBitSet::set(int bitIndex, bool value){
 	if (DEBUGGING) cout << "WAHBitSet::set done setting bit with index " << bitIndex <<  "!" << endl;
 }
 
-const bool WAHBitSet::get(int bitIndex){
+const bool WAHBitSet::get(unsigned int bitIndex){
 	const bool debug = false;
 	if (_empty) return false;
 	if (bitIndex > _lastBitIndex) return false;
@@ -570,7 +570,8 @@ void WAHBitSet::multiOr(WAHBitSet** bitSets, unsigned int numBitSets, WAHBitSet*
 	unsigned int* sWordIndex = new unsigned int[numBitSets];
 	unsigned int* sWordOffset = new unsigned int[numBitSets];
 	unsigned int* sBlockIndex = new unsigned int[numBitSets];
-	int largestOneFill, largestOneFillSize;
+	int largestOneFill = -1;
+	int largestOneFillSize;
 	int shortestZeroFillSize;
 	int currMergedLiteral, currWord, currFillLengthRemaining;
 	unsigned int lastBitIndex = 0;

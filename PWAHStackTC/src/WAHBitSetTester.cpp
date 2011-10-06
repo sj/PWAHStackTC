@@ -41,7 +41,7 @@ void WAHBitSetTester::testIterator(){
 	srand ( time(NULL) );
 
 	while (true){
-		WAHBitSet* wbs;
+		WAHBitSet* wbs = new WAHBitSet();
 		int maxBits = 5000;
 		BitSetTester<WAHBitSet>::randomise(wbs, maxBits);
 
@@ -109,7 +109,7 @@ void WAHBitSetTester::testMultiOr(){
 		if (simpleOrRes->_compressedBits.size() != multiOrRes->_compressedBits.size()){
 			throw string("Sizes do not match!");
 		}
-		for (int i = 0; i < simpleOrRes->_compressedBits.size(); i++){
+		for (unsigned int i = 0; i < simpleOrRes->_compressedBits.size(); i++){
 			if (simpleOrRes->_compressedBits[i] != multiOrRes->_compressedBits[i]){
 				throw string("Compressed bits mismatch");
 			}

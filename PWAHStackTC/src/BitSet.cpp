@@ -49,7 +49,7 @@ const bool BitSet::equals(BitSet* otherBitSet){
 	return true;
 }
 
-void BitSet::set(int bitIndex){
+void BitSet::set(unsigned int bitIndex){
 	set(bitIndex, true);
 }
 

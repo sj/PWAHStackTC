@@ -43,7 +43,7 @@ vector<int>* Graph::getChildren(unsigned int vertexIndex){
 
 unsigned int Graph::countNumberOfEdges(){
 	int numEdges = 0;
-	for (int v = 0; v < this->getNumberOfVertices(); v++){
+	for (unsigned int v = 0; v < this->getNumberOfVertices(); v++){
 		numEdges += _vertices[v].size();
 	}
 	return numEdges;
@@ -165,8 +165,8 @@ int Graph::findMinOutDegreeVertex(){
 int Graph::findMinInDegreeVertex(){
 	if (getNumberOfVertices() == 0) return -1;
 
-	unsigned int minInDegree = _vertexIndegree[0];
-	unsigned int minInDegreeVertex = 0;
+	int minInDegree = _vertexIndegree[0];
+	int minInDegreeVertex = 0;
 	for (unsigned int v = 1; v < getNumberOfVertices(); v++){
 		if (_vertexIndegree[v] < minInDegree){
 			minInDegree = getChildren(v)->size();

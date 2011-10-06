@@ -38,7 +38,7 @@ public:
 	static void testLongFill(BitSet* bitset);
 	static void testIterator(BitSet* bitset, bool randomise);
 	static void diff();
-	static void testOr(int numBitsets);
+	static void testOr(unsigned int numBitsets);
 	void testSetGet();
 
 	static string printBitSets(BitSet** bitsets, int numBitSets);

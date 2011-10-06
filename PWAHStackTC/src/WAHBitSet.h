@@ -74,9 +74,9 @@ public:
 
 
 	void setBits(int blockSeq, int value);
-	void set(int bitIndex);
-	void set(int bitIndex, bool value);
-	const bool get(int bitIndex);
+	void set(unsigned int bitIndex);
+	void set(unsigned int bitIndex, bool value);
+	const bool get(unsigned int bitIndex);
 	const string toString();
 	const unsigned int size();
 	bool isEmpty();

@@ -34,11 +34,11 @@ public:
 	PWAHBitSet();
 	virtual ~PWAHBitSet(){}
 
-	void set(int bitIndex);
-	void set(int bitIndex, bool value);
+	void set(unsigned int bitIndex);
+	void set(unsigned int bitIndex, bool value);
 	void clear();
-	const bool get(int bitIndex, bool disableIndex);
-	const bool get(int bitIndex);
+	const bool get(unsigned int bitIndex, bool disableIndex);
+	const bool get(unsigned int bitIndex);
 	const unsigned int size();
 	static void multiOr(PWAHBitSet** bitSets, unsigned int numBitSets, PWAHBitSet* result);
 	static PWAHBitSet* constructByOr(const PWAHBitSet* first, const PWAHBitSet* second);
@@ -62,9 +62,11 @@ private:
 	static const bool _VERIFY = false;
 	static int _indexChunkSize; // default: don't use indices
 
-	unsigned short _lastUsedPartition; // partition index of last used partition within the vector of words
 	long _plainBlockIndex; // the block index of the plain block
 	long _lastBitIndex;
+	unsigned short _lastUsedPartition; // partition index of last used partition within the vector of words
+
+
 	vector<long> _words;
 	vector<int> _indexWord;
 	vector<unsigned short> _indexPartition;
@@ -85,7 +87,7 @@ private:
 	void addFill(bool oneFill, int numBlocks, int firstBlockIndex);
 	void addExtendedFillPartitions(bool oneFill, int numBlocks, int firstBlockIndex);
 	void addLiteral(long value, int blockIndex);
-	void addFillPartition(bool oneFill, int numBlocks, int firstBlockIndex);
+	void addFillPartition(bool oneFill, long numBlocks, int firstBlockIndex);
 	void addPartition(bool isFill, long value);
 	void decompressLastBlock();
 	void updateIndex(int numBlocks, int firstBlockIndex);

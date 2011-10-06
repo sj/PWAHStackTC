@@ -32,7 +32,7 @@ DynamicBitSet::DynamicBitSet() {
 	init(0);
 }
 
-DynamicBitSet::DynamicBitSet(int initialCapacity) {
+DynamicBitSet::DynamicBitSet(unsigned int initialCapacity) {
 	init(initialCapacity);
 }
 
@@ -44,16 +44,16 @@ DynamicBitSet::DynamicBitSet(int initialCapacity) {
 DynamicBitSet::~DynamicBitSet() {}
 
 
-void DynamicBitSet::init(int initialCapacity){
+void DynamicBitSet::init(unsigned int initialCapacity){
 	_lastBitIndex = -1;
 	_vec = vector<long>(initialCapacity / 64 + 1);
 }
 
-void DynamicBitSet::set(int bitIndex){
+void DynamicBitSet::set(unsigned int bitIndex){
 	set(bitIndex, true);
 }
 
-void DynamicBitSet::set(int bitIndex, bool value){
+void DynamicBitSet::set(unsigned int bitIndex, bool value){
 	const bool debug = false;
 	if (bitIndex > _lastBitIndex) _lastBitIndex = bitIndex;
 	unsigned int vecElemIndex = bitIndex / 64;
@@ -74,7 +74,7 @@ void DynamicBitSet::set(int bitIndex, bool value){
 
 }
 
-const bool DynamicBitSet::get(int bitIndex){
+const bool DynamicBitSet::get(unsigned int bitIndex){
 	if (bitIndex > _lastBitIndex) return false;
 	return L_GET_BIT(_vec[bitIndex / 64], bitIndex % 64);
 }
