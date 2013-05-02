@@ -646,7 +646,6 @@ template<class B> bool PWAHStackTC<B>::reachable(unsigned int src, unsigned int 
 	if (dst >= _graph->getNumberOfVertices()) throw range_error("Source index out of bounds");
 	if (DEBUGGING) cout << "PWAHStackTC::reachable " << src << " -> " << dst << " (vertex indices)" << endl;
 
-	if (src == dst) return _vertexSelfLoop->get(src);
 	int srcComponent = _vertexComponents[src];
 	int dstComponent = _vertexComponents[dst];
 
