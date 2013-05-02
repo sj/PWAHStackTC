@@ -38,6 +38,7 @@ public:
 	double resetAndStop();
 	double currRunTime();
 	long currRunTimeMicro();
+	static long currTimeMilliSecs();
 	void pause();
 	void resume();
 	bool running();

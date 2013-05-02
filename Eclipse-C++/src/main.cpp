@@ -16,7 +16,9 @@
 #include "TransitiveClosureAlgorithm.h"
 #include "IntervalBitSet.h"
 #include <sys/resource.h>
-
+#include <fstream>
+#include <assert.h>
+#include <cstdio>
 using namespace std;
 
 void runValidatorWhenRequested(int argc, char* argv[]){
@@ -58,10 +60,137 @@ void printUsage(){
 	cerr << "--index-chuck-size=1024" << endl;
 	cerr << "  Sets the chunk size of the PWAH index (default: disable index)." << endl << endl;
 
+	cerr << "--source-vertices=mysources.txt" << endl;
+	cerr << "--target-vertices=mytargets.txt" << endl;
+	cerr << "--reachable-sources-targets=myresult.txt" << endl;
+	cerr << "  Reads sets of source and target vertex indices from the files provided, and" << endl;
+	cerr << "  will write all reachable pairs to 'myresult.txt'. The implementation is optimised" << endl;
+	cerr << "  for single:many queries and many:many queries." << endl << endl;
+
 	cerr << "For more information:" << endl;
 	cerr << "Sebastiaan J. van Schaik. Answering reachability queries on large directed graphs, introducing a new data structure using bit vector compression. MSc. thesis, Utrecht University, 2010." << endl;
 	cerr << "Sebastiaan J. van Schaik and Oege de Moor. A memory efficient reachability data structure through bit vector compression. In SIGMOD '11: Proceedings of the 37th SIGMOD international conference on Management of data, pages 913-924, New York, NY, USA, 2011. ACM." << endl;
+}
 
+vector<unsigned int> _read_int_tokens(string filename){
+	vector<unsigned int> res;
+	ifstream sources(filename.c_str());
+	string line = "";
+	if (sources.is_open()){
+		while(std::getline(sources,line)){
+			string token;
+
+			stringstream lineStream(line);
+			while(lineStream >> token)	{
+				unsigned int int_token = atoi(token.c_str());
+				res.push_back(int_token);
+			}
+		}
+	} else {
+		cerr << "Can't read '" << filename << "'. Aborting." << endl;
+		exit(1);
+	}
+
+	return res;
+}
+
+void doSourcesTargetsReachability(string filename_graph, string filename_sources, string filename_targets, string filename_out){
+	vector<unsigned int> source_vertices = _read_int_tokens(filename_sources);
+	vector<unsigned int> target_vertices = _read_int_tokens(filename_targets);
+	long num_pairs = source_vertices.size() * target_vertices.size();
+
+	PerformanceTimer total_timer;
+	PerformanceTimer timer;
+	total_timer.reset();
+
+	cout << "Determining reachability for " << source_vertices.size() << " source and " << target_vertices.size() << " target vertices (" << num_pairs << " pairs):" << endl;
+	cout << " - parsing graph: ";
+	fflush(stdout);
+
+	timer.reset();
+	Graph graph = Graph::parseChacoFile(filename_graph);
+	cout << "done in " << timer.reset() << " milliseconds, found " << graph.getNumberOfVertices() << " vertices." << endl;
+
+	PWAHStackTC<PWAHBitSet<8> >* tc = new PWAHStackTC<PWAHBitSet<8> >(graph);
+
+	vector<vector<unsigned int> > reachable;
+	reachable.reserve(source_vertices.size());
+
+	cout << " - computing transitive closure: ";
+	fflush(stdout);
+	timer.reset();
+	tc->computeTransitiveClosure(false, false, 0);
+	cout << "done in " << timer.reset() << " millisecs" << endl;
+
+	cout << " - performing reachability queries: ";
+	fflush(stdout);
+	timer.reset();
+	tc->reachablepairs(source_vertices, target_vertices, reachable);
+	const long time_reachable_micro = timer.currRunTimeMicro();
+	const long time_reachable = time_reachable_micro / (double) 1000;
+	cout << "done in " << time_reachable << " millisecs / " << time_reachable_micro << " microsecs (amortised " << (time_reachable_micro / (double)(num_pairs)) << " microseconds per query)" << endl;
+
+	cout << " - writing reachable pairs to '" << filename_out << ": ";
+	assert(reachable.size() == source_vertices.size());
+	ofstream out_file (filename_out.c_str(), ios::trunc);
+	if (out_file.is_open())
+	for (unsigned int i = 0; i < reachable.size(); i++){
+		const unsigned int source_vertex = source_vertices[i];
+
+		for (unsigned int j = 0; j < reachable[i].size(); j++){
+			const unsigned int target_vertex = reachable[i][j];
+			out_file << source_vertex << " " << target_vertex << "\n";
+		}
+	}
+	out_file.close();
+
+	cout << "done! Total time: " << total_timer.reset() << " milliseconds." << endl;
+
+
+	cout << " - verifying result: ";
+	fflush(stdout);
+
+	timer.reset();
+	unsigned int num_pairs_reachable = 0;
+	for (unsigned int i = 0; i < reachable.size(); i++){
+		const unsigned int source_vertex = source_vertices[i];
+
+		for (unsigned int j = 0; j < reachable[i].size(); j++){
+			const unsigned int target_vertex = reachable[i][j];
+
+			if (!tc->reachable(source_vertex, target_vertex)){
+				cerr << "ERROR: " << target_vertex << " is not actually reachable from " << source_vertex << "!?" << endl;
+				exit(1);
+			}
+
+			num_pairs_reachable++;
+		}
+	}
+
+
+	// The other way around: are there reachable pairs which were reported not reachable?
+	PerformanceTimer timer_distinct_queries;
+	timer_distinct_queries.reset();
+	unsigned int dist_num_pairs_reachable = 0;
+	for (unsigned int i = 0; i < source_vertices.size(); i++){
+		const unsigned int source_vertex = source_vertices[i];
+
+		for (unsigned int j = 0; j < target_vertices.size(); j++){
+			const unsigned int target_vertex = target_vertices[j];
+
+			if (tc->reachable(source_vertex, target_vertex)) dist_num_pairs_reachable++;
+		}
+	}
+	long time_distinct_queries = timer_distinct_queries.currRunTimeMicro();
+
+	if (dist_num_pairs_reachable != num_pairs_reachable){
+		cerr << "ERROR! Distinct reachability queries yield " << dist_num_pairs_reachable << " reachable source/target pairs, rather than " << num_pairs_reachable << " pairs!" << endl;
+		exit(1);
+	}
+
+
+	const long num_pairs_unreachable = num_pairs - num_pairs_reachable;
+	cout << "done, verification took " << timer.reset() << " seconds - verified " << dist_num_pairs_reachable << " reachable and " << num_pairs_unreachable << " unreachable source/target pairs! Performing " << num_pairs << " distinct queries took " << time_distinct_queries << " microseconds." << endl;
 }
 
 int main(int argc, char* argv[]) {
@@ -96,6 +225,9 @@ int main(int argc, char* argv[]) {
 	cmdLineArgs["no-details"] = "unset";
 	cmdLineArgs["index-chunk-size"] = "-1";
 	cmdLineArgs["min-multi-or"] = "0";
+	cmdLineArgs["source-vertices"] = "unset";
+	cmdLineArgs["target-vertices"] = "unset";
+	cmdLineArgs["reachable-sources-targets"] = "unset";
 
 	for (int i = 1; i < argc; i++){
 		string currArg = argv[i];
@@ -135,6 +267,16 @@ int main(int argc, char* argv[]) {
 
 	if (cmdLineArgs["usage"] != "unset" || cmdLineArgs["help"] != "unset"){
 		printUsage();
+		exit(0);
+	}
+
+	if (cmdLineArgs["source-vertices"] != "" || cmdLineArgs["target-vertices"] != "" || cmdLineArgs["reachable-sources-targets"] != ""){
+		if (cmdLineArgs["source-vertices"] == "" || cmdLineArgs["target-vertices"] == "" || cmdLineArgs["reachable-sources-targets"] == ""){
+			cerr << "Need all three of: --source-vertices, --target-vertices, --reachable-sources-targets" << endl << endl;
+			printUsage();
+			exit(1);
+		}
+		doSourcesTargetsReachability(cmdLineArgs["filename"], cmdLineArgs["source-vertices"],cmdLineArgs["target-vertices"],cmdLineArgs["reachable-sources-targets"]);
 		exit(0);
 	}
 
@@ -189,7 +331,7 @@ int main(int argc, char* argv[]) {
 			if (!reflexive){
 				cout << "Computing transitive closure using " << tca->algorithmName() << " ";
 			} else {
-				cout << "Computing REFLEXITIVE transitive closure using " << tca->algorithmName() << " ";
+				cout << "Computing REFLEXIVE transitive closure using " << tca->algorithmName() << " ";
 			}
 			if (minMultiOR == -1){
 				cout << "(NOT using multi-OR)... ";

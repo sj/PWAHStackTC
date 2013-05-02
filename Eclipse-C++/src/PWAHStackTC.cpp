@@ -32,6 +32,7 @@
 #include "BitSetTester.h"
 #include "IntervalBitSet.h"
 #include <assert.h>
+#include <climits>
 using namespace std;
 
 template<class B> PWAHStackTC<B>::PWAHStackTC(Graph& graph) {
@@ -68,46 +69,6 @@ template<class B> void PWAHStackTC<B>::computeTransitiveClosure(bool reflexitive
 	_minOutDegreeForMultiOR = minOutDegreeForMultiOR;
 	_mergeTimer.resetAndStop();
 
-	/*** Process vertices in order of increasing InDegree ***/
-	/**int maxInDegree = _graph->computeMaxInDegree();
-	unsigned int stepFactor = 10; // steps of 10%
-	unsigned int stepSize = numVertices / stepFactor;
-	cout << "[";
-	cout.flush();
-
-
-	int verticesDone = 0;
-	for (unsigned int inDegree = 0; inDegree <= maxInDegree; inDegree++){
-		for (unsigned int v = 0; v < numVertices; v++){
-			if (_graph->vertexInDegree(v) == inDegree){
-				if (!_visited.get(v)){
-					dfsVisit(v);
-				}
-				verticesDone++;
-				if (verticesDone % stepSize == 0){
-					cout << " " << (verticesDone / stepSize * stepFactor) << "% ";
-					cout.flush();
-				} else if (verticesDone % stepSize == stepSize / 2){
-					cout << "=";
-					cout.flush();
-				}
-
-
-				if (verticesDone > 100000) goto endloop;
-				cout << "done " << verticesDone << endl;
-			}
-		}
-	}
-	endloop:
-	cout << "] ";
-	cout.flush();
-
-	for (int i = 0; i < _componentSizes.size(); i++){
-		if (_componentSuccessors[i] != NULL){
-			cout << "Component " << i << endl;
-			cout << _componentSuccessors[i]->toString() << endl << endl;
-		}
-	}**/
 	for (unsigned int v = 0; v < numVertices; v++){
 		if (!_visited.get(v)){
 			dfsVisit(v);
@@ -202,7 +163,7 @@ template<class B> void PWAHStackTC<B>::dfsVisit(unsigned int vertexIndex){
 
 		if (debug) cout << "Vertex " << vertexIndex << " is component root, newComponentIndex=" << newComponentIndex << endl;
 
-		if (_vStack->peek() != vertexIndex || _vertexSelfLoop->get(vertexIndex)){
+		if (((unsigned int)_vStack->peek()) != vertexIndex || _vertexSelfLoop->get(vertexIndex)){
 			// This component has size > 1 or has an explicit self-loop.
 			if (!_storeComponentVertices && !_reflexitive){
 				explicitlyStoreSelfLoop = true;
@@ -226,7 +187,7 @@ template<class B> void PWAHStackTC<B>::dfsVisit(unsigned int vertexIndex){
 			// Number of adjacent components > 0
 			successors = new B();
 
-			const bool use_multiway_or = (numAdjacentComponents > _minOutDegreeForMultiOR) && _minOutDegreeForMultiOR >= 0;
+			const bool use_multiway_or = _minOutDegreeForMultiOR >= 0 && (numAdjacentComponents > (unsigned int)_minOutDegreeForMultiOR);
 
 			if (!use_multiway_or){
 				if (explicitlyStoreSelfLoop){
@@ -442,7 +403,7 @@ template<class B> long PWAHStackTC<B>::countNumberOfEdgesInCondensedTC(bool igno
 
 				// The number of if-statements can be reduced, but is preserved like this for
 				// sake of clarity.
-				if (currSuccessorIndex == c){
+				if ((unsigned int)currSuccessorIndex == c){
 					// Self-loop!
 					if (!ignoreSelfLoops){
 						// Self-loops need to be processed
@@ -557,6 +518,126 @@ template<class B> long PWAHStackTC<B>::countNumberOfEdgesInTC(){
 	delete[] componentVertexSuccessorCount;
 
 	return count;
+}
+
+/**
+ * Determines for each possible source/target pair whether they are reachable or not. Returns the number
+ * or pairs that were reachable and stores the result in the reachable vector.
+ *
+ * This implementation is more efficient than actually doing individual queries using "reachable", as it will
+ * only iterate over the reachability PWAHBitSet for components once (so if multiple sources are in the same
+ * strongly connected component, this saves time), and it will iterate over the PWAHBitSet to determine the 
+ * raechability of each target.
+ *
+ * Result stored in reachable:
+ *   reachable[si1] = { t1, t2, t3, tn }
+ *
+ * Where 
+ *  - si1 is the index of the source vertex in the sources vector (i.e., si1 is not a vertex index itself!)
+ *  - t1, ..., tn are the reachable target vertices (i.e., t1 is a vertex index of the target vertex)
+ *
+ * Note that reachable_pairs is a vector of pointers to vectors {t1, ..., tn} : if source vertices share 
+ * the same strongly connected component, they wil also share the same vector {t1, ..., tn} 
+ *
+ * The calling method is responsible for freeing the memory in the reachable array!
+ * 
+ */
+template<class B> void PWAHStackTC<B>::reachablepairs(vector<unsigned int>& sources, vector<unsigned int>& targets, vector<vector<unsigned int> >& reachable){
+	if (sources.size() == 0 || targets.size() == 0) return;
+	reachable.reserve(sources.size());
+
+
+	// First, find out the strongly connected components of the target vertices
+
+	// Will hold, for each component index, the vertices in the 'targets' vector that belong to that component
+	// (initialise with a NULL pointer for each component)
+	vector<vector<unsigned int>* > target_component_vertices = vector<vector<unsigned int>* >(_componentSuccessors.size(), NULL);
+	
+	// Will hold a simple list of target component indices we're interested in
+	vector<unsigned int> target_components;
+
+	// Populate target_components and target_component_vertices. We need this because we will have to
+	// return the vertex indices, rather than the component indices.
+	for (std::vector<unsigned int>::iterator it_tgt = targets.begin(); it_tgt != targets.end(); ++it_tgt){
+		const unsigned int target_vertex_index = *it_tgt;
+		
+		if (target_vertex_index >= _graph->getNumberOfVertices()) throw range_error("Target index out of bounds");
+
+		const unsigned int target_comp_index = _vertexComponents[target_vertex_index];
+
+		if (target_component_vertices[target_comp_index] == NULL){
+			target_component_vertices[target_comp_index] = new vector<unsigned int>();
+			target_components.push_back(target_comp_index);
+		}
+		target_component_vertices[target_comp_index]->push_back(target_vertex_index);
+	}
+
+	// Sort the component indices in target_components
+	sort(target_components.begin(), target_components.end());
+
+	// Stores for each source component whether we've stored its result in the 'reachable' vector already. This
+	// happens when multiple source vertices share the same component.
+	vector<unsigned int> components_in_reachable = vector<unsigned int>(_componentSuccessors.size(), UINT_MAX);
+
+	for (unsigned int i = 0; i < sources.size(); i++){
+		const unsigned int src_vertex_index = sources[i];
+		
+		if (src_vertex_index >= _graph->getNumberOfVertices()) throw range_error("Source index out of bounds");
+		const unsigned int src_comp_index = _vertexComponents[src_vertex_index];
+
+		if (components_in_reachable[src_comp_index] != UINT_MAX){
+			// We already have a result for this source component (i.e., we've seen a source vertex from this
+			// strongly connected component before). No need to iterate over the bitset, just copy
+			// the previous result
+			reachable[i] = reachable[components_in_reachable[src_comp_index]];
+		} else {
+			// Iterate over bit vectors to see which target components (and vertices) are reachable
+			reachable.push_back(vector<unsigned int>());
+			components_in_reachable[src_comp_index] = i;
+
+			if (_componentSuccessors[src_comp_index] == NULL){
+				// This component can't reach anything - leave result vector empty
+				continue;
+			}
+			BitSetIterator* iter = _componentSuccessors[src_comp_index]->iterator();
+
+
+			int currSuccessorIndex = iter->next();
+
+			unsigned int curr_target_component_i = 0; 
+			while (currSuccessorIndex != -1 && curr_target_component_i < target_components.size()){
+				int curr_target_component = target_components[curr_target_component_i];
+
+				if (currSuccessorIndex == curr_target_component){
+					// Queried target component is reachable! Add the target vertices in this component
+					// to the result list
+					reachable[i].insert(reachable[i].end(),
+							target_component_vertices[curr_target_component]->begin(),
+							target_component_vertices[curr_target_component]->end()
+					);
+
+					// Move on both iterator and target component
+					curr_target_component_i++;
+					currSuccessorIndex = iter->next();
+				} else if (currSuccessorIndex > curr_target_component){
+					// The reachable component returned by the bitset has an index larger than the target
+					// component currently under consideration. This means that the target component currently
+					// under consideration is not reachable - lets try the next one
+					curr_target_component_i++;
+				} else { // currSuccessorIndex < curr_target_component
+					// The target component we're hoping to find is further down the bitset, let's kick the
+					// iterator up.
+					currSuccessorIndex = iter->next();
+				}
+			}
+			delete iter;
+		}
+	}
+
+	// Be nice and free some memory
+	for (unsigned int i = 0; i < target_component_vertices.size(); i++){
+		if (target_component_vertices[i] != NULL) delete target_component_vertices[i];
+	}
 }
 
 template<class B> bool PWAHStackTC<B>::reachable(unsigned int src, unsigned int dst){

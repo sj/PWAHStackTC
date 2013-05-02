@@ -77,6 +77,7 @@ public:
 	int getNumberOfComponents();
 	void writeToChacoFile(string filename);
 	bool reachable(unsigned int src, unsigned int dst);
+	void reachablepairs(vector<unsigned int>& sources, vector<unsigned int>& targets, vector<vector<unsigned int> >& reachable_pairs);
 	long memoryUsedByBitSets();
 	long totalMemoryUsage();
 	string getStatistics();

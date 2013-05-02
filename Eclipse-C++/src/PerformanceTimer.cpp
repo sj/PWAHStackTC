@@ -77,6 +77,12 @@ double PerformanceTimer::currRunTime(){
 	}
 }
 
+long PerformanceTimer::currTimeMilliSecs(){
+	struct timeval* now = new timeval();
+	gettimeofday(now, NULL);
+	return now->tv_sec * 1000 + now->tv_usec / 1000.0;
+}
+
 long PerformanceTimer::currRunTimeMicro(){
 	if (_startTime == NULL){
 		return _storedRunTime;
