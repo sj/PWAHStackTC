@@ -527,7 +527,7 @@ template<class B> long PWAHStackTC<B>::countNumberOfEdgesInTC(){
  * This implementation is more efficient than actually doing individual queries using "reachable", as it will
  * only iterate over the reachability PWAHBitSet for components once (so if multiple sources are in the same
  * strongly connected component, this saves time), and it will iterate over the PWAHBitSet to determine the 
- * raechability of each target.
+ * reachability of each target.
  *
  * Result stored in reachable:
  *   reachable[si1] = { t1, t2, t3, tn }
@@ -542,7 +542,7 @@ template<class B> long PWAHStackTC<B>::countNumberOfEdgesInTC(){
  * The calling method is responsible for freeing the memory in the reachable array!
  * 
  */
-template<class B> void PWAHStackTC<B>::reachablepairs(vector<unsigned int>& sources, vector<unsigned int>& targets, vector<vector<unsigned int> >& reachable){
+template<> void PWAHStackTC<PWAHBitSet<8> >::reachablepairs(vector<unsigned int>& sources, vector<unsigned int>& targets, vector<vector<unsigned int> >& reachable){
 	if (sources.size() == 0 || targets.size() == 0) return;
 	reachable.reserve(sources.size());
 
@@ -589,7 +589,7 @@ template<class B> void PWAHStackTC<B>::reachablepairs(vector<unsigned int>& sour
 			// We already have a result for this source component (i.e., we've seen a source vertex from this
 			// strongly connected component before). No need to iterate over the bitset, just copy
 			// the previous result
-			reachable[i] = reachable[components_in_reachable[src_comp_index]];
+			reachable.push_back(reachable[components_in_reachable[src_comp_index]]);
 		} else {
 			// Iterate over bit vectors to see which target components (and vertices) are reachable
 			reachable.push_back(vector<unsigned int>());
@@ -599,6 +599,8 @@ template<class B> void PWAHStackTC<B>::reachablepairs(vector<unsigned int>& sour
 				// This component can't reach anything - leave result vector empty
 				continue;
 			}
+
+/*
 			BitSetIterator* iter = _componentSuccessors[src_comp_index]->iterator();
 
 
@@ -630,7 +632,21 @@ template<class B> void PWAHStackTC<B>::reachablepairs(vector<unsigned int>& sour
 					currSuccessorIndex = iter->next();
 				}
 			}
-			delete iter;
+			delete iter;*/
+
+
+			for (unsigned int j = 0; j < target_components.size(); j++){
+				const unsigned int curr_target_component_index = target_components[j];
+
+				if (_componentSuccessors[src_comp_index]->incr_get(curr_target_component_index)){
+					// Target component is reachable - add all target vertices of that component to the list of
+					// reachable vertices.
+					reachable[i].insert(reachable[i].end(),
+							target_component_vertices[curr_target_component_index]->begin(),
+							target_component_vertices[curr_target_component_index]->end()
+					);
+				}
+			}
 		}
 	}
 
@@ -646,7 +662,6 @@ template<class B> bool PWAHStackTC<B>::reachable(unsigned int src, unsigned int 
 	if (dst >= _graph->getNumberOfVertices()) throw range_error("Source index out of bounds");
 	if (DEBUGGING) cout << "PWAHStackTC::reachable " << src << " -> " << dst << " (vertex indices)" << endl;
 
-	if (src == dst) return _vertexSelfLoop->get(src);
 	int srcComponent = _vertexComponents[src];
 	int dstComponent = _vertexComponents[dst];
 
