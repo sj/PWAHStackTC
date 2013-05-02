@@ -528,7 +528,9 @@ template<unsigned int P> string PWAHBitSet<P>::toBitString(long value){
  */
 template<unsigned int P> PWAHBitSet<P>::PWAHBitSet():
 			// Initialise variables
-			_plainBlockIndex(0), _lastBitIndex(-1), _lastUsedPartition(0), _words(vector<long>()){
+			_plainBlockIndex(0), _lastBitIndex(-1), _lastUsedPartition(0), _words(vector<long>()),
+			_incr_get_WordIndex(0), _incr_get_PartitionIndex(0), _incr_get_BlockIndex(-1)
+{
 
 	// Assert to check whether the long primitive type consists of 64 bits. Might the data type
 	// consist of any other number of bits, weird things will happen...
@@ -547,10 +549,27 @@ template<unsigned int P> void PWAHBitSet<P>::clear(){
 	_indexPartitionOffset.clear();
 	_indexPartition.clear();
 	_indexWord.clear();
+	_incr_get_BlockIndex = -1;
+	_incr_get_PartitionIndex = 0;
+	_incr_get_WordIndex = 0;
 }
 
 template<unsigned int P> const bool PWAHBitSet<P>::get(unsigned int bitIndex){
 	return get(bitIndex, false);
+}
+
+template<unsigned int P> void PWAHBitSet<P>::reset_incr_get(){
+	_incr_get_BlockIndex = -1;
+	_incr_get_PartitionIndex = 0;
+	_incr_get_WordIndex = 0;
+}
+
+/**
+ * Same as PWAHBitSet::get(unsigned int, bool) below, but implements an optimisation to support incremental gets
+ * (i.e., to get multiple bits in an efficient way, but the queried bits need to be queried incrementally)
+ */
+template<unsigned int P> const bool PWAHBitSet<P>::incr_get(unsigned int bitIndex){
+	return _get(bitIndex, false, _incr_get_WordIndex, _incr_get_PartitionIndex, _incr_get_BlockIndex, true);
 }
 
 /**
@@ -564,8 +583,57 @@ template<unsigned int P> const bool PWAHBitSet<P>::get(unsigned int bitIndex){
  */
 template<unsigned int P> const bool PWAHBitSet<P>::get(unsigned int bitIndex, bool disableIndex){
 	const bool DEBUGGING = false;
+	unsigned int initialWordIndex = 0;
+	unsigned int initialPartitionIndex = 0;
+	long initialBlockIndex = -1;
+
+	if (_indexChunkSize > 0 && !disableIndex){
+		// Index available
+		const unsigned int chunkIndex = bitIndex / _indexChunkSize;
+		const unsigned int chunkFirstBit = chunkIndex * _indexChunkSize;
+
+		initialWordIndex = _indexWord[chunkIndex];
+		initialPartitionIndex = _indexPartition[chunkIndex];
+		initialBlockIndex = chunkFirstBit / _blockSize - _indexPartitionOffset[chunkIndex] - 1;
+		if (DEBUGGING){
+			cout << "PWAHBitSet::get[" << bitIndex << "] -- looking for block using index..." << endl;
+			cout << "PWAHBitSet::get[" << bitIndex << "] -- Index: chunkIndex = " << bitIndex << " / " << _indexChunkSize << " = " << chunkIndex << endl;
+			cout << "PWAHBitSet::get[" << bitIndex << "] -- Index: first bit in chunk " << chunkIndex << ": " << chunkFirstBit << endl;
+			cout << "PWAHBitSet::get[" << bitIndex << "] -- Index: initialWordIndex=" << initialWordIndex << endl;
+			cout << "PWAHBitSet::get[" << bitIndex << "] -- Index: scan starts at blockindex " << chunkFirstBit << " / " << _blockSize << " - " << _indexPartitionOffset[chunkIndex] << " - 1 = " << initialBlockIndex << endl;
+		}
+
+		if (chunkIndex >= _indexPartitionOffset.size()){
+			// Requested chunk not available?!
+			stringstream ss;
+			ss << "PWAHBitSet::get[" << bitIndex << "]: Index contains only " << _indexPartitionOffset.size() << " entry/entries, entry with index " << chunkIndex << " is out of bounds!";
+			ss << "\n";
+			ss << this->toString();
+			throw ss.str();
+		}
+	}
+
+	return _get(bitIndex, disableIndex, initialWordIndex, initialPartitionIndex, initialBlockIndex, false);
+}
+
+/**
+ * \brief Determines whether the bit at the given index is set, which starts scanning at the provided indices
+ *
+ * This operation takes O(n) times on PWAHBitSet instances without index,
+ * or O(k) time on indexes PWAHBitSet instances (k denotes the index granularity)
+ *
+ * \param bitIndex the index of the desired bit
+ * \param disableIndex when true, prevents the 'get' method from using the search index
+ * \param initialWordIndex the word to start scanning at
+ * \param initialPartitionIndex the partition of the word to start scanning at
+ * \param initialBlockIndex the block at the given word/partition
+ */
+template<unsigned int P> const bool PWAHBitSet<P>::_get(unsigned int bitIndex, bool disableIndex, unsigned int initialWordIndex, unsigned int initialPartitionIndex, long initialBlockIndex, bool update_incr_get_indices){
+	const bool DEBUGGING = false;
 	const int blockIndex = bitIndex / _blockSize;
-	long currBlockIndex = -1;
+	long currBlockIndex = initialBlockIndex;
+	unsigned int currPartitionIndex = initialPartitionIndex;
+
 	if (DEBUGGING) cout << "PWAHBitSet::get[" << bitIndex << "] -- bit in block " << blockIndex << endl;
 
 	if (blockIndex > _plainBlockIndex){
@@ -576,41 +644,12 @@ template<unsigned int P> const bool PWAHBitSet<P>::get(unsigned int bitIndex, bo
 		return L_GET_BIT(_words[0], bitIndex % _blockSize);
 	} else {
 		// Requested bit is located somewhere in the compressed bits
-
-		unsigned int initialWordIndex = 0;
-		unsigned int initialPartitionIndex = 0;
-		unsigned int currPartitionIndex = 0;
 		int currFillLength;
 
-		if (_indexChunkSize > 0 && !disableIndex){
-			// Index available
-			const unsigned int chunkIndex = bitIndex / _indexChunkSize;
-			const unsigned int chunkFirstBit = chunkIndex * _indexChunkSize;
-
-			initialWordIndex = _indexWord[chunkIndex];
-			currPartitionIndex = _indexPartition[chunkIndex];
-			currBlockIndex = chunkFirstBit / _blockSize - _indexPartitionOffset[chunkIndex] - 1;
-			if (DEBUGGING){
-				cout << "PWAHBitSet::get[" << bitIndex << "] -- block " << blockIndex << " already compressed, using index to speed up scanning..." << endl;
-				cout << "PWAHBitSet::get[" << bitIndex << "] -- Index: chunkIndex = " << bitIndex << " / " << _indexChunkSize << " = " << chunkIndex << endl;
-				cout << "PWAHBitSet::get[" << bitIndex << "] -- Index: first bit in chunk " << chunkIndex << ": " << chunkFirstBit << endl;
-				cout << "PWAHBitSet::get[" << bitIndex << "] -- Index: initialWordIndex=" << initialWordIndex << ", initialPartitionIndex=" << initialPartitionIndex << endl;
-				cout << "PWAHBitSet::get[" << bitIndex << "] -- Index: scan starts at blockindex " << chunkFirstBit << " / " << _blockSize << " - " << _indexPartitionOffset[chunkIndex] << " - 1 = " << currBlockIndex << endl;
-			}
-
-			if (chunkIndex >= _indexPartitionOffset.size()){
-				// Requested chunk not available?!
-				stringstream ss;
-				ss << "PWAHBitSet::get[" << bitIndex << "]: Index contains only " << _indexPartitionOffset.size() << " entry/entries, entry with index " << chunkIndex << " is out of bounds!";
-				ss << "\n";
-				ss << this->toString();
-				throw ss.str();
-			}
-
-		} else {
-			if (DEBUGGING) cout << "PWAHBitSet::get[" << bitIndex << "] -- block " << blockIndex << " already compressed, scanning..." << endl;
+		if (DEBUGGING){
+			cout << "PWAHBitSet::get[" << bitIndex << "] -- block " << blockIndex << " already compressed, starting scan at:" << endl;
+			cout << "PWAHBitSet::get[" << bitIndex << "] -- initialWordIndex=" << initialWordIndex << ", initialPartitionIndex=" << initialPartitionIndex << ", initialBlockIndex=" << initialBlockIndex << endl;
 		}
-
 
 		// Iterate over all words
 		long currWord;
@@ -619,6 +658,12 @@ template<unsigned int P> const bool PWAHBitSet<P>::get(unsigned int bitIndex, bo
 
 			// Iterate over partitions in this word
 			while (currPartitionIndex < P){
+				if (update_incr_get_indices){
+					_incr_get_WordIndex = w;
+					_incr_get_PartitionIndex = currPartitionIndex;
+					_incr_get_BlockIndex = currBlockIndex;
+				}
+
 				if (w == 0 && currPartitionIndex == 0){
 					// skip: word 0, partition 0 contains plain block
 					currPartitionIndex++;

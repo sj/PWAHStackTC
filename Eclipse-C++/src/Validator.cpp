@@ -34,14 +34,14 @@ Validator::~Validator() {}
 
 void Validator::validate(){
 	const int numTests = 11;
-	const string baseDir = "/home/bas/afstuderen/Datasets";
+	const string baseDir = "datasets";
 
 	string filenames[numTests] = {
-		"Semmle graphs/java/depends.graph",
-		"Semmle graphs/java/polycalls.graph",
-		"Semmle graphs/wiki/pagelinks.graph",
-		"Semmle graphs/c++/successor.graph",
-		"Semmle graphs/samba/setflow.graph",
+		"Semmle/adempiere/depends.graph",
+		"Semmle/adempiere/polycalls.graph",
+		"Semmle/wikipedia/pagelinks.graph",
+		"Semmle/imagemagick/successor.graph",
+		//"Semmle/samba/setflow.graph",
 		"SigMod 08/real_data/agrocyc.graph",
 		"SigMod 08/real_data/amaze.graph",
 		"SigMod 08/real_data/anthra.graph",
@@ -55,7 +55,7 @@ void Validator::validate(){
 		438508149, // polycalls.graph
 		12479685213, // pagelinks.graph
 		2309714078, // c++/successor.graph
-		10968067063, // samba/setflow.graph
+		//10968067063, // samba/setflow.graph
 		2731596, // agrocyc.graph
 		93685094, // amaze.graph
 		2440124, // anthra.graph
@@ -69,7 +69,7 @@ void Validator::validate(){
 		438552734, // polycalls.graph (NOT VERIFIED!)
 		12479732188, // wiki/pagelinks.graph (NOT VERIFIED!)
 		2310250306, // c++/successor.graph (NOT VERIFIED!)
-		10968568966, // samba/setflow.graph (NOT VERIFIED!)
+		//10968568966, // samba/setflow.graph (NOT VERIFIED!)
 		2744279, // agrocyc.graph
 		93688747, // amaze.graph
 		2452621, // anthra.graph

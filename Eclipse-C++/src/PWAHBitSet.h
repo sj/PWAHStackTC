@@ -39,6 +39,10 @@ public:
 	void clear();
 	const bool get(unsigned int bitIndex, bool disableIndex);
 	const bool get(unsigned int bitIndex);
+
+	const bool incr_get(unsigned int bitIndex);
+	void reset_incr_get();
+
 	const unsigned int size();
 	static void multiOr(PWAHBitSet** bitSets, unsigned int numBitSets, PWAHBitSet* result);
 	static PWAHBitSet* constructByOr(const PWAHBitSet* first, const PWAHBitSet* second);
@@ -72,6 +76,10 @@ private:
 	vector<unsigned short> _indexPartition;
 	vector<int> _indexPartitionOffset;
 
+	unsigned int _incr_get_WordIndex;
+	unsigned int _incr_get_PartitionIndex;
+	long _incr_get_BlockIndex;
+
 	inline static bool is_fill(long bits, unsigned short partitionIndex);
 	static bool is_onefill(long bits, unsigned short partitionIndex);
 	static bool is_zerofill(long bits, unsigned short partitionIndex);
@@ -93,6 +101,8 @@ private:
 	void updateIndex(int numBlocks, int firstBlockIndex);
 	void setIndexEntry(unsigned int chunkIndex, int indexWord, int indexPartition, int indexPartitionOffset);
 	int countNumberOfBlocks();
+
+	const bool _get(unsigned int bitIndex, bool disableIndex, unsigned int initialWordIndex, unsigned int initialPartitionIndex, long initialBlockIndex, bool update_incr_get_indices);
 };
 
 

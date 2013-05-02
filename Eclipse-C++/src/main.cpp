@@ -74,10 +74,10 @@ void printUsage(){
 
 vector<unsigned int> _read_int_tokens(string filename){
 	vector<unsigned int> res;
-	ifstream sources(filename.c_str());
+	ifstream in_file(filename.c_str());
 	string line = "";
-	if (sources.is_open()){
-		while(std::getline(sources,line)){
+	if (in_file.is_open()){
+		while(std::getline(in_file,line)){
 			string token;
 
 			stringstream lineStream(line);
@@ -90,6 +90,7 @@ vector<unsigned int> _read_int_tokens(string filename){
 		cerr << "Can't read '" << filename << "'. Aborting." << endl;
 		exit(1);
 	}
+	in_file.close();
 
 	return res;
 }
@@ -116,21 +117,28 @@ void doSourcesTargetsReachability(string filename_graph, string filename_sources
 	vector<vector<unsigned int> > reachable;
 	reachable.reserve(source_vertices.size());
 
+
 	cout << " - computing transitive closure: ";
 	fflush(stdout);
 	timer.reset();
 	tc->computeTransitiveClosure(false, false, 0);
 	cout << "done in " << timer.reset() << " millisecs" << endl;
 
-	cout << " - performing reachability queries: ";
-	fflush(stdout);
-	timer.reset();
-	tc->reachablepairs(source_vertices, target_vertices, reachable);
-	const long time_reachable_micro = timer.currRunTimeMicro();
-	const long time_reachable = time_reachable_micro / (double) 1000;
-	cout << "done in " << time_reachable << " millisecs / " << time_reachable_micro << " microsecs (amortised " << (time_reachable_micro / (double)(num_pairs)) << " microseconds per query)" << endl;
-
+	try {
+		cout << " - performing reachability queries: ";
+		fflush(stdout);
+		timer.reset();
+		tc->reachablepairs(source_vertices, target_vertices, reachable);
+		const long time_reachable_micro = timer.currRunTimeMicro();
+		const long time_reachable = time_reachable_micro / (double) 1000;
+		cout << "done in " << time_reachable << " millisecs / " << time_reachable_micro << " microsecs (amortised " << (time_reachable_micro / (double)(num_pairs)) << " microseconds per query)" << endl;
+	} catch (string& exc){
+		cerr << "Exception: " << exc << endl;
+		exit(1);
+	}
 	cout << " - writing reachable pairs to '" << filename_out << ": ";
+	fflush(stdout);
+
 	assert(reachable.size() == source_vertices.size());
 	ofstream out_file (filename_out.c_str(), ios::trunc);
 	if (out_file.is_open())
@@ -213,6 +221,7 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
+	runValidatorWhenRequested(argc, argv);
 
 	typedef map<string,string> mapType;
 	map<string, string> cmdLineArgs;
