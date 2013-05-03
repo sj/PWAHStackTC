@@ -26,6 +26,7 @@
 #include <math.h>
 #include <climits>
 #include <sstream>
+#include <stdexcept>
 using namespace std;
 
 /**
@@ -554,21 +555,42 @@ template<unsigned int P> void PWAHBitSet<P>::clear(){
 	_incr_get_WordIndex = 0;
 }
 
+/**
+ * \brief Returns the value (true/false <--> 1/0) of the bit at index 'bitIndex'.
+ *
+ * Complexity: linear in the size of the compressed data.
+ *
+ * \param bitIndex the index of the bit to be queried.
+ */
+
 template<unsigned int P> const bool PWAHBitSet<P>::get(unsigned int bitIndex){
 	return get(bitIndex, false);
 }
 
-template<unsigned int P> void PWAHBitSet<P>::reset_incr_get(){
+/**
+ * \brief Resets the indices used for the 'incr_get' method
+ *
+ * Complexity: O(1)
+ *
+ * @see incr_get(unsigned int)
+ */
+template<unsigned int P> void PWAHBitSet<P>::reset_incr_get_indices(){
 	_incr_get_BlockIndex = -1;
 	_incr_get_PartitionIndex = 0;
 	_incr_get_WordIndex = 0;
 }
 
 /**
- * Same as PWAHBitSet::get(unsigned int, bool) below, but implements an optimisation to support incremental gets
- * (i.e., to get multiple bits in an efficient way, but the queried bits need to be queried incrementally)
+ * \brief Same as PWAHBitSet::get(unsigned int, bool), but implements an optimisation to support incremental gets
+ * (i.e., to get multiple bits in an efficient way, but the queried bits need to be queried incrementally).
+ *
+ * Complexity for a single lookup: O(n)
+ * Total complexity for a series of lookups: O(n)
+ *
+ * For a series of lookups, this method will only do a single pass over the entire bitset.
  */
 template<unsigned int P> const bool PWAHBitSet<P>::incr_get(unsigned int bitIndex){
+	if (_bit_block_index(bitIndex) < _incr_get_BlockIndex) throw range_error("incr_get requires incremental querying. Use reset_incr_get_indices to reset indices.");
 	return _get(bitIndex, false, _incr_get_WordIndex, _incr_get_PartitionIndex, _incr_get_BlockIndex, true);
 }
 
@@ -627,12 +649,16 @@ template<unsigned int P> const bool PWAHBitSet<P>::get(unsigned int bitIndex, bo
  * \param initialWordIndex the word to start scanning at
  * \param initialPartitionIndex the partition of the word to start scanning at
  * \param initialBlockIndex the block at the given word/partition
+ * \param update_incr_get_indices determines whether _get will update the _incr_get_* values for incremental getting.
  */
 template<unsigned int P> const bool PWAHBitSet<P>::_get(unsigned int bitIndex, bool disableIndex, unsigned int initialWordIndex, unsigned int initialPartitionIndex, long initialBlockIndex, bool update_incr_get_indices){
+	// TODO: integrate incr_get with standard get?
 	const bool DEBUGGING = false;
-	const int blockIndex = bitIndex / _blockSize;
+	const int blockIndex = _bit_block_index(bitIndex);
 	long currBlockIndex = initialBlockIndex;
 	unsigned int currPartitionIndex = initialPartitionIndex;
+
+	if (blockIndex < initialBlockIndex) throw range_error("Scan of PWAHBitSet failed: initial block index is beyond bit block index.");
 
 	if (DEBUGGING) cout << "PWAHBitSet::get[" << bitIndex << "] -- bit in block " << blockIndex << endl;
 

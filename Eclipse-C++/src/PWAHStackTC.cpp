@@ -600,9 +600,9 @@ template<> void PWAHStackTC<PWAHBitSet<8> >::reachablepairs(vector<unsigned int>
 				continue;
 			}
 
-/*
+			/*
+			// Implementation of a single scan over a compressed bitset using the BitSetIterator
 			BitSetIterator* iter = _componentSuccessors[src_comp_index]->iterator();
-
 
 			int currSuccessorIndex = iter->next();
 
@@ -635,6 +635,11 @@ template<> void PWAHStackTC<PWAHBitSet<8> >::reachablepairs(vector<unsigned int>
 			delete iter;*/
 
 
+			// Implementation of a single scan over a compressed bitset using the 'incr_get' method of
+			// PWAHBitSet. This method requires that the queries to the PWAHBitSet are in increasing order
+			// of bit index, but then guarantees only a single pass is made over the data structure, which
+			// is of course much more efficient than scanning over the entire PWAHBitSet for every single
+			// query.
 			for (unsigned int j = 0; j < target_components.size(); j++){
 				const unsigned int curr_target_component_index = target_components[j];
 
@@ -656,6 +661,9 @@ template<> void PWAHStackTC<PWAHBitSet<8> >::reachablepairs(vector<unsigned int>
 	}
 }
 
+/**
+ * \brief Answers a reachability query for two vertices 'src' and 'dst'.
+ */
 template<class B> bool PWAHStackTC<B>::reachable(unsigned int src, unsigned int dst){
 	const bool DEBUGGING = false;
 	if (src >= _graph->getNumberOfVertices()) throw range_error("Source index out of bounds");

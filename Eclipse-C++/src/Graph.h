@@ -55,7 +55,7 @@ public:
 
 	static Graph parseChacoFile(string filename);
 
-	static vector<string> split(const std::string &s, char delim);
+	static vector<string> split(const string &s, char delim);
 	static vector<string> &split(const string &s, char delim, vector<string> &elems);
 };
 

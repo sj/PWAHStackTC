@@ -63,9 +63,9 @@ void printUsage(){
 	cerr << "--source-vertices=mysources.txt" << endl;
 	cerr << "--target-vertices=mytargets.txt" << endl;
 	cerr << "--reachable-sources-targets=myresult.txt" << endl;
-	cerr << "  Reads sets of source and target vertex indices from the files provided, and" << endl;
-	cerr << "  will write all reachable pairs to 'myresult.txt'. The implementation is optimised" << endl;
-	cerr << "  for single:many queries and many:many queries." << endl << endl;
+	cerr << "  Reads sets of source and target vertex indices (whitespace/newline separated) from the " << endl;
+	cerr << "  provided files, and will write all reachable pairs to 'myresult.txt'. " << endl;
+	cerr << "  The implementation is optimised for single:many queries and many:many queries." << endl << endl;
 
 	cerr << "For more information:" << endl;
 	cerr << "Sebastiaan J. van Schaik. Answering reachability queries on large directed graphs, introducing a new data structure using bit vector compression. MSc. thesis, Utrecht University, 2010." << endl;

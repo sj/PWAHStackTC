@@ -41,7 +41,7 @@ public:
 	const bool get(unsigned int bitIndex);
 
 	const bool incr_get(unsigned int bitIndex);
-	void reset_incr_get();
+	void reset_incr_get_indices();
 
 	const unsigned int size();
 	static void multiOr(PWAHBitSet** bitSets, unsigned int numBitSets, PWAHBitSet* result);
@@ -76,7 +76,18 @@ private:
 	vector<unsigned short> _indexPartition;
 	vector<int> _indexPartitionOffset;
 
+	/**
+	 * Current word index for use in the PWAHBitSet::incr_get(unsigned int) method
+	 *
+	 * @see PWAHBitSet::incr_get(unsigned int)
+	 */
 	unsigned int _incr_get_WordIndex;
+
+	/**
+	 * Current partition index for use in the PWAHBitSet::incr_get(unsigned int) method
+	 *
+	 * @see PWAHBitSet::incr_get(unsigned int)
+	 */
 	unsigned int _incr_get_PartitionIndex;
 	long _incr_get_BlockIndex;
 
@@ -88,6 +99,8 @@ private:
 	inline static bool is_literal_zerofill(long bits, unsigned short partitionIndex);
 	inline static long extract_partition(long bits, unsigned short partitionIndex);
 	inline static long clear_partition(long bits, unsigned short partitionIndex);
+	inline unsigned int _bit_block_index(unsigned int bitIndex){ return bitIndex / _blockSize; }
+
 	static short blocks_num_partitions(int numBlocks);
 
 	void compressPlainPartition();
