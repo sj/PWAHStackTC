@@ -65,7 +65,8 @@ void printUsage(){
 	cerr << "--reachable-sources-targets=myresult.txt" << endl;
 	cerr << "  Reads sets of source and target vertex indices (whitespace/newline separated) from the " << endl;
 	cerr << "  provided files, and will write all reachable pairs to 'myresult.txt'. " << endl;
-	cerr << "  The implementation is optimised for single:many queries and many:many queries." << endl << endl;
+	cerr << "  The implementation is optimised for single:many queries and many:many queries." << endl;
+	cerr << "  (this functionality uses PWAH-8 and ignores all other options, except for --reflexive)" << endl << endl;
 
 	cerr << "For more information:" << endl;
 	cerr << "Sebastiaan J. van Schaik. Answering reachability queries on large directed graphs, introducing a new data structure using bit vector compression. MSc. thesis, Utrecht University, 2010." << endl;
@@ -95,7 +96,7 @@ vector<unsigned int> _read_int_tokens(string filename){
 	return res;
 }
 
-void doSourcesTargetsReachability(string filename_graph, string filename_sources, string filename_targets, string filename_out){
+void doSourcesTargetsReachability(string filename_graph, string filename_sources, string filename_targets, string filename_out, bool reflexive){
 	vector<unsigned int> source_vertices = _read_int_tokens(filename_sources);
 	vector<unsigned int> target_vertices = _read_int_tokens(filename_targets);
 	long num_pairs = source_vertices.size() * target_vertices.size();
@@ -121,7 +122,7 @@ void doSourcesTargetsReachability(string filename_graph, string filename_sources
 	cout << " - computing transitive closure: ";
 	fflush(stdout);
 	timer.reset();
-	tc->computeTransitiveClosure(false, false, 0);
+	tc->computeTransitiveClosure(reflexive, false, 0);
 	cout << "done in " << timer.reset() << " millisecs" << endl;
 
 	try {
@@ -279,26 +280,29 @@ int main(int argc, char* argv[]) {
 		exit(0);
 	}
 
-	if (cmdLineArgs["source-vertices"] != "" || cmdLineArgs["target-vertices"] != "" || cmdLineArgs["reachable-sources-targets"] != ""){
-		if (cmdLineArgs["source-vertices"] == "" || cmdLineArgs["target-vertices"] == "" || cmdLineArgs["reachable-sources-targets"] == ""){
-			cerr << "Need all three of: --source-vertices, --target-vertices, --reachable-sources-targets" << endl << endl;
-			printUsage();
-			exit(1);
-		}
-		doSourcesTargetsReachability(cmdLineArgs["filename"], cmdLineArgs["source-vertices"],cmdLineArgs["target-vertices"],cmdLineArgs["reachable-sources-targets"]);
-		exit(0);
-	}
-
 	const bool nodetails = (cmdLineArgs["no-details"] != "unset");
 	const bool reflexive = (cmdLineArgs["reflexive"] != "unset");
 	const int minMultiOR = atoi(cmdLineArgs["min-multi-or"].c_str());
 	const string filename = cmdLineArgs["filename"];
+	const string source_vertices = cmdLineArgs["source-vertices"];
+	const string target_vertices = cmdLineArgs["target-vertices"];
+	const string reachable_sources_targets = cmdLineArgs["reachable-sources-targets"];
 	const int numRuns = atoi(cmdLineArgs["num-runs"].c_str());
 	const int indexChunkSize = atoi(cmdLineArgs["index-chunk-size"].c_str());
 	const int numQueries = 1000000;
 	double totalConstructionTime = 0;
 	double totalQueryTime = 0;
 	long memUsage = 0;
+
+	if (source_vertices != "" || target_vertices != "" ||  reachable_sources_targets != ""){
+		if (source_vertices == "" || target_vertices == "" || reachable_sources_targets == ""){
+			cerr << "Need all three of: --source-vertices, --target-vertices, --reachable-sources-targets" << endl << endl;
+			printUsage();
+			exit(1);
+		}
+		doSourcesTargetsReachability(filename, source_vertices, target_vertices,reachable_sources_targets, reflexive);
+		exit(0);
+	}
 
 	try {
 		PerformanceTimer timer = PerformanceTimer::start();

@@ -600,41 +600,6 @@ template<> void PWAHStackTC<PWAHBitSet<8> >::reachablepairs(vector<unsigned int>
 				continue;
 			}
 
-			/*
-			// Implementation of a single scan over a compressed bitset using the BitSetIterator
-			BitSetIterator* iter = _componentSuccessors[src_comp_index]->iterator();
-
-			int currSuccessorIndex = iter->next();
-
-			unsigned int curr_target_component_i = 0; 
-			while (currSuccessorIndex != -1 && curr_target_component_i < target_components.size()){
-				int curr_target_component = target_components[curr_target_component_i];
-
-				if (currSuccessorIndex == curr_target_component){
-					// Queried target component is reachable! Add the target vertices in this component
-					// to the result list
-					reachable[i].insert(reachable[i].end(),
-							target_component_vertices[curr_target_component]->begin(),
-							target_component_vertices[curr_target_component]->end()
-					);
-
-					// Move on both iterator and target component
-					curr_target_component_i++;
-					currSuccessorIndex = iter->next();
-				} else if (currSuccessorIndex > curr_target_component){
-					// The reachable component returned by the bitset has an index larger than the target
-					// component currently under consideration. This means that the target component currently
-					// under consideration is not reachable - lets try the next one
-					curr_target_component_i++;
-				} else { // currSuccessorIndex < curr_target_component
-					// The target component we're hoping to find is further down the bitset, let's kick the
-					// iterator up.
-					currSuccessorIndex = iter->next();
-				}
-			}
-			delete iter;*/
-
-
 			// Implementation of a single scan over a compressed bitset using the 'incr_get' method of
 			// PWAHBitSet. This method requires that the queries to the PWAHBitSet are in increasing order
 			// of bit index, but then guarantees only a single pass is made over the data structure, which
@@ -643,9 +608,37 @@ template<> void PWAHStackTC<PWAHBitSet<8> >::reachablepairs(vector<unsigned int>
 			for (unsigned int j = 0; j < target_components.size(); j++){
 				const unsigned int curr_target_component_index = target_components[j];
 
-				if (_componentSuccessors[src_comp_index]->incr_get(curr_target_component_index)){
-					// Target component is reachable - add all target vertices of that component to the list of
-					// reachable vertices.
+				bool target_reachable = false;
+				bool decided = false;
+
+				if (src_comp_index == curr_target_component_index){
+					// Source and target lie in the same component. If the component has size > 1, then any
+					// target vertex can be reached from any source within that same component. If the component
+					// consists of a single vertex, then reachability requires:
+					//		1) a self-loop  OR
+					// 		2) a reflexive transitive closure
+
+					if (_reflexitive || _componentSizes[src_comp_index] > 1){
+						// Always reachable
+						target_reachable = true;
+						decided = true;
+					} else if (_storeComponentVertices) {
+						// Self-loops were not stored explicitly, since their existence can be shown implicitly.
+						target_reachable = this->componentHasSelfLoop(src_comp_index);
+						decided = true;
+					} else {
+						// Self-loops were stored explicitly
+						decided = false;
+					}
+				}
+
+				if (!decided){
+					target_reachable = _componentSuccessors[src_comp_index]->incr_get(curr_target_component_index);
+					decided = true;
+				}
+
+				if (target_reachable){
+					// add all target vertices of that component to the list of reachable vertices.
 					reachable[i].insert(reachable[i].end(),
 							target_component_vertices[curr_target_component_index]->begin(),
 							target_component_vertices[curr_target_component_index]->end()
