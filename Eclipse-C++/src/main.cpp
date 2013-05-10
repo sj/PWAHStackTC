@@ -190,7 +190,7 @@ void doSourcesTargetsReachability(string filename_graph, string filename_sources
 			if (tc->reachable(source_vertex, target_vertex)) dist_num_pairs_reachable++;
 		}
 	}
-	long time_distinct_queries = timer_distinct_queries.currRunTimeMicro();
+	long time_distinct_queries = timer_distinct_queries.currRunTime();
 
 	if (dist_num_pairs_reachable != num_pairs_reachable){
 		cerr << "ERROR! Distinct reachability queries yield " << dist_num_pairs_reachable << " reachable source/target pairs, rather than " << num_pairs_reachable << " pairs!" << endl;
@@ -199,7 +199,7 @@ void doSourcesTargetsReachability(string filename_graph, string filename_sources
 
 
 	const long num_pairs_unreachable = num_pairs - num_pairs_reachable;
-	cout << "done, verification took " << timer.reset() << " seconds - verified " << dist_num_pairs_reachable << " reachable and " << num_pairs_unreachable << " unreachable source/target pairs! Performing " << num_pairs << " distinct queries took " << time_distinct_queries << " microseconds." << endl;
+	cout << "done, verification took " << timer.reset() << " milliseconds - verified " << dist_num_pairs_reachable << " reachable and " << num_pairs_unreachable << " unreachable source/target pairs! Performing " << num_pairs << " distinct queries took " << time_distinct_queries << " milliseconds." << endl;
 }
 
 int main(int argc, char* argv[]) {
