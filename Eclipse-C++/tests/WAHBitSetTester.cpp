@@ -17,17 +17,17 @@
  * along with PWAHStackTC. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "../src/datastructures/bitsets/wah/WAHBitSet.h"
 #include "WAHBitSetTester.h"
-#include "WAHBitSet.h"
-#include "DynamicBitSet.h"
+#include "../src/datastructures/bitsets/DynamicBitSet.h"
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
 #include <bitset>
 #include <sstream>
-#include "PerformanceTimer.h"
-#include "WAHBitSetIterator.h"
+#include "../src/util/PerformanceTimer.h"
+#include "../src/datastructures/bitsets/wah/WAHBitSetIterator.h"
 #include "BitSetTester.h"
 #include <string>
 using namespace std;

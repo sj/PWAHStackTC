@@ -19,7 +19,7 @@
 
 #ifndef WAHBITSETTESTER_H_
 #define WAHBITSETTESTER_H_
-#include "WAHBitSet.h"
+#include "../src/datastructures/bitsets/BitSet.h"
 
 class WAHBitSetTester {
 private:

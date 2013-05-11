@@ -22,13 +22,13 @@
 #include <stdlib.h>
 #include <iostream>
 #include <sstream>
-#include "PWAHBitSet.h"
-#include "WAHBitSet.h"
-#include "DynamicBitSet.h"
-#include "Graph.h"
-#include "PWAHStackTC.h"
+#include "../src/datastructures/bitsets/pwah/PWAHBitSet.h"
+#include "../src/datastructures/bitsets/wah/WAHBitSet.h"
+#include "../src/datastructures/bitsets/DynamicBitSet.h"
+#include "../src/datastructures/Graph.h"
+#include "../src/algorithms/PWAHStackTC.h"
 #include <math.h>
-#include "IntervalBitSet.h"
+#include "../src/datastructures/bitsets/interval/IntervalBitSet.h"
 using namespace std;
 
 template<class B> BitSetTester<B>::BitSetTester(BitSet* bs1, BitSet* bs2) {

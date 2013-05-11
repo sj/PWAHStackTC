@@ -20,14 +20,16 @@
 #include "Validator.h"
 #include <string>
 #include <iostream>
-#include "PerformanceTimer.h"
-#include "Graph.h"
-#include "PWAHStackTC.h"
+#include "../util/PerformanceTimer.h"
+#include "../algorithms/PWAHStackTC.h"
 #include <stdlib.h>
-#include "PWAHBitSet.h"
-#include "TransitiveClosureAlgorithm.h"
-#include "IntervalBitSet.h"
+#include "../datastructures/bitsets/pwah/PWAHBitSet.h"
+#include "../algorithms/TransitiveClosureAlgorithm.h"
+#include "../datastructures/Graph.h"
+#include "../datastructures/bitsets/interval/IntervalBitSet.h"
 using namespace std;
+
+// TODO: clean includes
 
 Validator::Validator() {}
 Validator::~Validator() {}

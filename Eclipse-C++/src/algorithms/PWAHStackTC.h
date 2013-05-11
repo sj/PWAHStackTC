@@ -19,18 +19,18 @@
 
 #ifndef WAHSTACKTC_H_
 #define WAHSTACKTC_H_
-#include "Graph.h"
-#include "WAHBitSet.h"
-#include "DynamicBitSet.h"
+#include "../datastructures/Graph.h"
+#include "../datastructures/bitsets/wah/WAHBitSet.h"
+#include "../datastructures/bitsets/DynamicBitSet.h"
 #include <vector>
 #include <stack>
-#include "PerformanceTimer.h"
-#include "StaticBitSet.h"
-#include "DynamicStack.h"
-#include "PWAHBitSet.h"
-#include "BitSet.h"
+#include "../util/PerformanceTimer.h"
+#include "../datastructures/bitsets/StaticBitSet.h"
+#include "../datastructures/DynamicStack.h"
+#include "../datastructures/bitsets/pwah/PWAHBitSet.h"
+#include "../datastructures/bitsets/BitSet.h"
 #include "TransitiveClosureAlgorithm.h"
-#include "IntervalBitSet.h"
+#include "../datastructures/bitsets/interval/IntervalBitSet.h"
 using namespace std;
 
 template <class B>
@@ -84,6 +84,7 @@ public:
 	string algorithmName();
 	long memoryUsedByIntervalLists();
 
+	// TODO: why is this?
 	friend class BitSetTester<IntervalBitSet>;
 	friend class BitSetTester<WAHBitSet>;
 	friend class BitSetTester<PWAHBitSet<2> >;

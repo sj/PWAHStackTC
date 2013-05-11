@@ -21,7 +21,7 @@
 #define TRANSITIVECLOSUREALGORITHM_H_
 #include <string>
 #include <vector>
-#include "BitSet.h"
+#include "../datastructures/bitsets/BitSet.h"
 using namespace std;
 
 class TransitiveClosureAlgorithm {

@@ -21,10 +21,10 @@
 #define WAHBITSET_H_
 #include <vector>
 #include <string>
-#include "BitSet.h"
-#include "DynamicBitSet.h"
+#include "../BitSet.h"
+#include "../DynamicBitSet.h"
 #include "WAHBitSetIterator.h"
-#include "BitSetTester.h"
+#include "../../../../tests/BitSetTester.h"
 using namespace std;
 
 class WAHBitSet : public BitSet {

@@ -19,7 +19,7 @@
 
 #ifndef WAHBITSETITERATOR_H_
 #define WAHBITSETITERATOR_H_
-#include "BitSetIterator.h"
+#include "../BitSetIterator.h"
 #include "WAHBitSet.h"
 using namespace std;
 

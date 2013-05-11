@@ -4,17 +4,20 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
-../src/main.cpp 
+../src/datastructures/bitsets/interval/IntervalBitSet.cpp \
+../src/datastructures/bitsets/interval/IntervalBitSetIterator.cpp 
 
 OBJS += \
-./src/main.o 
+./src/datastructures/bitsets/interval/IntervalBitSet.o \
+./src/datastructures/bitsets/interval/IntervalBitSetIterator.o 
 
 CPP_DEPS += \
-./src/main.d 
+./src/datastructures/bitsets/interval/IntervalBitSet.d \
+./src/datastructures/bitsets/interval/IntervalBitSetIterator.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
-src/%.o: ../src/%.cpp
+src/datastructures/bitsets/interval/%.o: ../src/datastructures/bitsets/interval/%.cpp
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
 	g++ -O3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"

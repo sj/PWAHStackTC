@@ -18,19 +18,17 @@
  */
 
 #include "PWAHStackTC.h"
-#include "Graph.h"
-#include "DynamicBitSet.h"
+#include "../datastructures/Graph.h"
+#include "../datastructures/bitsets/DynamicBitSet.h"
 #include <iostream>
 #include <sstream>
 #include <algorithm> // for sorting vectors
-#include "PerformanceTimer.h"
-#include "WAHBitSetIterator.h"
-#include "StaticBitSet.h"
-#include "DynamicStack.h"
-#include "PWAHBitSet.h"
+#include "../util/PerformanceTimer.h"
+#include "../datastructures/bitsets/StaticBitSet.h"
+#include "../datastructures/DynamicStack.h"
+#include "../datastructures/bitsets/pwah/PWAHBitSet.h"
 #include <stdexcept>
-#include "BitSetTester.h"
-#include "IntervalBitSet.h"
+#include "../datastructures/bitsets/interval/IntervalBitSet.h"
 #include <assert.h>
 #include <climits>
 using namespace std;

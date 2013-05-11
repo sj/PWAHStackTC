@@ -18,7 +18,7 @@
  */
 
 #include "PWAHBitSetIterator.h"
-#include "LongBitMacros.cpp"
+#include "../LongBitMacros.cpp"
 #include "PWAHBitSet.h"
 
 template<unsigned int P> PWAHBitSetIterator<P>::PWAHBitSetIterator(PWAHBitSet<P>* pwbs) {

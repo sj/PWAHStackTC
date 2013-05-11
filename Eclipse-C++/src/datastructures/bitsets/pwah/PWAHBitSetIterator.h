@@ -19,7 +19,7 @@
 
 #ifndef PWAHBITSETITERATOR_H_
 #define PWAHBITSETITERATOR_H_
-#include "BitSetIterator.h"
+#include "../BitSetIterator.h"
 #include "PWAHBitSet.h"
 
 template<unsigned int P>

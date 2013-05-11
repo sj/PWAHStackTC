@@ -22,12 +22,11 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include "PerformanceTimer.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <fstream>
 #include <assert.h>
-#include "StaticBitSet.h"
+#include "bitsets/StaticBitSet.h"
 using namespace std;
 
 Graph::Graph() {}
@@ -226,7 +225,6 @@ Graph Graph::parseChacoFile(string filename){
 	const bool debug = false;
 	Graph graph;
 
-	PerformanceTimer timer = PerformanceTimer::start();
 	ifstream input_file(filename.c_str());
 	char buffer[2621440];
 

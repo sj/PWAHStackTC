@@ -20,7 +20,7 @@
 #include "PWAHBitSet.h"
 #include <iostream>
 #include <cstring>
-#include "LongBitMacros.cpp"
+#include "../LongBitMacros.cpp"
 #include "PWAHBitSetIterator.h"
 #include <assert.h>
 #include <math.h>

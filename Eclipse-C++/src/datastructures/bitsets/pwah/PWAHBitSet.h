@@ -22,8 +22,8 @@
 #include <cstring>
 #include <iostream>
 #include <vector>
-#include "BitSet.h"
-#include "BitSetTester.h"
+#include "../BitSet.h"
+#include "../../../../tests/BitSetTester.h"
 using namespace std;
 
 template<unsigned int P> class PWAHBitSetIterator;

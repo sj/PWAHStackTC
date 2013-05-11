@@ -20,7 +20,7 @@
 #ifndef INTERVALBITSETITERATOR_H_
 #define INTERVALBITSETITERATOR_H_
 
-#include "BitSetIterator.h"
+#include "../BitSetIterator.h"
 #include "IntervalBitSet.h"
 
 class IntervalBitSetIterator: public BitSetIterator {

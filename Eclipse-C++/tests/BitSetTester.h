@@ -19,7 +19,7 @@
 
 #ifndef BITSETTESTER_H_
 #define BITSETTESTER_H_
-#include "BitSet.h"
+#include "../src/datastructures/bitsets/BitSet.h"
 #include <sstream>
 using namespace std;
 

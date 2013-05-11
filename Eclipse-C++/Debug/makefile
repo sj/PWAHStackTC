@@ -8,6 +8,14 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
+-include tests/subdir.mk
+-include src/util/subdir.mk
+-include src/datastructures/bitsets/wah/subdir.mk
+-include src/datastructures/bitsets/pwah/subdir.mk
+-include src/datastructures/bitsets/interval/subdir.mk
+-include src/datastructures/bitsets/subdir.mk
+-include src/datastructures/subdir.mk
+-include src/algorithms/subdir.mk
 -include src/subdir.mk
 -include subdir.mk
 -include objects.mk

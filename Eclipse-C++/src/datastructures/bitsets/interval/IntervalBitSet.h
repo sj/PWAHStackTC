@@ -21,7 +21,7 @@
 #define INTERVALBITSET_H_
 #include <vector>
 #include <string>
-#include "BitSet.h"
+#include "../BitSet.h"
 using namespace std;
 
 class IntervalBitSet : public BitSet {
