@@ -166,7 +166,7 @@ template<class B> void BitSetTester<B>::testIterator(BitSet* bitset, bool random
 
 	BitSetIterator* it = bitset->iterator();
 	bool value;
-	for (unsigned int i = 0; i < bitset->size(); i++){
+	for (int i = 0; i < (int)bitset->size(); i++){
 		value = bitset->get(i);
 		if (value){
 			cout << "BitSetTester::testIterator() -- bit " << i << " should be set..." << endl;

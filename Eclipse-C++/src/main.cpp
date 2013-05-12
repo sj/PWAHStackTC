@@ -16,7 +16,66 @@
 #include <fstream>
 #include <assert.h>
 #include <cstdio>
+#include "gtest-includes.h"
 using namespace std;
+
+/** \mainpage PWAHStackTC: an algorithm / data structure for reachability queries on graphs
+ *
+ * http://www.sjvs.nl/pwahstacktc
+ *
+ * Introduction
+ * ---
+ * PWAHStackTC is an algorithm and data structure to query and store reachability information on large directed graphs. It uses
+ * an algorithm first proposed by Esko Nuutila [Nuutila1995] and a data structure for bit vector compression designed by
+ * Sebastiaan van Schaik. See [VanSchaik2010] and [VanSchaikDeMoor2011] for a comprehensive description and experimental evaluation
+ * of the data structure and algorithm.
+ *
+ * This implementation is licenced under the GNU General Public Licence (GPL), see http://www.gnu.org/licenses/gpl.html
+ * <br><br>
+ *
+ *
+ *
+ * Comparing PWAHStackTC to your implementation
+ * ---
+ * By default, the executable will run an experiment by parsing a provided graph, constructing the reachability data structure,
+ * and performing 1,000,000 random reachability queries. Its performance (time required to construct data structure,
+ * time required to performing random queries) and memory usage are printed. For example:
+ *
+ *     PWAHStackTC --filename=myfile.graph
+ * <br>
+ *
+ *
+ * Compilation instructions
+ * ---
+ * PWAHStackTC requires a 64-bit operating system to compile and run, because it relies on the `long` type comprising 64 bits. For
+ * unit testing, it relies on the Google Test (gtest) framework, which is available from https://code.google.com/p/googletest/.
+ *
+ * The easiest way to compile the source code, is to enter the `Release` directory and use `make` to build:
+ *
+ *     cd Release
+ *     make clean
+ *     make all
+ *
+ * <br>
+ *
+ *
+ * Usage instructions
+ * ---
+ * After compiling the executable, run it with the option --help:
+ *
+ *     PWAHStackTC --filename=myfile.graph
+ *
+ *
+ * ### References ###
+ * Nuutila1995: Esko Nuutila. Efficient Transitive Closure Computation in Large Digraphs. PhD thesis, Finnish Academy of Technology, 1995. http://www.cs.hut.fi/~enu/tc.html
+ *
+ * VanSchaik2010: Sebastiaan J. van Schaik. Answering reachability queries on large directed graphs, introducing a new data structure using bit vector compression. MSc. thesis, Utrecht University, 2010.
+ *
+ * VanSchaikDeMoor2011: Sebastiaan J. van Schaik and Oege de Moor. A memory efficient reachability data structure through bit vector compression. In SIGMOD ’11: Proceedings of the 37th SIGMOD international conference on Management of data, pages 913-924, New York, NY, USA, 2011. ACM. DOI: 10.1145/1989323.1989419. See: http://dx.doi.org/10.1145/1989323.1989419
+ *
+ *
+ */
+
 
 void runValidatorWhenRequested(int argc, char* argv[]){
 	if (argc == 2){
@@ -65,10 +124,32 @@ void printUsage(){
 	cerr << "  The implementation is optimised for single:many queries and many:many queries." << endl;
 	cerr << "  (this functionality uses PWAH-8 and ignores all other options, except for --reflexive)" << endl << endl;
 
+	cerr << "--run-unit-tests" << endl;
+	cerr << "  Will call the Google Test framework (GTest) to run predefined unit tests" << endl;
+	cerr << "  (only available in Debug builds)" << endl << endl;
+
 	cerr << "For more information:" << endl;
 	cerr << "Sebastiaan J. van Schaik. Answering reachability queries on large directed graphs, introducing a new data structure using bit vector compression. MSc. thesis, Utrecht University, 2010." << endl;
 	cerr << "Sebastiaan J. van Schaik and Oege de Moor. A memory efficient reachability data structure through bit vector compression. In SIGMOD '11: Proceedings of the 37th SIGMOD international conference on Management of data, pages 913-924, New York, NY, USA, 2011. ACM." << endl;
 }
+
+void runUnitTestsWhenRequested(int argc, char* argv[]){
+	if (argc >= 2){
+		string arg = argv[1];
+
+		if (arg == "--run-unit-tests"){
+#ifndef __OPTIMIZE__
+			::testing::InitGoogleTest(&argc, argv);
+			RUN_ALL_TESTS();
+			exit(0);
+#else
+			cerr << "Error: unit tests are only available in Debug builds. Please use --help switch for usage information." << endl;
+			exit(1);
+#endif
+		}
+	}
+}
+
 
 vector<unsigned int> _read_int_tokens(string filename){
 	vector<unsigned int> res;
@@ -218,6 +299,8 @@ int main(int argc, char* argv[]) {
 			}
 		}
 	}
+
+	runUnitTestsWhenRequested(argc, argv);
 
 	runValidatorWhenRequested(argc, argv);
 

@@ -31,6 +31,7 @@
 #include "../datastructures/bitsets/BitSet.h"
 #include "TransitiveClosureAlgorithm.h"
 #include "../datastructures/bitsets/interval/IntervalBitSet.h"
+#include "../gtest-includes.h"
 using namespace std;
 
 template <class B>
@@ -60,6 +61,9 @@ private:
 	bool componentHasSelfLoop(int componentIndex);
 	void dfsVisit(unsigned int vertexIndex);
 
+	FRIEND_TEST(PWAHStackTCTest, TestReflexive);
+
+
 public:
 	PWAHStackTC(Graph& graph);
 	virtual ~PWAHStackTC();
@@ -84,7 +88,6 @@ public:
 	string algorithmName();
 	long memoryUsedByIntervalLists();
 
-	// TODO: why is this?
 	friend class BitSetTester<IntervalBitSet>;
 	friend class BitSetTester<WAHBitSet>;
 	friend class BitSetTester<PWAHBitSet<2> >;
