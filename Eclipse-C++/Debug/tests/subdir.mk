@@ -5,16 +5,19 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
 ../tests/BitSetTester.cpp \
+../tests/GraphTestInfo.cpp \
 ../tests/PWAHStackTCTest.cpp \
 ../tests/WAHBitSetTester.cpp 
 
 OBJS += \
 ./tests/BitSetTester.o \
+./tests/GraphTestInfo.o \
 ./tests/PWAHStackTCTest.o \
 ./tests/WAHBitSetTester.o 
 
 CPP_DEPS += \
 ./tests/BitSetTester.d \
+./tests/GraphTestInfo.d \
 ./tests/PWAHStackTCTest.d \
 ./tests/WAHBitSetTester.d 
 
