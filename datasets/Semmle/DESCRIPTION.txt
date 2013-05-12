@@ -1,0 +1,43 @@
+Wikipedia (Simple English Wikipedia, version from 1 July 2009)
+
+ => wiki/categorylinks.csv
+    The relation from a category page to other categories it links to. 18630 edges.
+
+ => wiki/categorypagelinks.csv
+    The relation from a category page to any other page (category or normal page) it links to.
+    181084 edges.
+
+ => wiki/pagelinks.csv
+    The link relation between pages. 2949220 edges.
+
+Adempiere revision 3.5.1a
+
+ => java/child.csv
+    The parent/child relation in the AST (should be a tree). 180373 edges.
+
+ => java/subtype.csv
+    The subtype relationship. 32588 edges.
+
+ => java/calls.csv
+    The direct calls relation between methods. 198041 edges.
+
+ => java/polycalls.csv
+    The calls relation taking virtual dispatch into account. 595198 edges.
+
+ => java/depends.csv
+    The dependency relation between types. 79804 edges.
+
+ => java/successors.csv
+    The control-flow successor relation between statements. 448909 edges.
+
+ImageMagick-6.5.7-8
+
+ => c++/callgraph.csv
+    The calls relation, (uses points-to to resolve virtual-calls). 22282 edges.
+
+ => c++/depends.csv
+    The dependency relation between files. 11408 edges.
+
+ => c++/successor.csv
+    The control-flow successor relation between expressions. 1184601 edges.
+
