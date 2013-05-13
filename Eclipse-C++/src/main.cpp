@@ -17,6 +17,7 @@
 #include <assert.h>
 #include <cstdio>
 #include "gtest-includes.h"
+#include "debug-build.h"
 using namespace std;
 
 /** \mainpage PWAHStackTC: an algorithm / data structure for reachability queries on graphs
@@ -301,6 +302,11 @@ int main(int argc, char* argv[]) {
 	}
 
 	runUnitTestsWhenRequested(argc, argv);
+
+#ifdef DEBUGGING
+	cerr << "RUNNING PWAHSTACKTC IN DEBUGGING MODE - DON'T USE THIS FOR EXPERIMENTAL EVALUATION!" << endl;
+	sleep(1);
+#endif
 
 	runValidatorWhenRequested(argc, argv);
 

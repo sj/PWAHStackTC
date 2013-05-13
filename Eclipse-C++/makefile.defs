@@ -1,0 +1,6 @@
+# Check whether the user is aware that he/she is debugging
+DEBUGGING_STATEMENT := 0
+ifneq ($(wildcard DEBUGGING-I-KNOW-WHAT-IM-DOING),)
+	DEBUGGING_STATEMENT := $(shell cat DEBUGGING-I-KNOW-WHAT-IM-DOING)
+endif
+
