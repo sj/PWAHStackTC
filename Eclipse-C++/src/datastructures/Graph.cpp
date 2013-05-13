@@ -228,6 +228,12 @@ Graph Graph::parseChacoFile(string filename){
 	ifstream input_file(filename.c_str());
 	char buffer[2621440];
 
+	if (!input_file.is_open()){
+		stringstream emsg;
+		emsg << "Error opening '" << filename << "' for reading";
+		throw emsg.str();
+	}
+
 	input_file.clear();
 	input_file.seekg(0);
 	bool firstLine = true;
@@ -246,6 +252,7 @@ Graph Graph::parseChacoFile(string filename){
 		} else if ((input_file.rdstate() & ifstream::failbit) != 0){
 			// 'failbit' was set, read failed because line didn't fit in buffer
 			eMsg << "Reading line " << (lineNo + 1) << " failed, buffer too small?";
+			input_file.close();
 			throw eMsg.str();
 		}
 
@@ -263,6 +270,7 @@ Graph Graph::parseChacoFile(string filename){
 			if (neighbours.size() != 2){
 				eMsg << "First line of graph file contains " << neighbours.size() << " elements? Expecting exactly 2." << endl;
 				eMsg << "Contents of first line: " << line;
+				input_file.close();
 				throw eMsg.str();
 			}
 			numVertices = atoi(neighbours[0].c_str());
@@ -278,6 +286,7 @@ Graph Graph::parseChacoFile(string filename){
 			if (lineNo - 1 > numVertices){
 				stringstream eMsg;
 				eMsg << "Graph file contains at least " << lineNo << " vertex specifications, while it should contain only " << numVertices << "?";
+				input_file.close();
 				throw eMsg.str();
 			}
 
@@ -295,12 +304,14 @@ Graph Graph::parseChacoFile(string filename){
 	if (lineNo - 1 != numVertices){
 		stringstream eMsg;
 		eMsg << "Graph file contains only " << lineNo << " vertex specifications, whilst it should contain " << numVertices << "?";
+		input_file.close();
 		throw eMsg.str();
 	}
 
 	if (edgeCount != numEdges){
 		stringstream eMsg;
 		eMsg << "Graph file contains " << edgeCount << " edges, whilst it should contain " << numEdges << "?";
+		input_file.close();
 		throw eMsg.str();
 	}
 
