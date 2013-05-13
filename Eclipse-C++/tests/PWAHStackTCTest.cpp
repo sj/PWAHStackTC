@@ -5,7 +5,6 @@
  *      Author: bas
  */
 
-#ifndef NDEBUG
 #include "PWAHStackTCTest.h"
 
 #include "../src/algorithms/PWAHStackTC.h"
@@ -26,12 +25,9 @@ TEST_F(PWAHStackTCTest, TestGraphsFromDataset){
 		const GraphTestInfo gti = graphtestinfo[graph_i];
 		const string filename = gti.getFullFilename();
 
-		//cout << "======= " << filename << " =======" << endl;
-		//cout << "Expecting " << gti.numEdgesInTC << " edges in TC, " << gti.numEdgesInReflexiveTC << " edges in reflexive TC..." << endl;
-		Graph graph;
-		ASSERT_NO_THROW(
-			graph = Graph::parseChacoFile(filename);
-		);
+		cout << "======= " << filename << " =======" << endl;
+		cout << "Expecting " << gti.numEdgesInTC << " edges in TC, " << gti.numEdgesInReflexiveTC << " edges in reflexive TC..." << endl;
+		Graph graph = Graph::parseChacoFile(filename);
 
 		EXPECT_EQ(graph.getNumberOfVertices(), gti.numVertices);
 
@@ -53,12 +49,12 @@ TEST_F(PWAHStackTCTest, TestGraphsFromDataset){
 
 				EXPECT_EQ(tca->getNumberOfComponents(), gti.numStronglyConnectedComponents);
 
-				const unsigned int numEdges = tca->countNumberOfEdgesInTC();
+				const unsigned int numEdgesInTC = tca->countNumberOfEdgesInTC();
 				//cout << numEdges << ". ";
 				if (reflexive == 1){
-					EXPECT_EQ(numEdges, gti.numEdgesInReflexiveTC);
+					EXPECT_EQ(numEdgesInTC, gti.numEdgesInReflexiveTC);
 				} else {
-					EXPECT_EQ(numEdges, gti.numEdgesInTC);
+					EXPECT_EQ(numEdgesInTC, gti.numEdgesInTC);
 				}
 
 				delete tca;
@@ -80,4 +76,3 @@ void PWAHStackTCTest::TearDown(){
 
 }
 
-#endif /* ifndef NDEBUG */

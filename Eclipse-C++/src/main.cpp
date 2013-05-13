@@ -3,7 +3,6 @@
 #include <sstream>
 #include <iostream>
 #include <map>
-#include "util/Validator.h"
 #include "datastructures/bitsets/pwah/PWAHBitSet.h"
 #include "datastructures/Graph.h"
 #include "datastructures/bitsets/wah/WAHBitSet.h"
@@ -78,16 +77,6 @@ using namespace std;
  */
 
 
-void runValidatorWhenRequested(int argc, char* argv[]){
-	if (argc == 2){
-		string arg = argv[1];
-		if (arg == "--run-validator"){
-			Validator::validate();
-			exit(0);
-		}
-	}
-}
-
 void printUsage(){
 	cerr << "Usage of PWAHStackTC:" << endl;
 	cerr << "  PWAHStackTC --arg1=val1 --arg2=val2" << endl << endl << endl;
@@ -140,9 +129,14 @@ void runUnitTestsWhenRequested(int argc, char* argv[]){
 
 		if (arg == "--run-unit-tests"){
 #ifndef __OPTIMIZE__
-			::testing::InitGoogleTest(&argc, argv);
-			RUN_ALL_TESTS();
-			exit(0);
+			try {
+				::testing::InitGoogleTest(&argc, argv);
+				const int test_result = RUN_ALL_TESTS();
+				exit(test_result);
+			} catch (string str){
+				cerr << "Exception: " << str << endl;
+				exit(1);
+			}
 #else
 			cerr << "Error: unit tests are only available in Debug builds. Please use --help switch for usage information." << endl;
 			exit(1);
@@ -305,10 +299,9 @@ int main(int argc, char* argv[]) {
 
 #ifdef DEBUGGING
 	cerr << "RUNNING PWAHSTACKTC IN DEBUGGING MODE - DON'T USE THIS FOR EXPERIMENTAL EVALUATION!" << endl;
-	sleep(1);
+	sleep(2);
 #endif
 
-	runValidatorWhenRequested(argc, argv);
 
 	typedef map<string,string> mapType;
 	map<string, string> cmdLineArgs;

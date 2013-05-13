@@ -4,16 +4,13 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
-../src/util/PerformanceTimer.cpp \
-../src/util/Validator.cpp 
+../src/util/PerformanceTimer.cpp 
 
 OBJS += \
-./src/util/PerformanceTimer.o \
-./src/util/Validator.o 
+./src/util/PerformanceTimer.o 
 
 CPP_DEPS += \
-./src/util/PerformanceTimer.d \
-./src/util/Validator.d 
+./src/util/PerformanceTimer.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
