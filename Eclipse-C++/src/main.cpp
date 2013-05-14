@@ -128,7 +128,7 @@ void runUnitTestsWhenRequested(int argc, char* argv[]){
 		string arg = argv[1];
 
 		if (arg == "--run-unit-tests"){
-#ifndef __OPTIMIZE__
+#ifdef DEBUG_BUILD
 			// Call Google Test
 			try {
 				::testing::InitGoogleTest(&argc, argv);
@@ -298,12 +298,6 @@ int main(int argc, char* argv[]) {
 
 	runUnitTestsWhenRequested(argc, argv);
 
-#ifdef DEBUG_BUILD
-	cerr << "THIS IS A DEBUG BUILD OF PWAHSTACKTC - DON'T USE IT FOR EXPERIMENTAL EVALUATION!" << endl;
-	sleep(2);
-#endif
-
-
 	typedef map<string,string> mapType;
 	map<string, string> cmdLineArgs;
 	cmdLineArgs["num-runs"] = "1";
@@ -357,6 +351,12 @@ int main(int argc, char* argv[]) {
 		cerr << "No input file provided, please use command-line option --filename=myfile.graph, or use --help for usage information." << endl;
 		exit (1);
 	}
+
+
+#ifdef DEBUG_BUILD
+	cerr << "THIS IS A DEBUG BUILD OF PWAHSTACKTC - DON'T USE IT FOR EXPERIMENTAL EVALUATION!" << endl;
+	sleep(2);
+#endif
 
 
 	const bool nodetails = (cmdLineArgs["no-details"] != "unset");

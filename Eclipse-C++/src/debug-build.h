@@ -26,7 +26,7 @@
 #error ║ >  I am creating a debug build and will not use this build for experimental evaluation  < ║
 #error ║                                                                                           ║
 #error ║ Store this number in a new file named "DEBUGGING-I-KNOW-WHAT-IM-DOING" in the "Debug"     ║
-#error ║ directory and restart the build process. Thanks!                                          ║
+#error ║ directory and restart the build process (make clean; make all). Thanks!                   ║
 #error ╚═══════════════════════════════════════════════════════════════════════════════════════════╝
 #else
 #warning ╔═════════════════════════ Creating Debug build of PWAHStackTC ═════════════════════════╗
