@@ -343,10 +343,14 @@ int main(int argc, char* argv[]) {
 
 		if (found == string::npos){
 			// Commandline argument invalid
-			cerr << "Invalid commandline argument: " << currArg << endl;
-			printUsage();
+			cerr << "Invalid commandline argument: " << currArg << ", please use --help for usage information" << endl;
 			exit(1);
 		}
+	}
+
+	if (cmdLineArgs["usage"] != "unset" || cmdLineArgs["help"] != "unset"){
+		printUsage();
+		exit(0);
 	}
 
 	if (cmdLineArgs["filename"] == ""){
@@ -354,10 +358,6 @@ int main(int argc, char* argv[]) {
 		exit (1);
 	}
 
-	if (cmdLineArgs["usage"] != "unset" || cmdLineArgs["help"] != "unset"){
-		printUsage();
-		exit(0);
-	}
 
 	const bool nodetails = (cmdLineArgs["no-details"] != "unset");
 	const bool reflexive = (cmdLineArgs["reflexive"] != "unset");
@@ -375,8 +375,7 @@ int main(int argc, char* argv[]) {
 
 	if (source_vertices != "unset" || target_vertices != "unset" ||  reachable_sources_targets != "unset"){
 		if (source_vertices == "unset" || target_vertices == "unset" || reachable_sources_targets == "unset"){
-			cerr << "Need all three of: --source-vertices, --target-vertices, --reachable-sources-targets" << endl << endl;
-			printUsage();
+			cerr << "Need all three of: --source-vertices, --target-vertices, --reachable-sources-targets. Please use --help for usage information." << endl;
 			exit(1);
 		}
 		doSourcesTargetsReachability(filename, source_vertices, target_vertices,reachable_sources_targets, reflexive);
@@ -415,8 +414,7 @@ int main(int argc, char* argv[]) {
 			} else if (cmdLineArgs["bitset-implementation"] == "interval"){
 				tca = new PWAHStackTC<IntervalBitSet>(graph);
 			} else {
-				cerr << "Invalid BitSet implementation specified on command line: '" << cmdLineArgs["bitset-implementation"] << "'" << endl;
-				printUsage();
+				cerr << "Invalid BitSet implementation specified on command line: '" << cmdLineArgs["bitset-implementation"] << "'. Please use --help for usage information." << endl;
 				exit(1);
 			}
 
