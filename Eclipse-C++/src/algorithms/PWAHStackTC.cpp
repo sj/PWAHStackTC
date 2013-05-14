@@ -848,6 +848,10 @@ template<class B> double PWAHStackTC<B>::computeLocalClusteringCoefficient(int c
 	return res;
 }
 
+template<class B> const vector<B*> PWAHStackTC<B>::getComponentSuccessors() const {
+	return _componentSuccessors;
+}
+
 /**
  * Instruct the compiler which templates to instantiate
  */

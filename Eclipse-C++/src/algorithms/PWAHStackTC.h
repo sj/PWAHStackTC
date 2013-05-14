@@ -87,12 +87,7 @@ public:
 	string getStatistics();
 	string algorithmName();
 	long memoryUsedByIntervalLists();
-
-	friend class BitSetTester<IntervalBitSet>;
-	friend class BitSetTester<WAHBitSet>;
-	friend class BitSetTester<PWAHBitSet<2> >;
-	friend class BitSetTester<PWAHBitSet<4> >;
-	friend class BitSetTester<PWAHBitSet<8> >;
+	const vector<B*> getComponentSuccessors() const;
 };
 
 #endif /* WAHSTACKTC_H_ */
