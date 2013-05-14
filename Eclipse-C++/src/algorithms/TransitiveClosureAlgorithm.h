@@ -29,7 +29,7 @@ public:
 	TransitiveClosureAlgorithm();
 	virtual ~TransitiveClosureAlgorithm();
 
-	virtual void computeTransitiveClosure(bool reflexitive, bool storeComponentMembers, int minOutDegreeForMultiOR) = 0;
+	virtual void computeTransitiveClosure(bool reflexive, bool storeComponentMembers, int minOutDegreeForMultiOR) = 0;
 	virtual string tcToString() = 0;
 	virtual long countNumberOfEdgesInTC() = 0;
 	virtual long countNumberOfEdgesInCondensedTC() = 0;

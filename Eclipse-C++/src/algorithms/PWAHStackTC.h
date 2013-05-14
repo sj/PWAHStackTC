@@ -50,7 +50,7 @@ private:
 	int* _vertexDFSSeqNo; // record DFS sequence number of every vertex
 	int _lastDFSSeqNo;
 	int _lastComponentIndex;
-	bool _reflexitive;
+	bool _reflexive;
 	int _minOutDegreeForMultiOR;
 	PerformanceTimer _mergeTimer;
 

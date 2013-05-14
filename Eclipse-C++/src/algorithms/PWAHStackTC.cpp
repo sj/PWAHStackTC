@@ -46,7 +46,7 @@ template<class B> PWAHStackTC<B>::~PWAHStackTC() {
 	delete _vertexSelfLoop;
 }
 
-template<class B> void PWAHStackTC<B>::computeTransitiveClosure(bool reflexitive, bool storeComponentMembers, int minOutDegreeForMultiOR){
+template<class B> void PWAHStackTC<B>::computeTransitiveClosure(bool reflexive, bool storeComponentMembers, int minOutDegreeForMultiOR){
 	unsigned int numVertices = _graph->getNumberOfVertices();
 
 	_cStack = new DynamicStack(numVertices);
@@ -63,7 +63,7 @@ template<class B> void PWAHStackTC<B>::computeTransitiveClosure(bool reflexitive
 	_vertexDFSSeqNo = new int[numVertices];
 	_lastDFSSeqNo = -1;
 	_lastComponentIndex = -1;
-	_reflexitive = reflexitive;
+	_reflexive = reflexive;
 	_storeComponentVertices = storeComponentMembers;
 	_minOutDegreeForMultiOR = minOutDegreeForMultiOR;
 	_mergeTimer.resetAndStop();
@@ -164,7 +164,7 @@ template<class B> void PWAHStackTC<B>::dfsVisit(unsigned int vertexIndex){
 
 		if (((unsigned int)_vStack->peek()) != vertexIndex || _vertexSelfLoop->get(vertexIndex)){
 			// This component has size > 1 or has an explicit self-loop.
-			if (!_storeComponentVertices && !_reflexitive){
+			if (!_storeComponentVertices && !_reflexive){
 				explicitlyStoreSelfLoop = true;
 			} // else: no need to explicitly store self-loop
 		} // else: no self loop
@@ -425,7 +425,7 @@ template<class B> long PWAHStackTC<B>::countNumberOfEdgesInCondensedTC(bool igno
 		}
 
 		if (!ignoreSelfLoops){
-			if (_reflexitive || _storeComponentVertices){
+			if (_reflexive || _storeComponentVertices){
 				// Self-loops were not stored explicitly
 				if (this->componentHasSelfLoop(c)) count++;
 			}
@@ -435,11 +435,11 @@ template<class B> long PWAHStackTC<B>::countNumberOfEdgesInCondensedTC(bool igno
 }
 
 template<class B> bool PWAHStackTC<B>::componentHasSelfLoop(int componentIndex){
-	if (_reflexitive || _storeComponentVertices){
+	if (_reflexive || _storeComponentVertices){
 		// Self-loops were not stored explicitly, since their existence can be shown
 		// implicitly.
 
-		if (!_reflexitive){
+		if (!_reflexive){
 			// Some components may have self-loops, others not
 			if (_componentSizes[componentIndex] > 1){
 				// Self-loop implied
@@ -500,7 +500,7 @@ template<class B> long PWAHStackTC<B>::countNumberOfEdgesInTC(){
 			delete iter;
 		}
 
-		if (_reflexitive || _storeComponentVertices){
+		if (_reflexive || _storeComponentVertices){
 			// Self-loops were not stored explicitly, since their existence can be shown
 			// implicitly.
 			if (this->componentHasSelfLoop(c)) count += _componentSizes[c];
@@ -617,7 +617,7 @@ template<> void PWAHStackTC<PWAHBitSet<8> >::reachablepairs(vector<unsigned int>
 					//		1) a self-loop  OR
 					// 		2) a reflexive transitive closure
 
-					if (_reflexitive || _componentSizes[src_comp_index] > 1){
+					if (_reflexive || _componentSizes[src_comp_index] > 1){
 						// Always reachable
 						target_reachable = true;
 						decided = true;
@@ -673,7 +673,7 @@ template<class B> bool PWAHStackTC<B>::reachable(unsigned int src, unsigned int 
 	} else if (srcComponent == dstComponent){
 		// Source and destination are within the same component!
 		// Determine whether the component contains a self-loop
-		if (_reflexitive || _componentSizes[srcComponent] > 1){
+		if (_reflexive || _componentSizes[srcComponent] > 1){
 			return true;
 		} else if (_componentSizes[srcComponent] == 1 && _storeComponentVertices){
 			return _vertexSelfLoop->get(src);
