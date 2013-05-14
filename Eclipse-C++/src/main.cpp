@@ -350,8 +350,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	if (cmdLineArgs["filename"] == ""){
-		cerr << "No input file provided, please use command-line option --filename=myfile.graph" << endl;
-		printUsage();
+		cerr << "No input file provided, please use command-line option --filename=myfile.graph, or use --help for usage information." << endl;
 		exit (1);
 	}
 
@@ -374,8 +373,8 @@ int main(int argc, char* argv[]) {
 	double totalQueryTime = 0;
 	long memUsage = 0;
 
-	if (source_vertices != "" || target_vertices != "" ||  reachable_sources_targets != ""){
-		if (source_vertices == "" || target_vertices == "" || reachable_sources_targets == ""){
+	if (source_vertices != "unset" || target_vertices != "unset" ||  reachable_sources_targets != "unset"){
+		if (source_vertices == "unset" || target_vertices == "unset" || reachable_sources_targets == "unset"){
 			cerr << "Need all three of: --source-vertices, --target-vertices, --reachable-sources-targets" << endl << endl;
 			printUsage();
 			exit(1);
