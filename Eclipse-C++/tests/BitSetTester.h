@@ -36,8 +36,8 @@ public:
 
 	static void testPWAH();
 
-	static void randomise(BitSet* bs1, BitSet* bs2, int maxBits);
-	static void randomise(BitSet* bs1, int maxBits);
+	static void randomise(BitSet* bs1, BitSet* bs2, unsigned int minBits, unsigned int maxBits);
+	static void randomise(BitSet* bs1, unsigned int minBits, unsigned int maxBits);
 	inline static float rand_float();
 
 	static void compare(BitSet* bs1, BitSet* bs2);
@@ -53,7 +53,7 @@ public:
 	static string printBitSets(BitSet* bs1, BitSet* bs2, BitSet* bs3);
 };
 
-
+// Define which template types to use for the Google Test framework on BitSetTester
 typedef ::testing::Types<PWAHBitSet<2>, PWAHBitSet<4>, PWAHBitSet<8> > TestTypes;
 TYPED_TEST_CASE(BitSetTester, TestTypes);
 

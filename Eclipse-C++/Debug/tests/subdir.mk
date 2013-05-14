@@ -6,20 +6,17 @@
 CPP_SRCS += \
 ../tests/BitSetTester.cpp \
 ../tests/GraphTestInfo.cpp \
-../tests/PWAHStackTCTest.cpp \
-../tests/WAHBitSetTester.cpp 
+../tests/PWAHStackTCTest.cpp 
 
 OBJS += \
 ./tests/BitSetTester.o \
 ./tests/GraphTestInfo.o \
-./tests/PWAHStackTCTest.o \
-./tests/WAHBitSetTester.o 
+./tests/PWAHStackTCTest.o 
 
 CPP_DEPS += \
 ./tests/BitSetTester.d \
 ./tests/GraphTestInfo.d \
-./tests/PWAHStackTCTest.d \
-./tests/WAHBitSetTester.d 
+./tests/PWAHStackTCTest.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

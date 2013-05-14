@@ -36,16 +36,6 @@ using namespace std;
 template<class B> BitSetTester<B>::~BitSetTester() {}
 
 
-/**
- * \brief Returns a random number between 0 and 1.
- *
- * Note that this function uses modulo calculation to generate the random number, which will
- * result in a very slight bias.
- */
-template<class B> float BitSetTester<B>::rand_float(){
-	return (rand() % 1000) / 1000.0;
-}
-
 TYPED_TEST(BitSetTester, TestGraphsFromDataset) {
 	vector<GraphTestInfo> graphs = GraphTestInfo::getJin2008Graphs();
 
@@ -81,10 +71,11 @@ TYPED_TEST(BitSetTester, TestGraphsFromDataset) {
 	}
 }
 
-template<class B> void BitSetTester<B>::testOr(unsigned int numBitSets){
-	B* b_result = new B();
+TYPED_TEST(BitSetTester, TestMultiOr) {
+	const unsigned int numBitSets = 10;
+	TypeParam* b_result = new TypeParam();
 	cout << "BitSetTester::testOr -- testing multi OR on " << numBitSets << " bitsets of type " << b_result->bsImplementationName() << endl;
-	B** b_bitsets = new B*[numBitSets];
+	TypeParam** b_bitsets = new TypeParam*[numBitSets];
 	WAHBitSet** wah_bitsets = new WAHBitSet*[numBitSets];
 	WAHBitSet* wah_result = new WAHBitSet();
 
@@ -93,10 +84,10 @@ template<class B> void BitSetTester<B>::testOr(unsigned int numBitSets){
 		cout.flush();
 
 		wah_bitsets[i] = new WAHBitSet();
-		b_bitsets[i] = new B();
-		randomise(b_bitsets[i], wah_bitsets[i], 15000);
+		b_bitsets[i] = new TypeParam();
+		BitSetTester<TypeParam>::randomise(b_bitsets[i], wah_bitsets[i], 3000, 15000);
 
-		compare(b_bitsets[i], wah_bitsets[i]);
+		BitSetTester<TypeParam>::compare(b_bitsets[i], wah_bitsets[i]);
 		cout << "done" << endl;
 	}
 
@@ -108,13 +99,13 @@ template<class B> void BitSetTester<B>::testOr(unsigned int numBitSets){
 	}
 	cout.flush();
 
-	B::multiOr(b_bitsets, numBitSets, b_result);
+	TypeParam::multiOr(b_bitsets, numBitSets, b_result);
 	WAHBitSet::multiOr(wah_bitsets, numBitSets, wah_result);
 
 	//cout << "Results of OR operation:" << endl;
 	//cout << printBitSets(pwbs_res, dbs_res);
 
-	compare(b_result, wah_result);
+	BitSetTester<TypeParam>::compare(b_result, wah_result);
 
 	delete[] b_bitsets;
 	delete[] wah_bitsets;
@@ -122,31 +113,38 @@ template<class B> void BitSetTester<B>::testOr(unsigned int numBitSets){
 	delete b_result;
 }
 
-template<class B> void BitSetTester<B>::testSetGet(BitSet* bs1, BitSet* bs2){
-	for (int i = 1; i < 100; i++){
-		randomise(bs1, bs2, 102400);
-		cout << "Done randomising pass " << i << endl;
+TYPED_TEST(BitSetTester, TestSetGet) {
+	TypeParam* tested_bitset = new TypeParam();
+	WAHBitSet* ref_bitset = new WAHBitSet();
 
-		compare(bs1, bs2);
-		cout << "Done testing get/set pass " << i << endl;
+	for (int i = 1; i < 50; i++){
+		BitSetTester<TypeParam>::randomise(tested_bitset, ref_bitset, 10000, 25000);
+		//cout << "Done randomising pass " << i << endl;
+
+		BitSetTester<TypeParam>::compare(tested_bitset, ref_bitset);
+		//cout << "Done testing get/set pass " << i << endl;
 	}
 	//cout << printBitSets(_bs1, _bs2);
 
 	cout << "Done!" << endl;
 }
 
-template<class B> void BitSetTester<B>::testIterator(BitSet* bitset, bool randomiseBitset){
-	cout << "BitSetTester::testIterator() -- starting..." << endl;
-	if (randomiseBitset) randomise(bitset, 15000);
-	cout << bitset->toString() << endl;
+//template<class B> void BitSetTester<B>::testIterator(BitSet* bitset, bool randomiseBitset){
+TYPED_TEST(BitSetTester, TestIterator) {
+	TypeParam* bitset = new TypeParam();
+	const unsigned int minNumRandomBits = 10000;
+	//cout << "BitSetTester::testIterator() -- starting..." << endl;
+	BitSetTester<TypeParam>::randomise(bitset, minNumRandomBits, minNumRandomBits * 5);
+	//cout << bitset->toString() << endl;
 
+	EXPECT_GE(bitset->size(), minNumRandomBits);
 	BitSetIterator* it = bitset->iterator();
 	bool value;
-	for (int i = 0; i < (int)bitset->size(); i++){
+	for (unsigned int i = 0; i < bitset->size(); i++){
 		value = bitset->get(i);
 		if (value){
-			cout << "BitSetTester::testIterator() -- bit " << i << " should be set..." << endl;
-			if (it->next() != i){
+			//cout << "BitSetTester::testIterator() -- bit " << i << " should be set..." << endl;
+			if (it->next() != (int)i){
 				cout.flush();
 				cerr << "BitSet causing problems:" << endl;
 				cerr << bitset->toString() << endl;
@@ -165,9 +163,12 @@ template<class B> void BitSetTester<B>::testIterator(BitSet* bitset, bool random
 	}
 
 	delete it;
-	cout << "BitSetTester::testIterator() -- done" << endl;
+	//cout << "BitSetTester::testIterator() -- done" << endl;
 }
 
+/**
+ * Helper method to compare two BitSet implementations using GTest EXPECT_EQ calls
+ */
 template<class B> void BitSetTester<B>::compare(BitSet* bitset1, BitSet* bitset2){
 	EXPECT_EQ(bitset1->size(), bitset2->size());
 
@@ -210,24 +211,16 @@ template<class B> void BitSetTester<B>::compare(BitSet* bitset1, BitSet* bitset2
 	//cout << "Done comparing!" << endl;
 }
 
-template<class B> void BitSetTester<B>::testLongFill(BitSet* bitset){
-	bitset->clear();
-
-	bitset->set(268435456);
-	for (int i = 268435458; i < 40; i++){
-		bitset->set(i);
-	}
-
-	cout << bitset->toString() << endl;
-}
 
 /**
  * \brief Randomises the bits in 'bitset' and 'bitset2'
  *
  * The first BitSet is used as 'base' for defining block sizes. The second BitSet can be NULL
  */
-template<class B> void BitSetTester<B>::randomise(BitSet* bitset1, BitSet* bitset2, int maxBits){
-	const bool DEBUGGING = true;
+template<class B> void BitSetTester<B>::randomise(BitSet* bitset1, BitSet* bitset2, unsigned int minBits, unsigned int maxBits){
+	const bool DEBUGGING = false;
+	assert(minBits <= maxBits);
+
 	srand ( time(NULL) );
 
 	bitset1->clear();
@@ -242,7 +235,11 @@ template<class B> void BitSetTester<B>::randomise(BitSet* bitset1, BitSet* bitse
 	// Fill the bit set with a random number of bits, somewhere between 0 and a big number
 	//int numBlocks = (rand() % 10000000) / 31;
 	int blockSize = bitset1->blocksize() > 0 ? bitset1->blocksize() : 64;
-	int numBits = rand() % maxBits;
+
+	unsigned int numAdditionalBits = 0;
+	if (maxBits - minBits > 0) numAdditionalBits = rand() % (maxBits - minBits);
+	const unsigned int numBits = minBits + numAdditionalBits;
+
 	int numBlocks = numBits / blockSize + 1;
 	int offset;
 
@@ -275,6 +272,9 @@ template<class B> void BitSetTester<B>::randomise(BitSet* bitset1, BitSet* bitse
 		cout << "BitSetTester::randomise -- result: " << endl;
 		cout << bitset1->toString() << endl;
 	}
+
+	ASSERT_GE(bitset1->size(), minBits);
+	if (bitset2 != NULL) ASSERT_GE(bitset2->size(), minBits);
 }
 
 template<class B> string BitSetTester<B>::printBitSets(BitSet* bitset1, BitSet* bitset2){
@@ -302,8 +302,18 @@ template<class B> string BitSetTester<B>::printBitSets(BitSet** bitSets, int num
 	return res.str();
 }
 
-template<class B> void BitSetTester<B>::randomise(BitSet* bitset1, int maxBits){
-	randomise(bitset1, NULL, maxBits);
+template<class B> void BitSetTester<B>::randomise(BitSet* bitset1, unsigned int minBits, unsigned int maxBits){
+	randomise(bitset1, NULL, minBits, maxBits);
+}
+
+/**
+ * \brief Returns a random number between 0 and 1.
+ *
+ * Note that this function uses modulo calculation to generate the random number, which will
+ * result in a very slight bias.
+ */
+template<class B> float BitSetTester<B>::rand_float(){
+	return (rand() % 1000) / 1000.0;
 }
 
 
