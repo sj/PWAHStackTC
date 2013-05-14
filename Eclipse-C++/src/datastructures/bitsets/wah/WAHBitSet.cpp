@@ -64,7 +64,7 @@ void WAHBitSet::set(unsigned int bitIndex, bool value){
 		throw stream.str();
 	}
 
-	if (bitIndex > _lastBitIndex) _lastBitIndex = bitIndex;
+	if ((int)bitIndex > _lastBitIndex) _lastBitIndex = bitIndex;
 	if (value) _empty = false;
 
 	if (bitIndex >= _plainWordBlockSeq * BLOCKSIZE + BLOCKSIZE){
@@ -574,7 +574,7 @@ void WAHBitSet::multiOr(WAHBitSet** bitSets, unsigned int numBitSets, WAHBitSet*
 	int largestOneFillSize;
 	int shortestZeroFillSize;
 	int currMergedLiteral, currWord, currFillLengthRemaining;
-	unsigned int lastBitIndex = 0;
+	int lastBitIndex = 0;
 
 	// Initialize values in int arrays to 0.
 	memset(sWordIndex, 0, numBitSets * sizeof(int));
