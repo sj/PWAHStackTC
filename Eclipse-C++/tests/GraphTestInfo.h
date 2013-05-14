@@ -27,6 +27,7 @@ struct GraphTestInfo {
 
 	string getFullFilename() const;
 	static vector<GraphTestInfo> getAllGraphs();
+	static vector<GraphTestInfo> getJin2008Graphs();
 };
 
 #endif /* GRAPHTESTINFO_H_ */

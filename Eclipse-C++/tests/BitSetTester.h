@@ -20,14 +20,21 @@
 #ifndef BITSETTESTER_H_
 #define BITSETTESTER_H_
 #include "../src/datastructures/bitsets/BitSet.h"
+#include "../src/datastructures/bitsets/pwah/PWAHBitSet.h"
 #include <sstream>
+#include "gtest/gtest.h"
+#include <list>
 using namespace std;
 
 template<class B>
-class BitSetTester {
+class BitSetTester : public ::testing::Test{
 public:
-	BitSetTester(BitSet* bs1, BitSet* bs2);
+	//static B shared_;
+	//B value_;
+
 	virtual ~BitSetTester();
+
+	static void testPWAH();
 
 	static void randomise(BitSet* bs1, BitSet* bs2, int maxBits);
 	static void randomise(BitSet* bs1, int maxBits);
@@ -37,16 +44,19 @@ public:
 	static void testSetGetIndex();
 	static void testLongFill(BitSet* bitset);
 	static void testIterator(BitSet* bitset, bool randomise);
-	static void diff();
+	static void testGraphDatasets();
 	static void testOr(unsigned int numBitsets);
-	void testSetGet();
+	static void testSetGet(BitSet* bs1, BitSet* bs2);
 
 	static string printBitSets(BitSet** bitsets, int numBitSets);
 	static string printBitSets(BitSet* bs1, BitSet* bs2);
 	static string printBitSets(BitSet* bs1, BitSet* bs2, BitSet* bs3);
-private:
-	BitSet* _bs1;
-	BitSet* _bs2;
 };
+
+
+typedef ::testing::Types<PWAHBitSet<2>, PWAHBitSet<4>, PWAHBitSet<8> > TestTypes;
+TYPED_TEST_CASE(BitSetTester, TestTypes);
+
+
 
 #endif /* BITSETTESTER_H_ */

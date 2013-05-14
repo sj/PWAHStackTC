@@ -12,6 +12,7 @@
 #include "GraphTestInfo.h"
 #include "../src/datastructures/bitsets/pwah/PWAHBitSet.h"
 #include "../src/datastructures/bitsets/wah/WAHBitSet.h"
+#include "../src/datastructures/bitsets/interval/IntervalBitSet.h"
 #include <vector>
 #include <iostream>
 

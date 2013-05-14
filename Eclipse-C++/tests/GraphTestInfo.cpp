@@ -19,7 +19,7 @@ string GraphTestInfo::getFullFilename() const {
 	return basedir + "/" + filename;
 }
 
-vector<GraphTestInfo> GraphTestInfo::getAllGraphs(){
+vector<GraphTestInfo> GraphTestInfo::getJin2008Graphs(){
 	vector<GraphTestInfo> res;
 
 	//							FILENAME						numVertices		numEdges	numSSC		numEdgesTC	numEdgesReflTC
@@ -30,9 +30,13 @@ vector<GraphTestInfo> GraphTestInfo::getAllGraphs(){
 	res.push_back(GraphTestInfo("Jin2008/hpycyc.graph", 		5565,			8474,		4771, 		1113356,	1118124));
 	res.push_back(GraphTestInfo("Jin2008/human.graph", 			40051,			43879,		38811, 		2804552,	2843362));
 
+	return res;
+}
+vector<GraphTestInfo> GraphTestInfo::getAllGraphs(){
+	vector<GraphTestInfo> res = getJin2008Graphs();
 
 	//							FILENAME										numVertices		numEdges	numSSC		numEdgesTC		numEdgesReflTC
-	res.push_back(GraphTestInfo("Semmle/Adempiere/depends.graph", 				6332, 			79804,		4679, 		7756079, 		7758212));
+	//res.push_back(GraphTestInfo("Semmle/Adempiere/depends.graph", 				6332, 			79804,		4679, 		7756079, 		7758212));
 	//res.push_back(GraphTestInfo("Semmle/Adempiere/polycalls.graph", 			53206, 			595198,		44839, 		438508149, 		438552734));
 	//res.push_back(GraphTestInfo("Semmle/Wikipedia/pagelinks.graph", 			137830,			2949220,	47242, 		12479685213,	12479732188));
 	res.push_back(GraphTestInfo("Semmle/Wikipedia/categorypagelinks.graph", 	75946,			181084,		75936, 		2262118,		2338037));

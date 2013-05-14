@@ -29,15 +29,12 @@
 #include "../src/algorithms/PWAHStackTC.h"
 #include <math.h>
 #include "../src/datastructures/bitsets/interval/IntervalBitSet.h"
+#include "GraphTestInfo.h"
 using namespace std;
 
-template<class B> BitSetTester<B>::BitSetTester(BitSet* bs1, BitSet* bs2) {
-	srand ( time(NULL) );
-	_bs1 = bs1;
-	_bs2 = bs2;
-}
 
 template<class B> BitSetTester<B>::~BitSetTester() {}
+
 
 /**
  * \brief Returns a random number between 0 and 1.
@@ -49,42 +46,39 @@ template<class B> float BitSetTester<B>::rand_float(){
 	return (rand() % 1000) / 1000.0;
 }
 
-template<class B> void BitSetTester<B>::diff(){
-	Graph g = Graph::parseChacoFile("/home/bas/afstuderen/Datasets/Semmle graphs/c++/depends.graph");
-	PWAHStackTC<PWAHBitSet<4> >* wstc_pwah4 = new PWAHStackTC<PWAHBitSet<4> >(g);
-	PWAHStackTC<WAHBitSet>* wstc_wah = new PWAHStackTC<WAHBitSet>(g);
+TYPED_TEST(BitSetTester, TestGraphsFromDataset) {
+	vector<GraphTestInfo> graphs = GraphTestInfo::getJin2008Graphs();
 
-	wstc_pwah4->computeTransitiveClosure(false, false, 0);
-	wstc_wah->computeTransitiveClosure(false, false, 0);
+	for (unsigned int i = 0; i < graphs.size(); i++){
+		Graph g = Graph::parseChacoFile(graphs[i].getFullFilename());
+		PWAHStackTC<TypeParam>* pwahstc_b = new PWAHStackTC<TypeParam>(g);
+		PWAHStackTC<WAHBitSet>* pwahstc_wah = new PWAHStackTC<WAHBitSet>(g);
 
-	cout << "PWAHBitSet<4> uses " << wstc_pwah4->memoryUsedByBitSets() << " bits" << endl;
-	cout << "WAHBitSet uses " << wstc_wah->memoryUsedByBitSets() << " bits" << endl;
+		pwahstc_b->computeTransitiveClosure(false, false, 0);
+		pwahstc_wah->computeTransitiveClosure(false, false, 0);
 
-	vector<PWAHBitSet<4>* > pwah4 = wstc_pwah4->_componentSuccessors;
-	vector<WAHBitSet*> wah = wstc_wah->_componentSuccessors;
+		//cout << pwahstc_b->algorithmName() <<  " uses " << pwahstc_b->memoryUsedByBitSets() << " bits" << endl;
+		//cout << pwahstc_wah->algorithmName() << " uses " << pwahstc_wah->memoryUsedByBitSets() << " bits" << endl;
 
-	if (pwah4.size() != wah.size()){
-		cout << "Number of bitsets doesn't: " << pwah4.size() << " versus " << wah.size() << endl;
-	} else {
-		cout << "Sizes match: " << pwah4.size() << " bit sets" << endl;
-		for (unsigned int i = 0; i < pwah4.size(); i++){
-			if (pwah4[i] == NULL) continue;
-			compare(pwah4[i], wah[i]);
+		const vector<TypeParam*> ref_b = pwahstc_b->getComponentSuccessors();
+		const vector<WAHBitSet*> wah = pwahstc_wah->getComponentSuccessors();
 
-			/**if (pwah4[i]->memoryUsage() > wah[i]->memoryUsage() + 32){
-				cout << "========================== " << pwah4[i]->memoryUsage() << " versus " << wah[i]->memoryUsage() << " ====================================" << endl;
-				cout << pwah4[i]->toString() << endl;
-				cout << "=================" << endl;
-				cout << wah[i]->toString() << endl;
-				cout << "========================================================================" << endl << endl;
-			} else {
-				//cout << i << " OK: " << pwah4[i]->memoryUsage() << " versus " << wah[i]->memoryUsage() << " bits" << endl;
-			}**/
+		EXPECT_EQ(ref_b.size(), wah.size());
+
+		if (ref_b.size() != wah.size()){
+			//cout << "Number of bitsets doesn't: " << ref_b.size() << " versus " << wah.size() << endl;
+		} else {
+			//cout << "Sizes match: " << ref_b.size() << " bit sets" << endl;
+			for (unsigned int i = 0; i < ref_b.size(); i++){
+				if (ref_b[i] == NULL) continue;
+
+				BitSetTester<TypeParam>::compare(ref_b[i], wah[i]);
+			}
 		}
+		//cout << "done" << endl;
+		delete pwahstc_b;
+		delete pwahstc_wah;
 	}
-	cout << "done" << endl;
-	delete wstc_pwah4;
-	delete wstc_wah;
 }
 
 template<class B> void BitSetTester<B>::testOr(unsigned int numBitSets){
@@ -128,30 +122,12 @@ template<class B> void BitSetTester<B>::testOr(unsigned int numBitSets){
 	delete b_result;
 }
 
-template<class B> void BitSetTester<B>::testSetGetIndex(){
-	PWAHBitSet<4>* bs = new PWAHBitSet<4>();
-	for (int i = 10; i < 18; i++){
-		bs->set(i * 10);
-	}
-
-	for (int i = 10; i < 18; i++){
-		if (!bs->get(i * 10)){
-			cout.flush();
-			cerr << "Bit " << (i * 10) << " not set?" << endl;
-			cerr << bs->toString() << endl;
-			throw string("bleh");
-		}
-	}
-
-	delete bs;
-}
-
-template<class B> void BitSetTester<B>::testSetGet(){
+template<class B> void BitSetTester<B>::testSetGet(BitSet* bs1, BitSet* bs2){
 	for (int i = 1; i < 100; i++){
-		randomise(_bs1, _bs2, 102400);
+		randomise(bs1, bs2, 102400);
 		cout << "Done randomising pass " << i << endl;
 
-		compare(_bs1, _bs2);
+		compare(bs1, bs2);
 		cout << "Done testing get/set pass " << i << endl;
 	}
 	//cout << printBitSets(_bs1, _bs2);
@@ -193,6 +169,8 @@ template<class B> void BitSetTester<B>::testIterator(BitSet* bitset, bool random
 }
 
 template<class B> void BitSetTester<B>::compare(BitSet* bitset1, BitSet* bitset2){
+	EXPECT_EQ(bitset1->size(), bitset2->size());
+
 	if (bitset1->size() != bitset2->size()){
 		cerr << printBitSets(bitset1, bitset2) << endl;
 		stringstream str;
@@ -204,12 +182,14 @@ template<class B> void BitSetTester<B>::compare(BitSet* bitset1, BitSet* bitset2
 		cerr.flush();
 		throw str.str();
 	}
-	cout << "Comparing BitSets of size " << bitset1->size() << endl;
+	//cout << "Comparing BitSets of size " << bitset1->size() << endl;
 
 	bool val1, val2;
 	for (unsigned int i = 0; i < bitset1->size(); i++){
 		val1 = bitset1->get(i);
 		val2 = bitset2->get(i);
+
+		EXPECT_EQ(val1, val2);
 
 		if (val1 != val2){
 			cout.flush();
@@ -227,7 +207,7 @@ template<class B> void BitSetTester<B>::compare(BitSet* bitset1, BitSet* bitset2
 		//cout << "Bit " << i << ": " << (val1 ? "set" : "not set") << endl;
 	}
 
-	cout << "Done comparing!" << endl;
+	//cout << "Done comparing!" << endl;
 }
 
 template<class B> void BitSetTester<B>::testLongFill(BitSet* bitset){
@@ -316,7 +296,7 @@ template<class B> string BitSetTester<B>::printBitSets(BitSet** bitSets, int num
 	stringstream res;
 
 	for (int i = 0; i < numBitSets; i++){
-		res << "BitSet " << i << endl;
+		res << "BitSet " << i << ": " << bitSets[i]->bsImplementationName() << endl;
 		res << bitSets[i]->toString() << endl << endl;
 	}
 	return res.str();
@@ -329,6 +309,7 @@ template<class B> void BitSetTester<B>::randomise(BitSet* bitset1, int maxBits){
 
 template class BitSetTester<IntervalBitSet>;
 template class BitSetTester<WAHBitSet>;
+
 template class BitSetTester<PWAHBitSet<2> >;
 template class BitSetTester<PWAHBitSet<4> >;
 template class BitSetTester<PWAHBitSet<8> >;
