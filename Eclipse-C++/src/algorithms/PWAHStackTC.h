@@ -20,17 +20,13 @@
 #ifndef WAHSTACKTC_H_
 #define WAHSTACKTC_H_
 #include "../datastructures/Graph.h"
-#include "../datastructures/bitsets/wah/WAHBitSet.h"
 #include "../datastructures/bitsets/DynamicBitSet.h"
 #include <vector>
 #include <stack>
 #include "../util/PerformanceTimer.h"
 #include "../datastructures/bitsets/StaticBitSet.h"
 #include "../datastructures/DynamicStack.h"
-#include "../datastructures/bitsets/pwah/PWAHBitSet.h"
-#include "../datastructures/bitsets/BitSet.h"
 #include "TransitiveClosureAlgorithm.h"
-#include "../datastructures/bitsets/interval/IntervalBitSet.h"
 #include "../gtest-includes.h"
 using namespace std;
 
