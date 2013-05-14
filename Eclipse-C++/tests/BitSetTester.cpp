@@ -74,30 +74,22 @@ TYPED_TEST(BitSetTester, TestGraphsFromDataset) {
 TYPED_TEST(BitSetTester, TestMultiOr) {
 	const unsigned int numBitSets = 10;
 	TypeParam* b_result = new TypeParam();
-	cout << "BitSetTester::testOr -- testing multi OR on " << numBitSets << " bitsets of type " << b_result->bsImplementationName() << endl;
+	//cout << "BitSetTester::testOr -- testing multi OR on " << numBitSets << " bitsets of type " << b_result->bsImplementationName() << endl;
 	TypeParam** b_bitsets = new TypeParam*[numBitSets];
 	WAHBitSet** wah_bitsets = new WAHBitSet*[numBitSets];
 	WAHBitSet* wah_result = new WAHBitSet();
 
 	for (unsigned int i = 0; i < numBitSets; i++){
-		cout << "BitSetTester::testOr -- randomising BitSets " << i << "... ";
-		cout.flush();
+		//cout << "BitSetTester::testOr -- randomising BitSets " << i << "... ";
+		//cout.flush();
 
 		wah_bitsets[i] = new WAHBitSet();
 		b_bitsets[i] = new TypeParam();
 		BitSetTester<TypeParam>::randomise(b_bitsets[i], wah_bitsets[i], 3000, 15000);
 
 		BitSetTester<TypeParam>::compare(b_bitsets[i], wah_bitsets[i]);
-		cout << "done" << endl;
+		//cout << "done" << endl;
 	}
-
-
-	cout << "Input to MultiOR:" << endl;
-	for (unsigned int i = 0; i < numBitSets; i++){
-		cout << "BitSet " << i << ": ";
-		cout << b_bitsets[i]->toString() << endl;
-	}
-	cout.flush();
 
 	TypeParam::multiOr(b_bitsets, numBitSets, b_result);
 	WAHBitSet::multiOr(wah_bitsets, numBitSets, wah_result);
@@ -126,7 +118,7 @@ TYPED_TEST(BitSetTester, TestSetGet) {
 	}
 	//cout << printBitSets(_bs1, _bs2);
 
-	cout << "Done!" << endl;
+	//cout << "Done!" << endl;
 }
 
 //template<class B> void BitSetTester<B>::testIterator(BitSet* bitset, bool randomiseBitset){
