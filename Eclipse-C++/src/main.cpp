@@ -129,6 +129,7 @@ void runUnitTestsWhenRequested(int argc, char* argv[]){
 
 		if (arg == "--run-unit-tests"){
 #ifndef __OPTIMIZE__
+			// Call Google Test
 			try {
 				::testing::InitGoogleTest(&argc, argv);
 				const int test_result = RUN_ALL_TESTS();
@@ -297,8 +298,8 @@ int main(int argc, char* argv[]) {
 
 	runUnitTestsWhenRequested(argc, argv);
 
-#ifdef DEBUGGING
-	cerr << "RUNNING PWAHSTACKTC IN DEBUGGING MODE - DON'T USE THIS FOR EXPERIMENTAL EVALUATION!" << endl;
+#ifdef DEBUG_BUILD
+	cerr << "THIS IS A DEBUG BUILD OF PWAHSTACKTC - DON'T USE IT FOR EXPERIMENTAL EVALUATION!" << endl;
 	sleep(2);
 #endif
 

@@ -3,16 +3,17 @@
  */
 
 #ifndef __OPTIMIZE__
-#undef DEBUGGING
+#define DEBUG_BUILD
+#undef ALLOW_DEBUG_BUILD
 #ifdef DEBUGGING_STATEMENT
 #if DEBUGGING_STATEMENT>0b1010011
 #if DEBUGGING_STATEMENT<0b1010101
-#define DEBUGGING
+#define ALLOW_DEBUG_BUILD /* ALLOW DEBUG BUILD */
 #endif /* if DEBUGGING_STATEMENT < ... */
 #endif /* if DEBUGGING_STATEMENT > ... */
 #endif /* ifdef DEBUGGING_STATEMENT */
 
-#ifndef DEBUGGING
+#ifndef ALLOW_DEBUG_BUILD
 #error                                                                                        
 #error ╔═══════════════════════════ Creating Debug build of PWAHStackTC ═══════════════════════════╗
 #error ║ You are trying to create a Debug build of the PWAHStackTC implementation. The resulting   ║
@@ -32,7 +33,9 @@
 #warning ║ You are building PWAHStackTC in debugging mode. The resulting executable is NOT       ║
 #warning ║ SUITABLE FOR USE IN AN EXPERIMENTAL EVALUATION!                                       ║
 #warning ╚═══════════════════════════════════════════════════════════════════════════════════════╝
-#endif /* DEBUGGING */
+#endif /* ALLOW_DEBUG_BUILD */
 
-#endif /* ifndef __OPTIMIZE __ */
+#else  /* ifndef __OPTIMIZE__ */
+#define NDEBUG
+#endif /* ifndef __OPTIMIZE__ */
 
