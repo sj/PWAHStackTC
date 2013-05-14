@@ -54,8 +54,6 @@ template<class B> void PWAHStackTC<B>::computeTransitiveClosure(bool reflexive, 
 	_componentSizes.clear();
 	_componentSuccessors.clear();
 	_componentVertices.clear();
-	_savedCStackSize = new unsigned int[numVertices];
-	if (storeComponentMembers) _savedVStackSize = new unsigned int[numVertices];
 	_vertexComponents = new int[numVertices];
 	_vertexCandidateComponentRoot = new unsigned int[numVertices];
 	_visited = DynamicBitSet(numVertices);
@@ -76,8 +74,6 @@ template<class B> void PWAHStackTC<B>::computeTransitiveClosure(bool reflexive, 
 
 	delete _cStack;
 	delete _vStack;
-	delete[] _savedCStackSize;
-	if (_storeComponentVertices) delete[] _savedVStackSize;
 	delete[] _vertexCandidateComponentRoot;
 	delete[] _vertexDFSSeqNo;
 }
@@ -86,10 +82,15 @@ template<class B> void PWAHStackTC<B>::dfsVisit(unsigned int vertexIndex){
 	const bool debug = false;
 
 	if (debug) cout << "Visiting vertex " << vertexIndex << endl;
+
+	// Save the current height of the two stacks - we'll need this information later when we're
+	// constructing a strongly connected component (if this vertex turns out to be the root of
+	// a SCC)
+	const unsigned int savedVStackSize = _vStack->size();
+	const unsigned int savedCStackSize = _cStack->size();
+
 	_visited.set(vertexIndex);
-	if (_storeComponentVertices) _savedVStackSize[vertexIndex] = _vStack->size();
 	_vStack->push(vertexIndex);
-	_savedCStackSize[vertexIndex] = _cStack->size();
 	_vertexComponents[vertexIndex] = -1;
 	_vertexDFSSeqNo[vertexIndex] = ++_lastDFSSeqNo;
 
@@ -170,7 +171,7 @@ template<class B> void PWAHStackTC<B>::dfsVisit(unsigned int vertexIndex){
 		} // else: no self loop
 
 		B* successors = NULL;
-		unsigned int numAdjacentComponents = _cStack->size() - _savedCStackSize[vertexIndex];
+		unsigned int numAdjacentComponents = _cStack->size() - savedCStackSize;
 		_componentSizes.push_back(0);
 
 		// Merge operations
@@ -319,7 +320,7 @@ template<class B> void PWAHStackTC<B>::dfsVisit(unsigned int vertexIndex){
 		// Store vertices when necessary
 		if (_storeComponentVertices){
 			// Prepare storing a list of vertices of this component
-			_componentVertices.push_back(new int[_vStack->size() - _savedVStackSize[vertexIndex]]);
+			_componentVertices.push_back(new int[_vStack->size() - savedVStackSize]);
 		}
 
 		unsigned int currStackVertexIndex;

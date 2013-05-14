@@ -43,8 +43,6 @@ private:
 	DynamicBitSet _visited; // records visited vertices (used during construction of transitive closure)
 	DynamicStack* _vStack; // stack for vertices (used during construction of transitive closure)
 	DynamicStack* _cStack; // stack for components (used during construction of transitive closure)
-	unsigned int* _savedVStackSize; // size of stack _vStack upon detection of a vertex (used during construction of transitive closure)
-	unsigned int* _savedCStackSize; // size of stack _cStack upon detection of a vertex (used during construction of transitive closure)
 	unsigned int* _vertexCandidateComponentRoot; // candidate component root for each vertex (used during construction of transitive closure)
 	StaticBitSet* _vertexSelfLoop; // records vertex self loops
 	int* _vertexDFSSeqNo; // record DFS sequence number of every vertex
