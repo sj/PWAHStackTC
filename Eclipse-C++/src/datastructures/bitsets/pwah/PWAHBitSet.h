@@ -23,7 +23,7 @@
 #include <iostream>
 #include <vector>
 #include "../BitSet.h"
-#include "../../../../tests/BitSetTester.h"
+#include "../../../gtest-includes.h"
 using namespace std;
 
 template<unsigned int P> class PWAHBitSetIterator;
@@ -57,7 +57,6 @@ public:
 	const int blocksize();
 
 	friend class PWAHBitSetIterator<P>;
-	friend class BitSetTester<PWAHBitSet<P> >;
 
 private:
 	static const long _maxBlocksPerFill;
