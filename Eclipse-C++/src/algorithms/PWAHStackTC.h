@@ -38,27 +38,24 @@ private:
 	//vector<DynamicBitSet*> _componentSuccessors; // stores the successor list (transitive closure) for each component
 	int* _vertexComponents; // stores the component index of each vertex
 	bool _storeComponentVertices; // determines whether or not to store a list of vertices in each component
-	vector<int*> _componentVertices; // stores the vertices in each component
-	vector<unsigned int> _componentSizes; // stores the size of strongly connected components
-	DynamicBitSet _visited; // records visited vertices
-	DynamicStack* _vStack; // stack for vertices
-	DynamicStack* _cStack; // stack for components
-	unsigned int* _savedVStackSize; // size of stack _vStack upon detection of a vertex
-	unsigned int* _savedCStackSize; // size of stack _cStack upon detection of a vertex
-	unsigned int* _vertexCandidateComponentRoot; // candidate component root for each vertex
+	vector<int*> _componentVertices; // stores the vertices in each component (only stored when requested)
+	vector<unsigned int> _componentSizes; // stores the size of strongly connected components (for informational purposes)
+	DynamicBitSet _visited; // records visited vertices (used during construction of transitive closure)
+	DynamicStack* _vStack; // stack for vertices (used during construction of transitive closure)
+	DynamicStack* _cStack; // stack for components (used during construction of transitive closure)
+	unsigned int* _savedVStackSize; // size of stack _vStack upon detection of a vertex (used during construction of transitive closure)
+	unsigned int* _savedCStackSize; // size of stack _cStack upon detection of a vertex (used during construction of transitive closure)
+	unsigned int* _vertexCandidateComponentRoot; // candidate component root for each vertex (used during construction of transitive closure)
 	StaticBitSet* _vertexSelfLoop; // records vertex self loops
 	int* _vertexDFSSeqNo; // record DFS sequence number of every vertex
-	int _lastDFSSeqNo;
-	int _lastComponentIndex;
+	int _lastDFSSeqNo; // last used DFS sequence number (used during construction of transitive closure)
+	int _lastComponentIndex; // last used strongly connected component index (used during construction of transitive closure)
 	bool _reflexive;
 	int _minOutDegreeForMultiOR;
 	PerformanceTimer _mergeTimer;
 
 	bool componentHasSelfLoop(int componentIndex);
 	void dfsVisit(unsigned int vertexIndex);
-
-	FRIEND_TEST(PWAHStackTCTest, TestReflexive);
-
 
 public:
 	PWAHStackTC(Graph& graph);

@@ -683,6 +683,11 @@ template<class B> bool PWAHStackTC<B>::reachable(unsigned int src, unsigned int 
 	return _componentSuccessors[srcComponent]->get(dstComponent);
 }
 
+/**
+ * \brief Returns the total amount of memory (unit: bits) used by the reachability data structures in PWAHStackTC.
+ *
+ * @see totalMemoryUsage();
+ */
 template<class B> long PWAHStackTC<B>::memoryUsedByBitSets(){
 	long totalBits = 0;
 	for (unsigned int i = 0; i < _componentSizes.size(); i++){
@@ -691,6 +696,12 @@ template<class B> long PWAHStackTC<B>::memoryUsedByBitSets(){
 	return totalBits;
 }
 
+/**
+ * \brief Returns the total amount of memory (unit: number of bits) used by PWAHStackTC to answer reachability queries.
+ *
+ * This amounts to the number of bits used by the backing data structure (e.g. PWAHBitSet<8>), plus
+ * 32 bits for every vertex index (to store the mapping from vertex -> strongly connected component).
+ */
 template<class B> long PWAHStackTC<B>::totalMemoryUsage(){
 	long byBitSets = memoryUsedByBitSets();
 	return byBitSets + 32 * _graph->getNumberOfVertices();
