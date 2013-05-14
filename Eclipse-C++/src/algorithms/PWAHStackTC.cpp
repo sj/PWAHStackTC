@@ -27,6 +27,7 @@
 #include "../datastructures/bitsets/StaticBitSet.h"
 #include "../datastructures/DynamicStack.h"
 #include "../datastructures/bitsets/pwah/PWAHBitSet.h"
+#include "../datastructures/bitsets/wah/WAHBitSet.h"
 #include <stdexcept>
 #include "../datastructures/bitsets/interval/IntervalBitSet.h"
 #include <assert.h>
