@@ -6,8 +6,8 @@
 #define DEBUG_BUILD
 #undef ALLOW_DEBUG_BUILD
 #ifdef DEBUGGING_STATEMENT
-#if DEBUGGING_STATEMENT>0b1010011
-#if DEBUGGING_STATEMENT<0b1010101
+#if DEBUGGING_STATEMENT>0b1000100
+#if DEBUGGING_STATEMENT<0b1000110
 #define ALLOW_DEBUG_BUILD /* ALLOW DEBUG BUILD */
 #endif /* if DEBUGGING_STATEMENT < ... */
 #endif /* if DEBUGGING_STATEMENT > ... */
@@ -21,7 +21,7 @@
 #error ║ Please create a Release build if you would like to run performance experiments.           ║
 #error ║                                                                                           ║
 #error ║ If you are aware of the consequences, but would still like to make a Debug build, please  ║
-#error ║ count the number of characters in the following sentence:                                 ║
+#error ║ count the number of characters (excluding spaces) in the following sentence:              ║
 #error ║                                                                                           ║
 #error ║ >  I am creating a debug build and will not use this build for experimental evaluation  < ║
 #error ║                                                                                           ║
