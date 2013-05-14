@@ -26,8 +26,8 @@ TEST_F(PWAHStackTCTest, TestGraphsFromDataset){
 		const GraphTestInfo gti = graphtestinfo[graph_i];
 		const string filename = gti.getFullFilename();
 
-		cout << "======= " << filename << " =======" << endl;
-		cout << "Expecting " << gti.numEdgesInTC << " edges in TC, " << gti.numEdgesInReflexiveTC << " edges in reflexive TC..." << endl;
+		//cout << "======= " << filename << " =======" << endl;
+		//cout << "Expecting " << gti.numEdgesInTC << " edges in TC, " << gti.numEdgesInReflexiveTC << " edges in reflexive TC..." << endl;
 		Graph graph = Graph::parseChacoFile(filename);
 
 		EXPECT_EQ(graph.getNumberOfVertices(), gti.numVertices);
