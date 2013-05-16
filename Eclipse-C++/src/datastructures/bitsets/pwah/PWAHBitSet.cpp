@@ -558,7 +558,7 @@ template<unsigned int P> void PWAHBitSet<P>::clear(){
 /**
  * \brief Returns the value (true/false <--> 1/0) of the bit at index 'bitIndex'.
  *
- * Complexity: linear in the size of the compressed data.
+ * For more details (including complexity), @see get(unsigned int, bool)
  *
  * \param bitIndex the index of the bit to be queried.
  */
@@ -581,27 +581,31 @@ template<unsigned int P> void PWAHBitSet<P>::reset_incr_get_indices(){
 }
 
 /**
- * \brief Same as PWAHBitSet::get(unsigned int, bool), but implements an optimisation to support incremental gets
- * (i.e., to get multiple bits in an efficient way, but the queried bits need to be queried incrementally).
+ * \brief Same as PWAHBitSet::get(unsigned int, bool), but uses only a single pass over the compressed PWAHBitSet. It requires
+ * that the bits are queried in increasing order of their index.
  *
  * Complexity for a single lookup: O(n)
- * Total complexity for a series of lookups: O(n)
+ * Total complexity for a series of lookups: O(n) in total
  *
- * For a series of lookups, this method will only do a single pass over the entire bitset.
+ * (for a PWAHBitSet of size n)
+ *
  */
 template<unsigned int P> const bool PWAHBitSet<P>::incr_get(unsigned int bitIndex){
 	if (_bit_block_index(bitIndex) < _incr_get_BlockIndex) throw range_error("incr_get requires incremental querying. Use reset_incr_get_indices to reset indices.");
-	return _get(bitIndex, false, _incr_get_WordIndex, _incr_get_PartitionIndex, _incr_get_BlockIndex, true);
+	return _get(bitIndex, _incr_get_WordIndex, _incr_get_PartitionIndex, _incr_get_BlockIndex, true);
 }
 
 /**
  * \brief Determines whether the bit at the given index is set
  *
- * This operation takes O(n) times on PWAHBitSet instances without index,
- * or O(k) time on indexes PWAHBitSet instances (k denotes the index granularity)
+ * For indexed PWAHBitSet instances with index granularity k, this method will run in O(k) time for a single query.
+ * A single query on a non-indexed PWAHBitSet will take O(n) time.
+ *
+ * For querying multiple bits in the same PWAHBitSet, it is worth considering @see incr_get(unsigned int). When
+ * the bits are queried in increasing order (of their index), then only one pass is made over the compressed words. *
  *
  * \param bitIndex the index of the desired bit
- * \param disableIndex when true, prevents the 'get' method from using the search index
+ * \param disableIndex when true, prevents the 'get' method from using the search index (should it exist)
  */
 template<unsigned int P> const bool PWAHBitSet<P>::get(unsigned int bitIndex, bool disableIndex){
 	const bool DEBUGGING = false;
@@ -635,7 +639,7 @@ template<unsigned int P> const bool PWAHBitSet<P>::get(unsigned int bitIndex, bo
 		}
 	}
 
-	return _get(bitIndex, disableIndex, initialWordIndex, initialPartitionIndex, initialBlockIndex, false);
+	return _get(bitIndex, initialWordIndex, initialPartitionIndex, initialBlockIndex, false);
 }
 
 /**
@@ -645,14 +649,12 @@ template<unsigned int P> const bool PWAHBitSet<P>::get(unsigned int bitIndex, bo
  * or O(k) time on indexes PWAHBitSet instances (k denotes the index granularity)
  *
  * \param bitIndex the index of the desired bit
- * \param disableIndex when true, prevents the 'get' method from using the search index
  * \param initialWordIndex the word to start scanning at
  * \param initialPartitionIndex the partition of the word to start scanning at
  * \param initialBlockIndex the block at the given word/partition
  * \param update_incr_get_indices determines whether _get will update the _incr_get_* values for incremental getting.
  */
-template<unsigned int P> const bool PWAHBitSet<P>::_get(unsigned int bitIndex, bool disableIndex, unsigned int initialWordIndex, unsigned int initialPartitionIndex, long initialBlockIndex, bool update_incr_get_indices){
-	// TODO: integrate incr_get with standard get?
+template<unsigned int P> const bool PWAHBitSet<P>::_get(unsigned int bitIndex, unsigned int initialWordIndex, unsigned int initialPartitionIndex, long initialBlockIndex, bool update_incr_get_indices){
 	const bool DEBUGGING = false;
 	const int blockIndex = _bit_block_index(bitIndex);
 	long currBlockIndex = initialBlockIndex;
@@ -752,7 +754,7 @@ template<unsigned int P> const bool PWAHBitSet<P>::_get(unsigned int bitIndex, b
 	ss << "PWAHBitSet::get[" << bitIndex << "]: unexpected state. ";
 	ss << "Scanned past last word (index " << (_words.size() - 1) << ", containing block " << currBlockIndex << "), but block " << blockIndex << " hasn't been located? ";
 
-	if (_indexChunkSize > 0 && !disableIndex){
+	/**	if (_indexChunkSize > 0 && !disableIndex){
 		// Index available, provide details in exception
 		const int chunkIndex = bitIndex / _indexChunkSize;
 		const int chunkFirstBit = chunkIndex * _indexChunkSize;
@@ -763,7 +765,8 @@ template<unsigned int P> const bool PWAHBitSet<P>::_get(unsigned int bitIndex, b
 		ss << "Indexing active. Scanning started at word " << initialWordIndex << ", partition " << currPartitionIndex;
 		ss << " which contains block " << currBlockIndex;
 		//ss << ". Without using index, query returns: " << (get(bitIndex, true) ? "true" : "false");
-	}
+	} **/
+
 	throw string(ss.str());
 }
 

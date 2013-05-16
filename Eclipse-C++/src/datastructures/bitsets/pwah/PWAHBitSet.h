@@ -114,7 +114,7 @@ private:
 	void setIndexEntry(unsigned int chunkIndex, int indexWord, int indexPartition, int indexPartitionOffset);
 	int countNumberOfBlocks();
 
-	const bool _get(unsigned int bitIndex, bool disableIndex, unsigned int initialWordIndex, unsigned int initialPartitionIndex, long initialBlockIndex, bool update_incr_get_indices);
+	const bool _get(unsigned int bitIndex, unsigned int initialWordIndex, unsigned int initialPartitionIndex, long initialBlockIndex, bool update_incr_get_indices);
 };
 
 

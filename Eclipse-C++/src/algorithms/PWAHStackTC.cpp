@@ -522,7 +522,9 @@ template<class B> long PWAHStackTC<B>::countNumberOfEdgesInTC(){
 
 /**
  * Determines for each possible source/target pair whether they are reachable or not. Returns the number
- * or pairs that were reachable and stores the result in the reachable vector.
+ * or pairs that were reachable and stores the result in the reachable vector. This is a specific template
+ * instantiation for PWAHStackTC<PWAHBitSet<8> >, as it relies on PWAHBitset::incr_get for efficient querying
+ * of multiple bits.
  *
  * This implementation is more efficient than actually doing individual queries using "reachable", as it will
  * only iterate over the reachability PWAHBitSet for components once (so if multiple sources are in the same
@@ -538,8 +540,6 @@ template<class B> long PWAHStackTC<B>::countNumberOfEdgesInTC(){
  *
  * Note that reachable_pairs is a vector of pointers to vectors {t1, ..., tn} : if source vertices share 
  * the same strongly connected component, they wil also share the same vector {t1, ..., tn} 
- *
- * The calling method is responsible for freeing the memory in the reachable array!
  * 
  */
 template<> void PWAHStackTC<PWAHBitSet<8> >::reachablepairs(vector<unsigned int>& sources, vector<unsigned int>& targets, vector<vector<unsigned int> >& reachable){

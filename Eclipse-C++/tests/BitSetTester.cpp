@@ -110,7 +110,7 @@ TYPED_TEST(BitSetTester, TestSetGet) {
 	WAHBitSet* ref_bitset = new WAHBitSet();
 
 	for (int i = 1; i < 50; i++){
-		BitSetTester<TypeParam>::randomise(tested_bitset, ref_bitset, 10000, 25000);
+		BitSetTester<TypeParam>::randomise(tested_bitset, ref_bitset, 1000, 2500);
 		//cout << "Done randomising pass " << i << endl;
 
 		BitSetTester<TypeParam>::compare(tested_bitset, ref_bitset);
@@ -121,7 +121,20 @@ TYPED_TEST(BitSetTester, TestSetGet) {
 	//cout << "Done!" << endl;
 }
 
-//template<class B> void BitSetTester<B>::testIterator(BitSet* bitset, bool randomiseBitset){
+TYPED_TEST(BitSetTester, TestIncrementalSetGet) {
+	TypeParam* tested_bitset = new TypeParam();
+	WAHBitSet* ref_bitset = new WAHBitSet();
+
+	for (int i = 1; i < 50; i++){
+		BitSetTester<TypeParam>::randomise(tested_bitset, ref_bitset, 1000, 2500);
+
+		// Force use of incr_get (will only work on PWAHBitSet classes) to see whether it behaves
+		for (unsigned int b = 0; b < tested_bitset->size(); b++){
+			EXPECT_EQ(tested_bitset->incr_get(b), ref_bitset->get(b));
+		}
+	}
+}
+
 TYPED_TEST(BitSetTester, TestIterator) {
 	TypeParam* bitset = new TypeParam();
 	const unsigned int minNumRandomBits = 10000;

@@ -480,8 +480,6 @@ int main(int argc, char* argv[]) {
 			srand ( time(NULL) );
 
 			for (int i = 0; i < numQueries; i++){
-				// modulo computation does not yield an exactly uniform distribution,
-				// but it's good enough for this purpose...
 				rndSrc[i] = rand() % graph.getNumberOfVertices();
 				rndDst[i] = rand() % graph.getNumberOfVertices();
 			}
@@ -500,7 +498,7 @@ int main(int argc, char* argv[]) {
 			if (!nodetails) cout << numReachable << " pairs turned out to be reachable." << endl;
 
 			memUsage = tca->totalMemoryUsage();
-			cout << "Number of bits required to store WAH compressed bitsets: " << memUsage << endl;
+			cout << "Number of bits required to store compressed bitsets: " << memUsage << endl;
 			delete[] rndDst;
 			delete[] rndSrc;
 			delete tca;
