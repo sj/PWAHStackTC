@@ -277,9 +277,6 @@ void doSourcesTargetsReachability(string filename_graph, string filename_sources
 }
 
 int main(int argc, char* argv[]) {
-	cout.setf(ios::fixed,ios::floatfield);
-	cout.precision(4);
-
 	// Increase stack size
 	const rlim_t sSize = 1024 * 1024 * 128; // 128 Megabytes
 	struct rlimit rl;
@@ -295,6 +292,11 @@ int main(int argc, char* argv[]) {
 			}
 		}
 	}
+
+	// Set floating point precision for stdout
+	cout.setf(ios::fixed,ios::floatfield);
+	cout.precision(4);
+
 
 	runUnitTestsWhenRequested(argc, argv);
 
