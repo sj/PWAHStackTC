@@ -4,3 +4,8 @@ ifneq ($(wildcard DEBUGGING-I-KNOW-WHAT-IM-DOING),)
 	DEBUGGING_STATEMENT := $(shell cat DEBUGGING-I-KNOW-WHAT-IM-DOING)
 endif
 
+# Default value for g++ compiler
+ifndef GPP
+	GPP := g++
+endif
+
