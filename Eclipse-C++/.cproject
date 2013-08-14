@@ -27,6 +27,7 @@
 								<option id="gnu.cpp.compiler.option.preprocessor.def.794951066" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="DEBUGGING_STATEMENT=$(DEBUGGING_STATEMENT)"/>
 								</option>
+								<option id="gnu.cpp.compiler.option.other.other.797787701" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 $(GPP_EXTRA_DEBUG_OPTIONS)" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1503450137" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.2130442289" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.exe.debug">

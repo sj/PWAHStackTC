@@ -33,6 +33,9 @@ endif
 ifneq ($(strip $(CPP_DEPS)),)
 -include $(CPP_DEPS)
 endif
+ifneq ($(strip $(TPP_DEPS)),)
+-include $(TPP_DEPS)
+endif
 ifneq ($(strip $(CXX_DEPS)),)
 -include $(CXX_DEPS)
 endif
@@ -58,7 +61,7 @@ PWAHStackTC: $(OBJS) $(USER_OBJS)
 
 # Other Targets
 clean:
-	-$(RM) $(OBJS)$(C++_DEPS)$(C_DEPS)$(CC_DEPS)$(CPP_DEPS)$(EXECUTABLES)$(CXX_DEPS)$(C_UPPER_DEPS) PWAHStackTC
+	-$(RM) $(OBJS)$(C++_DEPS)$(C_DEPS)$(CC_DEPS)$(CPP_DEPS)$(EXECUTABLES)$(TPP_DEPS)$(CXX_DEPS)$(C_UPPER_DEPS) PWAHStackTC
 	-@echo ' '
 
 .PHONY: all clean dependents

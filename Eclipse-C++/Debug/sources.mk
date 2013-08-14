@@ -6,6 +6,7 @@ O_SRCS :=
 CPP_SRCS := 
 C_UPPER_SRCS := 
 C_SRCS := 
+TPP_SRCS := 
 S_UPPER_SRCS := 
 OBJ_SRCS := 
 ASM_SRCS := 
@@ -18,6 +19,7 @@ C_DEPS :=
 CC_DEPS := 
 CPP_DEPS := 
 EXECUTABLES := 
+TPP_DEPS := 
 CXX_DEPS := 
 C_UPPER_DEPS := 
 

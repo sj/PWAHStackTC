@@ -9,3 +9,10 @@ ifndef GPP
 	GPP := g++
 endif
 
+# Check whether g++ will do diagnostics with carets (versions 4.8 and newer). If so: disable that, because it will fail to show the
+# debugging warning correctly. Older versions of g++ will bail on the -fno-diagnostics-show-caret option.
+GPP_WITH_CARETS = $(shell expr `$(GPP) -dumpversion | cut -d . -f 1,2 | tr -d .` \>= 48)
+
+ifeq "$(GPP_WITH_CARETS)" "1"
+	GPP_EXTRA_DEBUG_OPTIONS += -fno-diagnostics-show-caret
+endif
